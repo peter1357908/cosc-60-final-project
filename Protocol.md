@@ -203,6 +203,9 @@ so it can update its Local DHT.
 
 No response is needed.
 
+NOTE: when a supernode offers a new file, all it has to do is update its local-DHT,
+and doesn't need to send any packets. (until it receives a request for available files, of course.)
+
 *Notification that a Node is leaving the Network:*
 
 Post:
