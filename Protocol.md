@@ -5,7 +5,11 @@ stipulate that the protocol is built on a reliable for of UDP, which Matt has
 offered us to use.
 
 Before reading this, familiarize yourself with the jobs of supernodes and child
-nodes [here](https://gitlab.cs.dartmouth.edu/hyperistic/cosc-60-final-project/blob/master/Structure.md). 
+nodes [here](https://gitlab.cs.dartmouth.edu/hyperistic/cosc-60-final-project/blob/master/Structure.md).
+
+Note: this document uses GitHub tables to represent the structure of a packet. Each part
+of a table should correspond to a 2 byte field. If a field ends with an ellipsis, you
+should assume the data continues on past the 2 byte field.
 
 So, the general structure of a packet on our network will be:
 
