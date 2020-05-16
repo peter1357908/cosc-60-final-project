@@ -5,7 +5,7 @@ stipulate that the protocol is built on a reliable for of UDP, which Matt has
 offered us to use.
 
 Before reading this, familiarize yourself with the jobs of supernodes and child
-nodes here. (Hyperlink is on its way. Writing this document now.)
+nodes [here](https://gitlab.cs.dartmouth.edu/hyperistic/cosc-60-final-project/blob/master/Structure.md). 
 
 So, the general structure of a packet on our network will be:
 
