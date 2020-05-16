@@ -7,3 +7,5 @@ network and the responsibilities of supernodes and child nodes.
 
 Afterwards, read [Protocol.md](https://gitlab.cs.dartmouth.edu/hyperistic/cosc-60-final-project/blob/master/Protocol.md) to understand what kind of messages our network uses to communicate.
 This document also gets into some specifics, offering proposed byte values for the corresponding, more general fields.
+
+Apologies for any typos.
