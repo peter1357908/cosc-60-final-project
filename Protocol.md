@@ -1,7 +1,7 @@
 **Protocol Writeup for Gao, Ma, Parker, Foye, and Vojdanovski**
 
 The [requirements](https://canvas.dartmouth.edu/courses/39576/assignments/234934) for the lab
-stipulate that the protocol is built on a reliable for of UDP, which Matt has
+stipulate that the protocol is built on a reliable form of UDP, which Matt has
 offered us to use.
 
 Before reading this, familiarize yourself with the jobs of supernodes and child
@@ -22,14 +22,14 @@ Our protocol will hope to account for the following types of messages:
 
 *  Posts
 *  Requests
-*  Downloads
+*  File-transfer
 
-Where "Posts" are some sort of notification of new information, "Requests" are
-requests for some unknown information, and "Downloads" are the special case
-where the file is being transferred across the network.
+Where "Posts" are notifications of new information, "Requests" are
+requests for some unknown information, and "File-transfers" are the special case
+where a file is being transferred between a requesting node and an offering node.
 
-Our P2P Protocol will have the general structure, which each partition corresponding
-to 2 bytes:
+Our P2P Protocol will be partitioned as follows, with each partition 
+being 2 bytes in length:
 
 | Type | Message Length |
 | ------ | ------ |
@@ -37,18 +37,18 @@ to 2 bytes:
 | IPv4 | IPv4 | 
 | Value | Value . . . |
 
-"Type" is a 2-byte value that specifies if the message is a:
-*  Request for Information - "0x0001"
-*  Notification / Post of New Information "0x0101"
-*  A Download-in-Progress "0x1111"
-*  An invalid packet response / error response "0x0000"
+"Type" is a 2-byte value that specifies if the message is a(n):
+
+*  Post - "0x0001"
+*  Request - "0x0101"
+*  File-transfer - "0x1111"
+*  Indication of error - "0x0000"
 
 (I included some preliminary byte values for each type, open to change.)
 
-
 Where "ID" is a unique/random message id so messages are not repeated. 
-Nodes store these ID's in a regurarily cleared cache (every 6 hrs, perhaps) so that
-if they received a duplicate, flooded message they can ignore it.
+Nodes store these ID's in a regularly cleared cache (every 6 hrs, perhaps) so that
+if they can ignore/drop a duplicate message.
 
 Where "Message Length" is the length of the packet, except when the message type is
 a download, in which case it is the total number of fragments that make up the file.
