@@ -138,13 +138,26 @@ each request value might correspond to.
 
 * Request:
 
-  | 000d | File ID length (in bytes) |
+  | 000d | Source IP |
   | ---- | ---- |
-  | File ID | File ID . . . |
+  | File ID length (in bytes) | File ID . . . |
+  
+  The `Source IP` is the IP address of the node that sent this request.
 
-This message is sent to a node which is supposed to contain this file. 
+  This message is sent to a node which supposedly offers this file (for UDP-holepunching) **AND** to the supernode that is the bootstrapping node for that sharing node (unless the sharing node is a supernode).
 
-There is no direct response to this request - the node that received this request will either ignore it (e.g. if it no longer offers the file) or start transferring the file (see `File-transfer` type)
+  There is no direct response to this request; if the receiving node is a:
+  
+  * supernode:
+    
+    * If the supernode's IP is the same as `Source IP`, this means that it just received the dummy message meant for UDP-holepunching; ignore it.
+    * Else if the requested file is offered by the supernode, "forward" the exact same message to the node specified by `Source IP` for UDP-holepunching.
+    * Else, supernode should "forward" the exact same message to the child node that offers the file as specified by `File ID`.
+    
+  * child node:
+    
+    * If the child node's IP is the same as `Source IP`, this means that it just received the dummy message meant for UDP-holepunching; ignore it.
+    * Else, child node should "forward" the exact same message to the node specified by `Source IP` for UDP-holepunching.
 
 ---
 
@@ -168,7 +181,6 @@ There is no direct response to this request - the node that received this reques
   (When a supernode offers a new file, all it has to do is update its local-DHT; it should not send any `Post` messages)
 
   (No response is needed.)
-
   
 
 #### Notification for intention to disconnect
@@ -194,12 +206,9 @@ There is no direct response to this request - the node that received this reques
 A file-transfer message contains the binary data of the file being transferred.
 There is only one kind of file-transfer message (type `000a`).
 
-| 000a | Total Fragments | Total Fragments |
-| ---- | ---- | ---- |
-| Current Fragment of File | data | data |
-| data | data . . . | ... |
+| 000a | Total Number of Fragments |
+| ---- | ---- |
+| Current Fragment Number | data... |
 
-This packet (and all packets are) is a fixed size, where the last packet in the stream is 0-padded. 
-Once the downloading node has acknowledged as many packets as the file is specified to have,
-it knows it has all of the file and the file-transfer will end.
+(No response is necessary.)
 
