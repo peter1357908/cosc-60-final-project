@@ -185,14 +185,14 @@ come later though, as it requires additional info, such as which node belongs to
 -------
 
 **Posts:**
-* A notification that the node offers a new file (this is akin to notification that a node joined the network) "0x000x"
-* A notification that the node is leaving the network "0x000y"
+* A notification that the node offers a new file (this is akin to notification that a node joined the network) "0x000d"
+* A notification that the node is leaving the network "0x000e"
 
 *Notification the Node Offers a New File:*
 
 Post:
 
-| 000x | File ID |
+| 000d | File ID |
 | ------ | ------ |
 | File Name | File Name . . . |
 | File Size | File Size | 
@@ -214,7 +214,7 @@ and doesn't need to send any packets. (until it receives a request for available
 
 Post:
 
-| 000y | null |
+| 000e | null |
 | ------ | ------ |
 | null | null |
 
@@ -225,9 +225,9 @@ Note: Any requests-to-download to this IP address will now be dropped.
 
 **File-transfer: "0x1111**
 A file-transfer message contains the actual data of the file being transferred.
-There is only one kind of file-transfer message, so a Type of 0000 is fine.
+There is only one kind of file-transfer message, so a Type of 1111 is fine.
 
-| 0000 | Current Fragment of File |
+| 1111 | Current Fragment of File |
 | ------ | ------ |
 | data | data |
 | data | data . . . | 
