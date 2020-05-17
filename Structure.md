@@ -1,28 +1,51 @@
-**This file details the responsibilites of a supernode and a child node.**
+### This file details the responsibilites of different types of nodes (supernodes, child nodes)
 
-Some assumptions:
-1. Supernodes never disconnect.
-2. There is always 1 supernode online.
+---
 
-**Supernodes**
+### All nodes can:
 
-I think I should begin by discussing the jobs of a supernode:
-*  Connect a limited number of child nodes
-*  Maintiain a local Distributed Hash Table
+*  Offer files for download
+*  Download files
+
+*Offer Files for Download*
+
+A child node can offer files for download by notifying its parent supernode;
+a supernode can offer files for download by updating its Local Distributed Hash Table.
+
+*Download Files*
+
+Both the child and the supernode can download files from other nodes by directly
+connecting to the node(s) that offer the file (the information on who has which file is
+stored in Local Distributed Hash Tables and distributed by supernodes).
+
+---
+
+### Supernodes should:
+
+*  Remain online
+*  Connect to a limited number of child nodes
+*  Maintiain a Local Distributed Hash Table
 *  Connect to other Supernodes
-*  Offering files for download (see child explanation)
-*  Download files (see child explanation)
 
-And go through these one by one.
+*Remain online:*
 
-*Connect a limited number of child nodes:*
+The supernodes are essential for keeping the network operational by bootstrapping
+newly joining nodes, maintain its existing children, and exchanging meta-information
+with other supernodes, and thus should remain online (if no supernodes are online,
+the network is considered offline).
+
+*Connect to a limited number of child nodes:*
 
 The supernode acts as a bootstrapper for nodes wanting to join the network. From 
 the child nodes' perspective, the child only has one neighbor: the supernode. This way,
 the supernode can manage local requests for information. *The supernode does not act as a middle man during downloads.*
-The supernode should be behind a static NAT, for convienence. 
+(it is not responsible for relaying the actual download/upload stream).
+The supernode should be behind either a static NAT or no NAT, for convienence.
 
-*Maintain a Local DHT*
+To ensure stability, a supernode should only connect to a limited number of child nodes.
+The more supernodes a network has, the more child nodes it can accommodate.
+
+*Maintiain a Local Distributed Hash Table*
 
 A "Local-DHT" is a hash table which contains all of the files offered by the supernode
 and its children. The local DHT is instantiated with the files the supernode itself offers.
@@ -30,42 +53,26 @@ It is updated by "New File" and "Node Disconnecting" posts by the supernode's ch
 The Local DHT is requested by child nodes and other supernodes when a node sends out a 
 "request for available files" request. A child node of a supernode will never
 request another supernode's local-DHT. That will always be done through the child's 
-corresponding supernode. Only supernodes only talk to other supernodes and their children
-when exchanging information. (An exception would be if a child of another supernode requested
-a file download from a supernode which was offering the file.)
+corresponding supernode. A supernode can only talk to its children and other supernodes
+when exchanging meta-information, but it can uploading to/download from all nodes in the network.
 
 *Connect to other Supernodes*
 
 Each supernode maintians a table of all of their neighboring supernodes by IP address,
-so it is able to inform its children how many supernodes there are. Supernodes also use this
-table to ask other supernodes for their respective Local-DHT's when a client requests
-available files.
+mainly so it can ask other supernodes for their respective Local-DHT's. This table also enables
+a supernode to inform its children on how many supernodes are currently online.
 
------
+---
 
-**Children**
+### Child nodes should:
 
-The responsibilities of a child node are:
+*  Connect to one and only one supernode
 
-*  Connect to a single supernode and nobody else
-*  Offer files for download
-*  Download Files
+*Connect to one and only one supernode*
 
-*Connect to a Single Supernode and Nobody Else*
-
-By connecting to just one node, the child ensures that its information requests
-are reliable and distributed among the network. It also makes connecting and
-disconnecting from the network clean and simple.
-
-*Offer Files for Download*
-
-It is the child's job to offer files for download. It does this by notifying its 
-corresponding supernode whenever it is offering a file.
-
-*Download Files*
-
-Both the child and the supernode download files from from other nodes by connecting
-to them directly. 
+By connecting to a supernode, the child ensures that its information requests
+are heard and orderly distributed. Since a child connects to only one supernode,
+it is clean and simple to handle nodes joining and quitting the network.
 
 -----
 
