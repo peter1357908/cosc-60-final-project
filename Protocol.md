@@ -51,7 +51,7 @@ Nodes store these ID's in a regularly cleared cache (every 6 hrs, perhaps) so th
 if they can ignore/drop a duplicate message.
 
 Where "Message Length" is the length of the packet, except when the message type is
-a download, in which case it is the total number of fragments that make up the file.
+a file-transfer, in which case it is the total number of fragments that make up the file.
 
 The "IPv4" address is the address of the initial creator of the message, i.e. the 
 node posting new info or requesting info.
@@ -223,9 +223,9 @@ the message by removing the files associated with the senders IP from the DHT.
 
 Note: Any requests-to-download to this IP address will now be dropped.
 
-**Downloads: "0x1111**
-A download message contains the actual data of the file being downloaded.
-There is only one kind of download message, so a Type of 0000 is fine.
+**File-transfer: "0x1111**
+A file-transfer message contains the actual data of the file being transferred.
+There is only one kind of file-transfer message, so a Type of 0000 is fine.
 
 | 0000 | Current Fragment of File |
 | ------ | ------ |
@@ -234,7 +234,7 @@ There is only one kind of download message, so a Type of 0000 is fine.
 
 This packet (and all packets are) is a fixed size, where the last packet in the stream is 0-padded. 
 Once the downlaoding node has acknowledged as many packets as the file is specified to have,
-it knows it has all of the file and the download will end.
+it knows it has all of the file and the file-transfer will end.
 
 
 
