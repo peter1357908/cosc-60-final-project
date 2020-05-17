@@ -223,7 +223,7 @@ the message by removing the files associated with the senders IP from the DHT.
 
 Note: Any requests-to-download to this IP address will now be dropped.
 
-**File-transfer: "0x1111**
+**File-transfer: "0x1111"**
 A file-transfer message contains the actual data of the file being transferred.
 There is only one kind of file-transfer message, so a Type of 1111 is fine.
 
