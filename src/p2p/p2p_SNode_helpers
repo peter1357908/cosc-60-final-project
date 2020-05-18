@@ -1,0 +1,41 @@
+import binascii as btasc
+
+'''
+A procedure that receives a message from a lower-ranking peer, decoded and responds if necessary.
+Please see procedure.md for more details on the structure of our messages
+'''
+def msg_parser(msg):
+    # Grab the data included in the message headers
+    msg_type = btasc.b2a_hex(msg[0:1])
+    msg_len = btasc.b2a_hex(msg[1:2])
+    peer_id = btasc.b2a_hex(msg[2:4])
+    ip_addr = btasc.b2a_hex(msg[4:6])
+
+    # Post
+    if msg_type.decode() == '0001':
+        # TODO: --
+
+    # Request
+    if msg_type.decode() == '0101':
+        request_type = btasc.b2a_hex(msg[6:7])
+        misc = btasc.b2a_hex(msg[7:8])
+
+        if request_type.decode() == '000a':
+            if misc.decode() == '0000':
+                #TODO: Send a list of supernodes
+            elif misc.decode() == '0001':
+                #TODO: Send new node as a supernode to supernode neighbors
+                #TODO: Send a list of supernodes and add node to it
+            else:
+                #TODO: Send a response of invalid request and designate them as a regular node
+
+        #TODO: Handle other request types
+
+    # File-transfer
+    if msg_type.decode() == '1111':
+        #TODO: --
+    # Indication of error
+    if msg_type.decode() == '0000':
+        # TODO: --
+
+
