@@ -35,11 +35,10 @@ where a file is being transferred between a requesting node and an offering node
 Our P2P Protocol will be partitioned as follows, with each partition 
 being 2 bytes in length:
 
-| Type | Message Length |
+| Type | Value Length (in bytes) |
 | ---- | ---- |
-| ID part 1 | ID part 2 |
-| IPv4 part 1 | IPv4 part 2 | 
-| Value part 1| Value . . . |
+| Source IPv4 | Source IPv4 | 
+| Value | Value . . . |
 
 "Type" is a 2-byte value that specifies if the message is a(n):
 
@@ -48,24 +47,18 @@ being 2 bytes in length:
 *  File-transfer - "0x1111"
 *  Indication of error - "0x0000"
 
-Where "ID" is a unique/random message id so messages are not repeated. 
-Nodes store these ID's in a regularly cleared cache (every 6 hrs, perhaps) so that
-if they can ignore/drop a duplicate message.
+Where "Message Length" is the length of the `value` part of the message (depends on the message type).
 
-Where "Message Length" is the length of the packet, except when the message type is
-a file-transfer, in which case it is the total number of fragments that make up the file.
+The "Source IPv4" address is the address of the initial creator of the message, in case the message needs to be forwarded.
 
-The "IPv4" address is the address of the initial creator of the message, i.e. the 
-node posting new info or requesting info.
-
-Here, "Value" is a function-specific field which can be longer than 4 bytes.
+"Value" is a function-specific field with arbitrary length.
 
 ## Types of Messages
 
 ### Requests:
 
 * Request to join the network - "0x000a"
-* Request for a supernode's neighbor list - "0x000b"
+* Request for a supernode's supernode list - "0x000b"
 * Request for a supernode's Local-DHT - "0x000c"
 * Request for a file-transfer - "0x000d"
 
@@ -85,22 +78,29 @@ each request value might correspond to.
 
 * Request:
 
-  | 000a | node type |
+  | 000a | request type |
   | ---- | ---- |
 
-  `node type` will be `0000` for a regular node, and `0001` for a supernode.
+  `request type` will be `0000` for a regular node join request, and `0001` for a supernode join request, and `0002` for a relayed supernode join request (see below)
 
 * Response:
 
-  | 100a | number of neighbor list entries in this response |
-  | ---- | ---- |
-  | Neighbor list | Neighbor list . . . |
+  * If `request type` is `0000` or `0001`, the receiver sends the following response to the requester.
 
-  When a node sends a request to join to a bootstrapping node (supernode), the bootstrapping node acknowledges the join attempt by sending back its list of neighboring supernodes.
-  The neighbor list in the response should not include the joining node (in case the node wants to join as a supernode).
-  If the node wants to join as a supernode, it is added to the list after the request. 
-  ** We should probably alert all other supernodes of a new supernode ** 
-#### Request for a supernode's neighbor list:
+    | 100a | number of supernode list entries in this response |
+    | ---- | ---- |
+    | supernode list | supernode list . . . |
+  
+  * If `request type` is `0001` or `0002`, the receiver adds the IP address specified in `Source IPv4` to its supernode list.
+  
+  * If `request type` is `0001`, the receiver also needs to send the following request to all supernodes it knows with the same `Source IPv4` as the request message:
+
+    | 000a | 0002 |
+    | ---- | ---- |
+  
+  
+  
+#### Request for a supernode's supernode list:
 
 * Request:
 
@@ -109,14 +109,11 @@ each request value might correspond to.
   
   (Only the type field is necessary)
 
-
 * Response:
 
-  | 100b | number of neighbor list entries in this response |
+  | 100b | number of supernode list entries in this response |
   | ---- | ---- |
-  | Neighbor list | Neighbor list . . . |
-
-  Besides the type field, this response is the same as the response to a `Request to Join`.
+  | supernode list | supernode list . . . |
   
 #### Request for a supernode's Local-DHT:
 
@@ -133,17 +130,28 @@ each request value might correspond to.
   | 100c | number of Local-DHT entries in this response |
   | ---- | ---- |
   | Local-DHT | Local-DHT . . . |
+  
+#### Request for all DHT entries in the network:
+
+* Request:
+
+  | 000d |
+  | ---- |
+  
+  This request should be sent from a child node (a supernode should directly use request type `000c`) to a supernode (which does not have to be its bootstrapping supernode).
+
+* Response:
+
+  There is no direct response; the supernode that receives the request will query all the supernodes it knows and forward all the responses (type `100c`) to the requester.
 
 
 #### Request for a file-transfer:*
 
 * Request:
 
-  | 000d | Source IP |
+  | 000e | File ID length (in bytes) |
   | ---- | ---- |
-  | File ID length (in bytes) | File ID . . . |
-  
-  The `Source IP` is the IP address of the node that sent this request.
+  | File ID | File ID . . . |
 
   This message is sent to a node which supposedly offers this file (for UDP-holepunching) **AND** to the supernode that is the bootstrapping node for that sharing node (unless the sharing node is a supernode).
 
@@ -151,14 +159,14 @@ each request value might correspond to.
   
   * supernode:
     
-    * If the supernode's IP is the same as `Source IP`, this means that it just received the dummy message meant for UDP-holepunching; ignore it.
+    * If the supernode's IP is the same as `Source IPv4`, this means that it just received the dummy message meant for UDP-holepunching; ignore it.
     * Else if the requested file is offered by the supernode, "forward" the exact same message to the node specified by `Source IP` for UDP-holepunching.
-    * Else, supernode should "forward" the exact same message to the child node that offers the file as specified by `File ID`.
+    * Else, the supernode should "forward" the exact same message (same `Source IPv4`) to the child node that offers the file as specified by `File ID`.
     
   * child node:
     
-    * If the child node's IP is the same as `Source IP`, this means that it just received the dummy message meant for UDP-holepunching; ignore it.
-    * Else, child node should "forward" the exact same message to the node specified by `Source IP` for UDP-holepunching.
+    * If the child node's IP is the same as `Source IPv4`, this means that it just received the dummy message meant for UDP-holepunching; ignore it.
+    * Else, child node should "forward" the exact same message (same `Source IPv4`) to the node specified by `Source IP` for UDP-holepunching.
 
 ---
 
@@ -175,7 +183,7 @@ each request value might correspond to.
   | ---- | ---- |
   | File ID length (in bytes) | File ID . . . |
 
-  `File Size` is the size of the file in fragments.
+  `File Size` is the size of the file in bytes (originally number of fragments).
 
   This message must be from a child node to its bootstrapping node.
   
@@ -204,12 +212,14 @@ each request value might correspond to.
 
 ### File-transfer
 
-A file-transfer message contains the binary data of the file being transferred.
-There is only one kind of file-transfer message (type `000a`).
+* A file-transfer message contains the binary data of the file being transferred. (There is only one kind of file-transfer message - type `000a`)
 
-| 000a | Total Number of Fragments |
-| ---- | ---- |
-| Current Fragment Number | data... |
+  | 000a | data... |
+  | ---- | ---- |
 
-(No response is necessary.)
+  The node that is to receive the file-transfer is responsible for keeping track of which file it is downloading and if it has fully received the file.
+
+  (we could also put file ID length and file ID in the message to allow easy book-keeping)
+
+  (No response is necessary.)
 
