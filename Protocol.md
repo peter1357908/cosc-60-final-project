@@ -88,7 +88,7 @@ each request value might correspond to.
   | 000a | node type |
   | ---- | ---- |
 
-  `node type` will be `0000` for a child node, and `0001` for a supernode.
+  `node type` will be `0000` for a regular node, and `0001` for a supernode.
 
 * Response:
 
