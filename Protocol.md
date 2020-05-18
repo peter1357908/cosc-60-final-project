@@ -98,7 +98,8 @@ each request value might correspond to.
 
   When a node sends a request to join to a bootstrapping node (supernode), the bootstrapping node acknowledges the join attempt by sending back its list of neighboring supernodes.
   The neighbor list in the response should not include the joining node (in case the node wants to join as a supernode).
-
+  If the node wants to join as a supernode, it is added to the list after the request. 
+  ** We should probably alert all other supernodes of a new supernode ** 
 #### Request for a supernode's neighbor list:
 
 * Request:
