@@ -60,7 +60,7 @@ The "Source IPv4" address is the address of the initial creator of the message, 
 * Request to join the network - "0x000a"
 * Request for a supernode's supernode list - "0x000b"
 * Request for a supernode's Local-DHT - "0x000c"
-* Request for a file-transfer - "0x000d"
+* Request for a file-transfer - "0x000e"
 
 Typical Request Value:
 
