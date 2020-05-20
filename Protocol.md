@@ -220,7 +220,7 @@ each request value might correspond to.
 
   The node that is to receive the file-transfer is responsible for keeping track of which file it is downloading and if it has fully received the file.
 
-  (we could also put file ID length and file ID in the message to allow easy book-keeping)
+  (we could also put file ID length and file ID in the message to allow easy book-keeping) <--- We definitely need to, else we have no idea what is happening if we have multiple request - Vlado
 
   (No response is necessary.)
 
