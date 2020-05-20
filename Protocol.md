@@ -59,8 +59,8 @@ The "Source IPv4" address is the address of the initial creator of the message, 
 
 * Request to join the network - "0x000a"
 * Request for a supernode's supernode list - "0x000b"
-* Request for a supernode's Local-DHT - "0x000c"
-* Request for all DHT entries in the network - "0x000d"
+* Request for a supernode's Local-DHT (on all files/one file) - "0x000c"
+* Request for all DHT entries (on all files / one file): - "0x000d"
 * Request for a file-transfer - "0x000e"
 
 Typical Request Value:
@@ -99,8 +99,6 @@ each request value might correspond to.
     | 000a | 0002 |
     | ---- | ---- |
   
-  
-  
 #### Request for a supernode's supernode list:
 
 * Request:
@@ -116,37 +114,46 @@ each request value might correspond to.
   | ---- | ---- |
   | supernode list | supernode list . . . |
   
-#### Request for a supernode's Local-DHT:
+#### Request for a supernode's Local-DHT entries (on all files / one file):
 
 * Request:
 
-  | 000c |
-  | ---- |
+  | 000c | File ID length (in bytes) |
+  | ---- | ---- |
+  | File ID | File ID . . . |
   
-  (Only the type field is necessary)
+  If the requester wants all entries, `File ID length` should be `0x0000` (and consequently have nothing for `File ID`).
+  
+  Else, the requester specifies the file whose entries it wants with `File ID length` and `File ID`.
 
 
 * Response:
 
   | 100c | number of Local-DHT entries in this response |
   | ---- | ---- |
-  | Local-DHT | Local-DHT . . . |
+  | Local-DHT entry | Local-DHT entry . . . |
   
-#### Request for all DHT entries in the network:
+  For robust-ness, the supernode should always respond to request `000c` (if no entries are found, respond with `number` being `0x000` and no `Local-DHT entry`).
+  
+#### Request for all DHT entries (on all files / one file):
 
 * Request:
 
-  | 000d |
-  | ---- |
+  | 000d | File ID length (in bytes) |
+  | ---- | ---- |
+  | File ID | File ID . . . |
   
   This request should be sent from a child node (a supernode should directly use request type `000c`) to a supernode (which does not have to be its bootstrapping supernode).
 
 * Response:
 
-  There is no direct response; the supernode that receives the request will query all the supernodes it knows and forward all the responses (type `100c`) to the requester.
+  The supernode that receives the request will perform two tasks if the `Source IPv4` is not its own address:
+  
+  1. Respond to the requesting node as if the request is of type `000c`
+  
+  1. Forward the message with type `000c` instead of `000d` to all the supernodes it knows (so the other supernode will respond to the requesting node directly).
 
-
-#### Request for a file-transfer:*
+#### Request for a file-transfer:
 
 * Request:
 
@@ -215,12 +222,10 @@ each request value might correspond to.
 
 * A file-transfer message contains the binary data of the file being transferred. (There is only one kind of file-transfer message - type `000a`)
 
-  | 000a | data... |
+  | 000a | File ID length (in bytes) |
   | ---- | ---- |
+  | File ID . . . | File Data .... |
 
   The node that is to receive the file-transfer is responsible for keeping track of which file it is downloading and if it has fully received the file.
 
-  (we could also put file ID length and file ID in the message to allow easy book-keeping) <--- We definitely need to, else we have no idea what is happening if we have multiple request - Vlado
-
   (No response is necessary.)
-
