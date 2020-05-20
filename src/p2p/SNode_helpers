@@ -12,10 +12,20 @@ def msg_parser(msg):
     msg_len = btasc.b2a_hex(msg[1:2])
     peer_id = btasc.b2a_hex(msg[2:4])
     ip_addr = btasc.b2a_hex(msg[4:6])
+    #TODO: Add this client to some sort of list?
 
     # Post
     if msg_type.decode() == '0001':
-        # TODO: --
+        post_type = btasc.b2a_hex(msg[6:7])
+        if post_type.decode() == '000a':
+            # TODO: UPDATE THE DHT, COORDINATE WITH PETER
+            file_size = btasc.b2a_hex(msg[6:7])
+            file_id_length = btasc.b2a_hex(msg[7:8])
+            file_id = btasc.b2a_hex(msg[8:9])
+
+        if post_type.decode() == '000b':
+            # TODO: REMOVE from DHT, inform of file losses, and acknowledge
+
 
     # Request
     if msg_type.decode() == '0101':
@@ -71,10 +81,11 @@ def msg_parser(msg):
 
     # File-transfer
     if msg_type.decode() == '1111':
-        #TODO: --
+        #TODO: Accept file
+        recv_file = msg[7:]
     # Indication of error
     if msg_type.decode() == '0000':
-        # TODO: --
+        # TODO: Figure out what we want to do... Perhaps have more details on what type of error this is.. Resend request? Send to different server..
 
 
 #TODO: MOVE MAIN INTO SEPARATE FILE
@@ -90,3 +101,5 @@ if __name__ == '__main__':
         connection = mrt.mrt_accept1()
         message = mrt.mrt_receive1(connection)
         msg_parser(message)
+
+
