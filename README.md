@@ -2,10 +2,8 @@
 
 We reccomend reading in this order:
 
-Start with [Structure.md](https://gitlab.cs.dartmouth.edu/hyperistic/cosc-60-final-project/blob/master/Structure.md) to get a good idea of the structure of our
-network and the responsibilities of supernodes and child nodes.
+Start with [Structure.md](./doc/Structure.md) to get a good idea of the structure of our
+network and the responsibilities of supernodes and childnodes.
 
-Afterwards, read [Protocol.md](https://gitlab.cs.dartmouth.edu/hyperistic/cosc-60-final-project/blob/master/Protocol.md) to understand what kind of messages our network uses to communicate.
-This document also gets into some specifics, offering proposed byte values for the corresponding, more general fields.
-
-Apologies for any typos.
+Afterwards, read [Protocol.md](./doc/Protocol.md) to understand what kind of messages our network uses to communicate.
+[Protocol.md](./doc/Protocol.md) also contains specific information on how to implement a peer client for this P2P Network.

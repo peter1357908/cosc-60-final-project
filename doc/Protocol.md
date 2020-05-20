@@ -143,7 +143,7 @@ each request value might correspond to.
   | ---- | ---- |
   | File ID | File ID . . . |
   
-  This request should be sent from a child node (a supernode should directly use request type `000c`) to a supernode (which does not have to be its bootstrapping supernode).
+  This request should be sent from a childnode (a supernode should directly use request type `000c`) to a supernode (which does not have to be its bootstrapping supernode).
 
 * Response:
 
@@ -169,12 +169,12 @@ each request value might correspond to.
     
     * If the supernode's IP is the same as `Source IPv4`, this means that it just received the dummy message meant for UDP-holepunching; ignore it.
     * Else if the requested file is offered by the supernode, "forward" the exact same message to the node specified by `Source IP` for UDP-holepunching.
-    * Else, the supernode should "forward" the exact same message (same `Source IPv4`) to the child node that offers the file as specified by `File ID`.
+    * Else, the supernode should "forward" the exact same message (same `Source IPv4`) to the childnode that offers the file as specified by `File ID`.
     
-  * child node:
+  * childnode:
     
-    * If the child node's IP is the same as `Source IPv4`, this means that it just received the dummy message meant for UDP-holepunching; ignore it.
-    * Else, child node should "forward" the exact same message (same `Source IPv4`) to the node specified by `Source IP` for UDP-holepunching.
+    * If the childnode's IP is the same as `Source IPv4`, this means that it just received the dummy message meant for UDP-holepunching; ignore it.
+    * Else, childnode should "forward" the exact same message (same `Source IPv4`) to the node specified by `Source IP` for UDP-holepunching.
 
 ---
 
@@ -193,7 +193,7 @@ each request value might correspond to.
 
   `File Size` is the size of the file in bytes (originally number of fragments).
 
-  This message must be from a child node to its bootstrapping node.
+  This message must be from a childnode to its bootstrapping node.
   
   (When a supernode offers a new file, all it has to do is update its local-DHT; it should not send any `Post` messages)
 
