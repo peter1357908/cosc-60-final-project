@@ -60,8 +60,9 @@ join_type:
 	2: join as relayed supernode
 """
 def join_p2p(join_type = 0):
-	#TODO FIX THIS TO INCLUDE LENGTH AND IPV4
-	pre_msg = ''.join([REQUEST,R_JOIN,f'{join_type:04d}'])
+	values = ''.join([R_JOIN,f'{join_type:04d}'])
+	msg_len = len(values)
+	pre_msg = ''.join([REQUEST,msg_len,SOURCE_IP,values])
 	send_msg = binascii.unhexlify(pre_msg)
 	send_p2p_msg(send_msg)
 
