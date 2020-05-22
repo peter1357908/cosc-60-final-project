@@ -1,6 +1,6 @@
 # Protocol Write-up
 
-**Gao, Ma, Parker, Foye, and Vojdanovski**
+** Foye, Gao, Ma, Parker, and Vojdanovski**
 
 ## Protocol Overview
 
