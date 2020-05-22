@@ -1,5 +1,23 @@
 import binascii as btasc
-from mrt import mrt
+from dataclasses import dataclass
+import FileInfoTable
+import ChildrenInfoTable
+
+import mrt
+
+
+'''
+A temporary position for our Supernode class that is here only for ease of access. Will be its own class at
+earliest possibility.
+'''
+@dataclass
+class SuperNode:
+    fileHash: FileInfoTable.FileInfoTable
+    childHash: ChildrenInfoTable.ChildrenInfoTable
+
+fInfo = FileInfoTable.FileInfoTable()
+childHash = ChildrenInfoTable.ChildrenInfoTable()
+sNode = SuperNode(fInfo,childHash)
 
 
 '''
@@ -10,21 +28,22 @@ def msg_parser(msg):
     # Grab the data included in the message headers
     msg_type = btasc.b2a_hex(msg[0:1])
     msg_len = btasc.b2a_hex(msg[1:2])
-    peer_id = btasc.b2a_hex(msg[2:4])
+    peer_id = btasc.b2a_hex(msg[2:4]) # TODO: Figure out how to make this play well with the mrt id's, if at all
     ip_addr = btasc.b2a_hex(msg[4:6])
-    #TODO: Add this client to some sort of list?
 
     # Post
     if msg_type.decode() == '0001':
         post_type = btasc.b2a_hex(msg[6:7])
         if post_type.decode() == '000a':
-            # TODO: UPDATE THE DHT, COORDINATE WITH PETER
             file_size = btasc.b2a_hex(msg[6:7])
             file_id_length = btasc.b2a_hex(msg[7:8])
             file_id = btasc.b2a_hex(msg[8:9])
+            fInfo.addFileInfo(file_id.decode(),ip_addr.decode(),file_size.decode())
+
 
         if post_type.decode() == '000b':
-            # TODO: REMOVE from DHT, inform of file losses, and acknowledge
+            file_id = btasc.b2a_hex(msg[7:8])
+            fInfo.removeFileInfoByOfferer(file_id.decode(), ip_addr.decode())
 
 
     # Request
@@ -39,49 +58,52 @@ def msg_parser(msg):
             if r_misc == '0000':
                 response_type = '100a'
                 snodes_num = str(len(supernode_list))
-                response = response_type+snodes_num+str(supernode_list)
-                # TODO: ensure ip_addr.decode() is in the right format.
-                mrt.mrt_send1(ip_addr.decode(), btasc.a2b_hex(response)) #TODO: Check what id requires i.e ip or (ip,port)
-                #TODO: Structure Messages accordingly...
+                response = response_type+snodes_num+str(supernode_list)#Remove first and last char of list upon receiving
+                # sends a message to id, which is returne upon our call to connect(in main)
+                mrt.mrt_send1(id, btasc.a2b_hex(response))
 
             elif r_misc == '0001':
-                # TODO: Ensure own id not in supernode_list OR ignore it here.
-                # TODO: Alternatively, only add if 0002...
                 for supernode in supernode_list:
                     new_sn_msg = '000a' + '0002' + ip_addr.decode()
+                    #TODO: Figure out how we want to deal with cases where ip is not in senders in mrt
                     mrt.mrt_send1(supernode, btasc.a2b_hex(new_sn_msg))
 
             elif r_misc == '0002':
-                #TODO: Ensure ip addr is in the right format, probably is not :)
+                #Note that IP will be a string
                 supernode_list.append(ip_addr.decode())
 
             else:
-                #see above regarding ip
-                #sends an invalid request message
                 mrt.mrt_send1(ip_addr.decode(), btasc.a2b_hex('0000'))
 
         if request_type.decode() == '000b':
             response_type = '100b'
             snodes_num = str(len(supernode_list))
             response = response_type + snodes_num + str(supernode_list)
-            # TODO: ensure ip_addr.decode() is in the right format.
-            mrt.mrt_send1(ip_addr.decode(), btasc.a2b_hex(response))  # TODO: Check what id requires i.e ip or (ip,port)
+            # sends a message to the id returned by accept1
+            mrt.mrt_send1(id, btasc.a2b_hex(response))
 
         if request_type.decode() == '000c':
-            #TODO: Coordinate with Peter
-            mrt.mrt_send1(ip_addr, 'DHT')
+            #TODO: Figure out the parsing of the Hash
+            mrt.mrt_send1(id, str(fInfo))
 
         if request_type.decode() == '000d':
-            #TODO: clarify approach
+            #TODO: Seems like a messy way of doing this
+            for supernode in supernode_list:
+                #TODO: See if we can have MRT work with ip-addresses
+                #TODO: Interface with client side to use their "000c"
+                mrt.mrt_send1(supernode, "")
+
 
         if request_type.decode() == '000e':
             #TODO: clarify approach
+            # forwarding the exact same message may be a pretty bad idea if we go toward scalaibility
+            # how do we know which supernode is responsible for which part of DHT?
+            # finish code that deals with holepunching
 
-        #TODO: Handle other request types
+
 
     # File-transfer
     if msg_type.decode() == '1111':
-        #TODO: Accept file
         recv_file = msg[7:]
     # Indication of error
     if msg_type.decode() == '0000':
@@ -98,8 +120,6 @@ if __name__ == '__main__':
     # Keep handling requests while running
     # Accepts a connection, receives the message, and parses it
     while True:
-        connection = mrt.mrt_accept1()
-        message = mrt.mrt_receive1(connection)
+        id = mrt.mrt_accept1()
+        message = mrt.mrt_receive1(id)
         msg_parser(message)
-
-
