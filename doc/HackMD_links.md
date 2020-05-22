@@ -3,3 +3,5 @@ The documentation in the repository should contain the latest version; before ed
 [Structure.md](https://hackmd.io/viTtv68jQTGOJGWfFkzItA)
 
 [Protocol.md](https://hackmd.io/Ntcyg_7wTsKrL5BiNz400g)
+
+[Info.md](https://hackmd.io/SxRImo-YSjqgC6BpyhjDbg)
