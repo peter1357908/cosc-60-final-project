@@ -14,10 +14,12 @@ class ChildrenInfoTable:
   def __init__(self):
     self.tb = dict()
 
+  # will do nothing if child already exists in the table
   def addChild(self, child):
-    self.tb[child] = set()
+    if (child not in self.tb):
+      self.tb[child] = set()
 
-  # will add the child entry if it is not in the table yet
+  # will add the child entry if child is not in the table yet
   # (but there shouldn't be such an occassion)
   def addFile(self, child, file):
     fileSet = self.tb.get(child)
