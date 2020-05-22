@@ -36,6 +36,7 @@ SUPERNODE_ID = 0
 
 #TODO: GET SOURCE IP USING STUN STUFF
 SOURCE_IP = ''
+SOURCE_PORT = 0
 
 """
 GENERAL NOTE: I JUST REALIZED THAT I DIDNT ADD LENGTH,
@@ -62,7 +63,7 @@ join_type:
 def join_p2p(join_type = 0):
 	values = ''.join([R_JOIN,f'{join_type:04d}'])
 	msg_len = len(values)
-	pre_msg = ''.join([REQUEST,msg_len,SOURCE_IP,values])
+	pre_msg = ''.join([REQUEST,msg_len,SOURCE_IP,SOURCE_PORTvalues])
 	send_msg = binascii.unhexlify(pre_msg)
 	send_p2p_msg(send_msg)
 
@@ -76,9 +77,11 @@ Takes one arg: all (bool)
 """
 def request_dht(all_dht=True)
 	if all_dht:
-		pre_msg = ''.join([REQUEST,R_ALL_DHT])
+		values = ''.join([R_ALL_DHT])
 	else: 
-		pre_msg = ''.join([REQUEST,R_LOCAL_DHT])
+		values = ''.join([R_LOCAL_DHT])
+	msg_len = len(values)
+	pre_msg = ''.join([REQUEST,msg_len,SOURCE_IP,SOURCE_PORT,values])
 	send_msg = binascii.unhexlify(pre_msg)
 	send_p2p_msg(send_msg)
 
@@ -87,7 +90,9 @@ Function to request supernode list
 Takes no parameters
 """
 def request_super_list():
-	pre_msg = ''.join([REQUEST,R_LIST])
+	values = ''.join([R_LIST])
+	msg_len = len(values)
+	pre_msg = ''.join([REQUEST,msg_len,SOURCE_IP,SOURCE_PORT,values])
 	send_msg = binascii.unhexlify(pre_msg)
 	send_p2p_msg(send_msg)
 
@@ -100,7 +105,21 @@ PARAMETERS:
 	File ID: string
 """
 def post_file(file_size,id_size,filename)
-	pre_msg = ''.join([])
+	values = ''.join([P_NEW_FILE,file_size,id_size,filename])
+	msg_len = len(values)
+	pre_msg = ''.join([POST,msg_len,SOURCE_IP,SOURCE_PORT,values])
+	send_msg = binascii.unhexlify(pre_msg)
+	send_p2p_msg(send_msg)
+
+"""
+Function to send request to disconnect
+"""
+def send_disconnect():
+	values = ''.join([P_DISCONNECT])
+	msg_len = len(values)
+	pre_msg = ''.join([POST,msg_len,SOURCE_IP,SOURCE_PORT,values])
+	send_msg = binascii.unhexify(pre_msg)
+	send_p2p_msg(send_msg)
 
 """
 Function to send the pre-made p2p message. 
