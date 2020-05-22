@@ -8,6 +8,7 @@ May 2020
 import socket
 import binascii
 from mrt import * 
+from stun import *
 
 """ DEFINITIONS """
 POST = '0001'
@@ -37,6 +38,7 @@ SUPERNODE_ID = 0
 #TODO: GET SOURCE IP USING STUN STUFF
 SOURCE_IP = ''
 SOURCE_PORT = 0
+SOCK = 0
 
 """
 GENERAL NOTE: I JUST REALIZED THAT I DIDNT ADD LENGTH,
@@ -52,6 +54,15 @@ Returns an ID connection object
 def connect_p2p(ip = SUPERNODE_IP,port = SUPERNODE_PORT):
 	global SUPERNODE_ID
 	SUPERNODE_ID = mrt_connect(SUPERNODE_IP,SUPERNODE_PORT)
+
+
+"""
+Function to get the source ip and port (public) for the client
+TODO: NEED TO INITIALIZE SOCK 
+"""
+def get_source_addr():
+	global SOURCE_IP,SOURCE_PORT
+	SOURCE_IP, SOURCE_PORT = get_address(SOCK)
 
 """
 Function to join the network, takes one parameter
