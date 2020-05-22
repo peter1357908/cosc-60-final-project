@@ -4,7 +4,8 @@ Child Node Helper files for COSC 60 FInal Project
 
 May 2020
 """
-
+import sys
+sys.path.append('../mrt/')
 import socket
 import binascii
 from mrt import * 
@@ -86,7 +87,7 @@ Takes one arg: all (bool)
 	all = False: send '000c'
 	default is True
 """
-def request_dht(all_dht=True)
+def request_dht(all_dht=True):
 	if all_dht:
 		values = ''.join([R_ALL_DHT])
 	else: 
@@ -115,7 +116,7 @@ PARAMETERS:
 	File ID length: int of byte size
 	File ID: string
 """
-def post_file(file_size,id_size,filename)
+def post_file(file_size,id_size,filename):
 	values = ''.join([P_NEW_FILE,file_size,id_size,filename])
 	msg_len = len(values)
 	pre_msg = ''.join([POST,msg_len,SOURCE_IP,SOURCE_PORT,values])
