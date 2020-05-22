@@ -37,8 +37,8 @@ being 2 bytes in length:
 
 | Type | Value Length (in bytes) |
 | ---- | ---- |
-| Source IPv4 | Source IPv4 | 
-| Value | Value . . . |
+| Source PORT | Source IPv4 | 
+| Source IPv4 | Value . . . |
 
 "Type" is a 2-byte value that specifies if the message is a(n):
 
