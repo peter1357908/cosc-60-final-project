@@ -97,7 +97,11 @@ class InputListener(threading.Thread):
                 elif input_tks[1] == "supernodes":
                     self.request_supernodes()
                 elif input_tks[1] == "dl":
+                    assert len(input_tks) >= 4
                     # Else if input is to begin a download:
+                    file_id = input_tks[2]
+                    # TODO: need to add validation for IP:port
+                    file_host = input_tks[3].split(":")
                     file = None
                     downloadIP = None
                     self.beginDownload(downloadIP, file)
