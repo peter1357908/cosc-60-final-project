@@ -15,6 +15,10 @@ class InputListener(threading.Thread):
         threading.Thread.__init__(self)
         self.supernodeIP = supernodeIP  # IP of supernode, 127.0.0.1 if is a supernode
         self.table = table # File Info Table
+        # If the Node is a supernode, then instantiate a childTable and superList
+        if supernodeIP == "127.0.0.1":
+            self.childTable = ChildrenInfoTable()
+            self.superList = SupernodeList()
 
     # Methods for handling each parsed case:
     # A note on the following methods: "file" is always a File Object.
