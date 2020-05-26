@@ -1,11 +1,11 @@
-#! /usr/bin/python3
-
 # This is the code for the InputListener Thread:
 
 import threading
-import File
-import FileInfoTable
-import SNode_helpers
+# import File
+# import FileInfoTable
+# import SNode_helpers
+
+import CNode_helper
 
 class InputListener(threading.Thread):
 
@@ -15,42 +15,57 @@ class InputListener(threading.Thread):
         threading.Thread.__init__(self)
         self.supernodeIP = supernodeIP  # IP of supernode, 127.0.0.1 if is a supernode
         self.table = table # File Info Table
-        # If the Node is a supernode, then instantiate a childTable and superList
         if supernodeIP == "127.0.0.1":
-            self.childTable = ChildrenInfoTable()
+            self.childTable = ChildInfoTable()
             self.superList = SupernodeList()
 
     # Methods for handling each parsed case:
     # A note on the following methods: "file" is always a File Object.
 
     # Construct Request DHT packet and send to supernodeIP:
-    def requestDHT(self):
-        # TODO
+    def requestDHT(self, all_dht):
+        # CNode_helper.requestDHT(all_dht)
+        if all_dht:
+            print("requesting entire DHT")
         print("Requested DHT from ", self.supernodeIP)
+
+    # Request list of supernodes
+    def request_supernodes(self):
+        # TODO
+        # CNode_helper.request_super_list()
+        print("requesting all the supernodes")
 
     # Begin a download:
     def beginDownload(self, downloadIP, file):
-        downloader = Downloader(self.supernodeIP, downloadIP, file)
-        downloader.start()
+        # downloader = Downloader(self.supernodeIP, downloadIP, file)
+        # downloader.start()
         print("Attempting to download from ", downloadIP)
     
     # Offer a New File
     def offerNewFile(self, file):
         # TODO
+        # CNode_helper.post_file(file_size, id_size, filename)
         print("Announcing a new file is being offered: ", file)
     
     # Announce a file is no longer being offered:
     def removeOfferedFile(self, file):
         # TODO:
-        print(file.getName(), " is no longer being offered")
+        # need corresponding protocol message?
+        print(f"{file} is no longer being offered")
     
     # Disconnect from the network:
     def disconnect(self):
         # TODO:
+        # CNode_helper.send_disconnect()
         print("Disconnected from the network. Goodbye!")
 
+    # Return a stirng informing user about the usage
+    def usage_statement(self):
+        print("usage statement stub")
+        pass
 
-   # TODO: run() method of the listener: constantly listen for input and parse it out:
+
+    # TODO: run() method of the listener: constantly listen for input and parse it out:
     # I Think SNode_helpers can 'help' with parsing and calling these methods
     def run(self):
         while True:
@@ -113,10 +128,3 @@ class InputListener(threading.Thread):
                 print(f"command not recognized {input_tks[0]}")
                 # Then, print out list of possible commmands:
                 print(self.usage_statement())
-
-
-
-
-
-
-
