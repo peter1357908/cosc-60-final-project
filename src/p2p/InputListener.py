@@ -50,35 +50,70 @@ class InputListener(threading.Thread):
         print("Disconnected from the network. Goodbye!")
 
 
-    # TODO: run() method of the listener: constantly listen for input and parse it out:
+   # TODO: run() method of the listener: constantly listen for input and parse it out:
     # I Think SNode_helpers can 'help' with parsing and calling these methods
     def run(self):
-        while true:
+        while True:
+            # # If the command requires a file as an arg: 
+            #     fileID = 'parsed'
+            #     offerer = 'parsed'
+            #     fileInfo = 'parsed'
+            #     name = 'parsed'
+            #     file = File(fileID, offerer, fileInfo, name)
+            #     downloadIP = file.getOfferer()
+
             # Parse out user input
-                
-                # If the command requires a file as an arg: 
-                    fileID = 'parsed'
-                    offerer = 'parsed'
-                    fileInfo = 'parsed'
-                    name = 'parsed'
-                    file = File(fileID, offerer, fileInfo, name)
+            user_input = input("> ")
 
-                    downloadIP = file.getOfferer()
+            if not user_input:
+                continue
+            if user_input.isspace():
+                continue
 
-            # If input is request for information:
-                self.requestDHT()
-            # Else if input is to begin a download:
-                self.beginDownload(downloadIP, file)
-            # Else if input is to offer a new file:
-                self.offerNewFile(file)
-            # Else if input is to remove a file currently offered:
-                self.removeOfferedFile(file)
-            # Else if input is to disconnect from the network:
-                self.disconnect()
-            # Else:
-                print("Unknown Command.")
+            # user input tokens are space delimited
+            input_tks = user_input.split(" ")
+            assert len(input_tks) > 0
+            print(f"input tks are {input_tks}")
+            if input_tks[0] == "req":
+                assert len(input_tks) >= 2
+                if input_tks[1] == "files":
+                    # If input is request for information:
+                    all_dht = False
+                    if len(input_tks) >= 3 and input_tks[2] == "all":
+                        all_dht = True
+                    self.requestDHT(all_dht)
+                elif input_tks[1] == "supernodes":
+                    self.request_supernodes()
+                elif input_tks[1] == "dl":
+                    assert len(input_tks) >= 4
+                    # Else if input is to begin a download:
+                    file_id = input_tks[2]
+                    # TODO: need to add validation for IP:port
+                    file_host = input_tks[3].split(":")
+                    file = None
+                    downloadIP = None
+                    self.beginDownload(downloadIP, file)
+            elif input_tks[0] == "post":
+                assert len(input_tks) >= 2
+
+                if input_tks[1] == "offer":
+                    assert len(input_tks) >= 3
+                    # Else if input is to offer a new file:
+                    file_id = input_tks[2]
+                    self.offerNewFile(file=None)
+                elif input_tks[1] == "rm":
+                    assert len(input_tks) >= 3
+                    file_id = input_tks[2]
+                    self.removeOfferedFile(file=None)
+                elif input_tks[1] == "disconnect":
+                    # Else if input is to disconnect from the network
+                    self.disconnect()
+
+            else:
+                print(f"command not recognized {input_tks[0]}")
                 # Then, print out list of possible commmands:
-            
+                print(self.usage_statement())
+
 
 
 
