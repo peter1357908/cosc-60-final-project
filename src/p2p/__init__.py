@@ -8,19 +8,28 @@ import FileInfoTable
 # If the connection is successful, then the __init__ file will begin the two main threads
 
 # TODO: Parse the arguments
+
+# TODO: Currently need to specify input argument for determining if the node is
+# joining as a supernode or childnode.
+
+
+
 # If the node is a supernode, supernodeIP is loopback / 127.0.0.1
+# If the node is a childnode, then the IP of the supernode to be joined is an arg
 supernodeIP = 'parsed'
 
-# If a supernode, also include a ChildNodeTable and SupernodeTable
-
+# The file info table to hold the files
 table  = FileInfoTable()
+
+# If a supernode, then the childnode and supernode tables will be intantated
+# in the INputListener thread, since it can check if supernode ip == loopback,
+# and if so instantiate ChildNodeTable and SupernodeTable
 
 
 # Attempt to connect to the supernode:
 #####
 
 # TODO: MRT CODE GOES HERE
-
 
 #####
 
