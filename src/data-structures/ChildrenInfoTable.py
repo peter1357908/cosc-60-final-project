@@ -5,8 +5,8 @@
 #
 # value: a Python Set of File IDs (strings of arbitrary length)
 #
-# (IPv4 addresses are 4 bytes in length and in network byte order)
-# (Port numbers are 2 bytes in length and in network byte order)
+# (IPv4 addresses should be a 12-byte human-readable ASCII string;
+#  Port number should be a 5-byte human-readable  ASCII string)
 # (assumes sane input; does not check input sanity)
 
 class ChildrenInfoTable:

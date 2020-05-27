@@ -11,7 +11,7 @@ nodes [here](https://gitlab.cs.dartmouth.edu/hyperistic/cosc-60-final-project/bl
 
 Note: this document uses GitHub Markdown tables to represent the structure of a transmission. Each cell of a table should correspond to a 2 byte field. Fields that end with an ellipsis have arbitrary length.
 
-All number fields (e.g. `Value Length` are binary and in network byte order (as opposed to ASCII/string form).
+All IPv4 addresses are represented by a 12-byte ASCII string, and all port numbers are represented by a 5-byte ASCII string. All other numbers (e.g. `Message Length`, `File ID Length`) are binary and in network byte order.
 
 The general structure of a packet on our network will be:
 
@@ -35,8 +35,8 @@ being 2 bytes in length:
 
 | Type | Message Length (in bytes) |
 | ---- | ---- |
-| Source IPv4 | Source IPv4 | 
-| Source Port | Message ... |
+| Source IPv4 ... | Source Port ... |
+| Message ... |
 
 * `Type` specifies if the message is a(n):
 
@@ -47,9 +47,9 @@ being 2 bytes in length:
 
 * `Message Length` is the length of the `Message` part of the transmission.
 
-* `Source IPv4` is the IPv4 address of the initial creator of the message, in case the message needs to be forwarded (in network byte order).
+* `Source IPv4` is the IPv4 address of the initial creator of the message, in case the message needs to be forwarded.
 
-* `Source Port` is the port number the source is listening on (in network byte order)
+* `Source Port` is the port number the source is listening on
 
 * `Message` is the payload of the transmission (whose composition is specified below).
 
@@ -81,9 +81,9 @@ being 2 bytes in length:
     
     Each `supernode entry` has the following format:
 
-    | IPv4 | IPv4 | Port |
-    | ---- | ---- | ---- |
-
+    | IPv4 ... | Port ... |
+    | ---- | ---- |
+    
   * If `request type` is `0000`, the receiver recognizes `(Source IPv4, Source Port)` as a paired childnode (and keep track of it).
 
   * If `request type` is `0001` or `0002`, the receiver recognizes `(Source IPv4, Source Port)` as a known supernode (and keep track of it).
@@ -109,8 +109,8 @@ being 2 bytes in length:
   
   Each `supernode entry` has the following format:
 
-  | IPv4 | IPv4 | Port |
-  | ---- | ---- | ---- |
+  | IPv4 ... | Port ... |
+  | ---- | ---- |
   
 #### Request for a supernode's Local-DHT entries (on all files / one file):
 
@@ -136,10 +136,9 @@ being 2 bytes in length:
 
     * Each `File entry` has the following format:
 
-      | Offerer IPv4 | Offerer IPv4 |
-      | ---- | ---- |
-      | Offerer Port | File Size |
-      
+      | Offerer IPv4 ... | Offerer Port ... | File Size |
+      | ---- | ---- | ---- |
+
       Note that the requesting node should distinguish between different supernodes' response by `(Source IPv4, Source Port)`. Knowing which supernode maintains a Local-DHT entry is necessary for crafting the request `000e` below.
   
   For robust-ness, the supernode should always respond to request `000c` (if no entries are found, respond with `number` being `0x000` and no `Local-DHT entry`).
@@ -167,8 +166,8 @@ being 2 bytes in length:
 
   | 000e | File ID length (in bytes) |
   | ---- | ---- |
-  | File ID ... | Offerer IPv4 |
-  | Offerer IPv4 | Offerer Port |
+  | File ID ... | Offerer IPv4 ... |
+  | Offerer Port ... | |
 
   For UDP-holepunching, this message must be sent to the offering node **AND** to the supernode that maintains the file's Local-DHT entry (this information should have been recorded from a request response `100c`).
 

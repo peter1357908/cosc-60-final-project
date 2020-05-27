@@ -3,5 +3,5 @@
 # to cache known supernodes
 #
 # not a specific class; just use a Python List of (IPv4, Port) tuples
-# (IPv4 addresses should be 4 bytes in length and in network byte order;
-#  Port number should be 2 bytes in length and in network byte order)
+# (IPv4 addresses should be a 12-byte human-readable ASCII string;
+#  Port number should be a 5-byte human-readable  ASCII string)
