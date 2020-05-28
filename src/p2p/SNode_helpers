@@ -95,10 +95,11 @@ def msg_parser(msg):
 
         # request for local DHT files
         #TODO: Consider doing parsing(say by comma) instead of maintaining a super rigid structure.
+        #TODO: Alternative ensure that the FileInfoTable is structured in such a way that this is more easily achievable
         if request_type.decode() == '000c':
             request_file_length = msg[8:9]
             if request_file_length.decode() == '0000':
-                #TODO: Do the formatting............................................
+                #TODO: Do the formatting.
                  mrt.mrt_send1(id, str(fInfo)) #TODO: what does str(finfo) look like?
             else:
                 #TODO: Figure out if it is possible to use FIT to get a formatting mandated by the protocol.md
@@ -124,15 +125,15 @@ def msg_parser(msg):
             file_id_length = msg[6:7].decode()
             id_end = 7+int(file_id_length)
             file_id = msg[7: id_end].decode()
-            sender_ip = msg[id_end: id_end+6].decode()
-
-
-            #TODO: clarify approach
-            # forwarding the exact same message may be a pretty bad idea if we go toward scalaibility
-            # how do we know which supernode is responsible for which part of DHT?
-            # finish code that deals with holepunching
-
-
+            # Ensure offerer_addr matches the format of myAddr
+            offerer_addr = '(' + msg[id_end: id_end+6].decode() + ',' + msg[id_end+6, id_end+11].decode() + ')'
+            if not ip_addr == myAddr:
+                    if offerer_addr == myAddr:
+                        #placeholder before adding the actual file
+                        mrt.mrt_send1(id, '7777')
+                    else:
+                        child_id = mrt.ip2id_lut(offerer_addr)
+                        mrt.mrt_send1(child_id, '000e'+str(file_id_length)+str(file_id))
 
     # File-transfer
     if msg_type.decode() == '1111':
@@ -161,3 +162,4 @@ if __name__ == '__main__':
 def append_zeroes(msg, total_len):
     msg = msg + total_len-len(msg) * '0'
     return msg
+    
