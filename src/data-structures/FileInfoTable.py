@@ -21,6 +21,9 @@
 #  Port number should be a 5-byte human-readable  ASCII string)
 # (assumes sane input; does not check input sanity)
 
+# A dictionary of sets that contains all files by a certain offerer
+filesByOfferer = {}
+
 class FileInfo:
 
     def __init__(self, size, maintainer):
@@ -35,6 +38,13 @@ class FileInfoTable:
   # will replace the old fileInfo from the same offerer if it already exists
   def addFileInfo(self, fileID, offerer, fileInfo):
     fileInfoDict = self.tb.get(fileID)
+    
+    # Create a set of files per offerer
+    if filesByOfferer[offerer] is None:
+        filesByOfferer[offerer] = {}
+    filesByOfferer[offerer].add(fileID)
+    
+    
     if fileInfoDict is None:
       fileInfoDict = dict()
       self.tb[fileID] = fileInfoDict
@@ -63,7 +73,8 @@ class FileInfoTable:
   
   # executes removeFileInfoByOfferer() on each fileID in fileIDSet
   def removeAllFileInfoByOfferer(self, fileIDSet, offerer):
-    for fileID in fileIDSet:
+   # for fileID in fileIDSet:
+    for fileID in filesByOfferer[offerer]:
       # the following should be the same as removeFileInfoByOfferer()
       fileInfoDict = self.tb.get(fileID)
       if fileInfoDict is not None:
