@@ -668,7 +668,7 @@ def verify_checksum(data):
 Finds the associated id for a certain ip addr
 '''
 def id_lookup(addr):
-	return ip2id_lut[addr]
+	return ip2id_lut.get(addr)
 
 
 
