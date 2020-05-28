@@ -1,7 +1,7 @@
 import binascii as btasc
 from dataclasses import dataclass
-import FileInfoTable
-import ChildrenInfoTable
+from MSG_Parser_CS60 import FileInfoTable
+from MSG_Parser_CS60 import ChildrenInfoTable
 
 import mrt
 
@@ -33,7 +33,7 @@ def msg_parser(msg):
     msg_len = msg[1:2]
     peer_id = msg[2:4] # NOTE: This is currently unused since we rely on the internal mrt id
     ip_addr = msg[4:6]
-    internal_id = mrt.ip2id_lut(ip_addr.decode()) # TODO: See formatting of ip_addr
+    internal_id = mrt.id_lookup(ip_addr.decode()) # TODO: See formatting of ip_addr
 
     # Post
     if msg_type.decode() == '0001':
@@ -74,7 +74,7 @@ def msg_parser(msg):
                 for supernode in supernode_list:
                     new_sn_msg = '0101' + '0000' + ip_addr.decode() + '000a' + '0002'
                     # Find the mrt assigned id for our supernodes
-                    sup_id = mrt.ip2id_lut(supernode) # TODO: Are there situations where mrt doesn't have this ip?
+                    sup_id = mrt.id_lookup(supernode) # TODO: Are there situations where mrt doesn't have this ip?
                     mrt.mrt_send1(sup_id, new_sn_msg)
 
             # relayed supernode request (supernode informing other supernodes ofa new SN)
@@ -119,7 +119,7 @@ def msg_parser(msg):
         if request_type.decode() == '000d':
             for supernode in supernode_list:
                 #TODO: Interface with client side to use their "000c"
-                sup_id = mrt.ip2id_lut(supernode)
+                sup_id = mrt.id_lookup(supernode)
                 mrt.mrt_send1(sup_id, "")
 
 
@@ -134,7 +134,7 @@ def msg_parser(msg):
                         #placeholder before adding the actual file
                         mrt.mrt_send1(id, '7777')
                     else:
-                        child_id = mrt.ip2id_lut(offerer_addr)
+                        child_id = mrt.id_lookup(offerer_addr)
                         mrt.mrt_send1(child_id, '000e' + '0000' + myAddr + str(file_id_length)+str(file_id))
 
     # File-transfer
@@ -164,3 +164,4 @@ if __name__ == '__main__':
 def append_zeroes(msg, total_len):
     msg = msg + total_len-len(msg) * '0'
     return msg
+    
