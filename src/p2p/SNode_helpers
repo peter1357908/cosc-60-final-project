@@ -29,21 +29,25 @@ Please see procedure.md for more details on the structure of our messages
 '''
 def msg_parser(msg):
     # Grab the data included in the message headers
-    msg_type = msg[0:1]
-    msg_len = msg[1:2]
-    peer_id = msg[2:4] # NOTE: This is currently unused since we rely on the internal mrt id
-    ip_addr = msg[4:6]
+    msg_type = msg[0:4]
+    print(msg_type.decode())
+    msg_len = msg[4:8]
+    print(msg_len.decode())
+    peer_id = msg[8:12] # NOTE: This is currently unused since we rely on the internal mrt id
+    print(peer_id.decode())
+    ip_addr = msg[12:16]
+    print(ip_addr.decode())
     internal_id = mrt.id_lookup(ip_addr.decode()) # TODO: See formatting of ip_addr
-
+    print(internal_id)
     # Post
     if msg_type.decode() == '0001':
-        post_type = msg[6:7]
+        post_type = msg[16:20]
 
         # Offer of a new file
         if post_type.decode() == '000a':
-            file_size = msg[6:7]
-            file_id_length = msg[7:8]
-            file_id = msg[8:9]
+            file_size = msg[20:24]
+            file_id_length = msg[24:28]
+            file_id = msg[28:32]
             fInfo.addFileInfo(file_id.decode(),ip_addr.decode(),file_size.decode())
 
         # Intent to disconnect
@@ -54,8 +58,8 @@ def msg_parser(msg):
 
     # Request
     if msg_type.decode() == '0101':
-        request_type = msg[6:7]
-        misc = msg[7:8]
+        request_type = msg[16:20]
+        misc = msg[20:24]
 
         # joining the network
         if request_type.decode() == '000a':
@@ -99,13 +103,13 @@ def msg_parser(msg):
         #TODO: Consider doing parsing(say by comma) instead of maintaining a super rigid structure.
         #TODO: Alternative ensure that the FileInfoTable is structured in such a way that this is more easily achievable
         if request_type.decode() == '000c':
-            request_file_length = msg[8:9]
+            request_file_length = msg[20:24]
             if request_file_length.decode() == '0000':
                 #TODO: Do the formatting.
                  mrt.mrt_send1(id, '100c' + '0000' + myAddr + str(fInfo)) #TODO: what does str(finfo) look like?
             else:
                 #TODO: Figure out if it is possible to use FIT to get a formatting mandated by the protocol.md
-                file_id = msg[9:9+int(request_file_length)/2].decode()
+                file_id = msg[24:24+int(request_file_length)/2].decode()
                 file_entries= fInfo.getFileInfoDict(file_id)
                 #TODO: File entries having the protocol.md may require some changes to FIT.
                 toSend = str(file_id) + str(len(file_entries)) + str(file_entries)
@@ -124,11 +128,11 @@ def msg_parser(msg):
 
 
         if request_type.decode() == '000e':
-            file_id_length = msg[6:7].decode()
-            id_end = 7+int(file_id_length)
-            file_id = msg[7: id_end].decode()
+            file_id_length = msg[16:20].decode()
+            id_end = 20+int(file_id_length)
+            file_id = msg[20: id_end].decode()
             # Ensure offerer_addr matches the format of myAddr
-            offerer_addr = '(' + msg[id_end: id_end+6].decode() + ',' + msg[id_end+6: id_end+11].decode() + ')'
+            offerer_addr = '(' + msg[id_end: id_end+12].decode() + ',' + msg[id_end+12: id_end+17].decode() + ')'
             if not ip_addr == myAddr:
                     if offerer_addr == myAddr:
                         #placeholder before adding the actual file
@@ -139,7 +143,7 @@ def msg_parser(msg):
 
     # File-transfer
     if msg_type.decode() == '1111':
-        recv_file = msg[7:]
+        recv_file = msg[16:]
     # Indication of error
     if msg_type.decode() == '0000':
         print("Error occured")
@@ -164,4 +168,3 @@ if __name__ == '__main__':
 def append_zeroes(msg, total_len):
     msg = msg + total_len-len(msg) * '0'
     return msg
-    
