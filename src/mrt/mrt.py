@@ -22,7 +22,6 @@ ip2id_lut = {}
 
 buffer_lock = threading.Lock() #buffer lock to help with data races
 
-
 """
 mrt_open: indicate ready-ness to receive incoming connections
 
