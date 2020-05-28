@@ -31,14 +31,14 @@ R_FILE_TRANS = '000e'
 P_NEW_FILE = '000a'
 P_DISCONNECT = '000b'
 
-SUPERNODE_IP = ''
-SUPERNODE_PORT = 0
+SUPERNODE_IP = '192.168.0.249'
+SUPERNODE_PORT = 11235
 SUPERNODE_ID = 0
 
 
 #TODO: GET SOURCE IP USING STUN STUFF
-SOURCE_IP = ''
-SOURCE_PORT = 0
+SOURCE_IP = '1921689249'
+SOURCE_PORT = 12345
 SOCK = 0
 
 """
@@ -54,16 +54,21 @@ Returns an ID connection object
 """
 def connect_p2p(ip = SUPERNODE_IP,port = SUPERNODE_PORT):
 	global SUPERNODE_ID
-	SUPERNODE_ID = mrt_connect(SUPERNODE_IP,SUPERNODE_PORT)
-
+	SUPERNODE_ID = mrt_connect(ip,port)
+	print(SUPERNODE_ID)
 
 """
 Function to get the source ip and port (public) for the client
 TODO: NEED TO INITIALIZE SOCK 
 """
-def get_source_addr():
+def get_source_addr(sock):
 	global SOURCE_IP,SOURCE_PORT
-	SOURCE_IP, SOURCE_PORT = get_address(SOCK)
+	ip, SOURCE_PORT = get_address(sock)
+	SOURCE_PORT = str(SOURCE_PORT).zfill(5)
+	ip = str(ip).split('.')
+	ip = [x.zfill(3) for x in ip]
+	SOURCE_IP = ''.join(ip)
+	print(f'source_ip: {SOURCE_IP}, source_port: {SOURCE_PORT}')
 
 """
 Function to join the network, takes one parameter
@@ -75,9 +80,8 @@ join_type:
 def join_p2p(join_type = 0):
 	values = ''.join([R_JOIN,f'{join_type:04d}'])
 	msg_len = len(values)
-	pre_msg = ''.join([REQUEST,msg_len,SOURCE_IP,SOURCE_PORTvalues])
-	send_msg = binascii.unhexlify(pre_msg)
-	send_p2p_msg(send_msg)
+	msg = ''.join([REQUEST,f'{msg_len:04d}',SOURCE_IP,SOURCE_PORT,values])
+	send_p2p_msg(msg)
 
 
 """
@@ -93,9 +97,8 @@ def request_dht(all_dht=True):
 	else: 
 		values = ''.join([R_LOCAL_DHT])
 	msg_len = len(values)
-	pre_msg = ''.join([REQUEST,msg_len,SOURCE_IP,SOURCE_PORT,values])
-	send_msg = binascii.unhexlify(pre_msg)
-	send_p2p_msg(send_msg)
+	msg = ''.join([REQUEST,f'{msg_len:04d}',SOURCE_IP,SOURCE_PORT,values])
+	send_p2p_msg(msg)
 
 """
 Function to request supernode list
@@ -104,9 +107,8 @@ Takes no parameters
 def request_super_list():
 	values = ''.join([R_LIST])
 	msg_len = len(values)
-	pre_msg = ''.join([REQUEST,msg_len,SOURCE_IP,SOURCE_PORT,values])
-	send_msg = binascii.unhexlify(pre_msg)
-	send_p2p_msg(send_msg)
+	msg = ''.join([REQUEST,f'{msg_len:04d}',SOURCE_IP,SOURCE_PORT,values])
+	send_p2p_msg(msg)
 
 
 """
@@ -117,11 +119,10 @@ PARAMETERS:
 	File ID: string
 """
 def post_file(file_size,id_size,filename):
-	values = ''.join([P_NEW_FILE,file_size,id_size,filename])
+	values = ''.join([P_NEW_FILE,f'{file_size:04d}',f'{id_size:04d}',filename])
 	msg_len = len(values)
-	pre_msg = ''.join([POST,msg_len,SOURCE_IP,SOURCE_PORT,values])
-	send_msg = binascii.unhexlify(pre_msg)
-	send_p2p_msg(send_msg)
+	msg = ''.join([POST,f'{msg_len:04d}',SOURCE_IP,SOURCE_PORT,values])
+	send_p2p_msg(msg)
 
 """
 Function to send request to disconnect
@@ -129,9 +130,8 @@ Function to send request to disconnect
 def send_disconnect():
 	values = ''.join([P_DISCONNECT])
 	msg_len = len(values)
-	pre_msg = ''.join([POST,msg_len,SOURCE_IP,SOURCE_PORT,values])
-	send_msg = binascii.unhexify(pre_msg)
-	send_p2p_msg(send_msg)
+	msg = ''.join([POST,f'{msg_len:04d}',SOURCE_IP,SOURCE_PORT,values])
+	send_p2p_msg(msg)
 
 """
 Function to send the pre-made p2p message. 
