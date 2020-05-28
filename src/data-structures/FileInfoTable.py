@@ -21,6 +21,7 @@
 #  Port number should be a 5-byte human-readable  ASCII string)
 # (assumes sane input; does not check input sanity)
 
+
 # A dictionary of sets that contains all files by a certain offerer
 filesByOfferer = {}
 
@@ -72,7 +73,7 @@ class FileInfoTable:
         self.tb.pop(fileID)
   
   # executes removeFileInfoByOfferer() on each fileID in fileIDSet
-  def removeAllFileInfoByOfferer(self, fileIDSet, offerer):
+  def removeAllFileInfoByOfferer(self, offerer):
    # for fileID in fileIDSet:
     for fileID in filesByOfferer[offerer]:
       # the following should be the same as removeFileInfoByOfferer()
