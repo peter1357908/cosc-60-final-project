@@ -19,6 +19,9 @@ fInfo = FileInfoTable.FileInfoTable()
 childHash = ChildrenInfoTable.ChildrenInfoTable()
 sNode = SuperNode(fInfo,childHash)
 
+myAddr = '(1000,5001)' #TODO: get the actual IP
+myIP = 111111
+myPort = 5001
 
 '''
 A procedure that receives a message from a lower-ranking peer, decoded and responds if necessary.
@@ -26,75 +29,104 @@ Please see procedure.md for more details on the structure of our messages
 '''
 def msg_parser(msg):
     # Grab the data included in the message headers
-    msg_type = btasc.b2a_hex(msg[0:1])
-    msg_len = btasc.b2a_hex(msg[1:2])
-    peer_id = btasc.b2a_hex(msg[2:4]) # TODO: Figure out how to make this play well with the mrt id's, if at all
-    ip_addr = btasc.b2a_hex(msg[4:6])
+    msg_type = msg[0:1]
+    msg_len = msg[1:2]
+    peer_id = msg[2:4] # NOTE: This is currently unused since we rely on the internal mrt id
+    ip_addr = msg[4:6]
+    internal_id = mrt.ip2id_lut(ip_addr.decode()) # TODO: See formatting of ip_addr
 
     # Post
     if msg_type.decode() == '0001':
-        post_type = btasc.b2a_hex(msg[6:7])
+        post_type = msg[6:7]
+
+        # Offer of a new file
         if post_type.decode() == '000a':
-            file_size = btasc.b2a_hex(msg[6:7])
-            file_id_length = btasc.b2a_hex(msg[7:8])
-            file_id = btasc.b2a_hex(msg[8:9])
+            file_size = msg[6:7]
+            file_id_length = msg[7:8]
+            file_id = msg[8:9]
             fInfo.addFileInfo(file_id.decode(),ip_addr.decode(),file_size.decode())
 
-
+        # Intent to disconnect
         if post_type.decode() == '000b':
-            file_id = btasc.b2a_hex(msg[7:8])
-            fInfo.removeFileInfoByOfferer(file_id.decode(), ip_addr.decode())
+            #Removes all files by this ip address
+            fInfo.removeAllFileInfoByOfferer(ip_addr.decode())
 
 
     # Request
     if msg_type.decode() == '0101':
-        request_type = btasc.b2a_hex(msg[6:7])
-        misc = btasc.b2a_hex(msg[7:8])
+        request_type = msg[6:7]
+        misc = msg[7:8]
 
-        # If joining as a regular node, send only the list of current supernodes
+        # joining the network
         if request_type.decode() == '000a':
             r_misc = misc.decode()
-
+            # join as a regular node
             if r_misc == '0000':
                 response_type = '100a'
                 snodes_num = str(len(supernode_list))
                 response = response_type+snodes_num+str(supernode_list)#Remove first and last char of list upon receiving
-                # sends a message to id, which is returne upon our call to connect(in main)
-                mrt.mrt_send1(id, btasc.a2b_hex(response))
+                # id is returned by accept1()
+                mrt.mrt_send1(id, response)
 
+            # join as a supernode
             elif r_misc == '0001':
                 for supernode in supernode_list:
                     new_sn_msg = '000a' + '0002' + ip_addr.decode()
-                    #TODO: Figure out how we want to deal with cases where ip is not in senders in mrt
-                    mrt.mrt_send1(supernode, btasc.a2b_hex(new_sn_msg))
+                    # Find the mrt assigned id for our supernodes
+                    sup_id = mrt.ip2id_lut(supernode) # TODO: Are there situations where mrt doesn't have this ip?
+                    mrt.mrt_send1(sup_id, new_sn_msg)
 
+            # relayed supernode request (supernode informing other supernodes ofa new SN)
             elif r_misc == '0002':
                 #Note that IP will be a string
                 supernode_list.append(ip_addr.decode())
 
+            # error
             else:
-                mrt.mrt_send1(ip_addr.decode(), btasc.a2b_hex('0000'))
+                mrt.mrt_send1(ip_addr.decode(), '0000')
 
+        # request supernode list
         if request_type.decode() == '000b':
             response_type = '100b'
             snodes_num = str(len(supernode_list))
             response = response_type + snodes_num + str(supernode_list)
             # sends a message to the id returned by accept1
-            mrt.mrt_send1(id, btasc.a2b_hex(response))
+            mrt.mrt_send1(id, response)
 
+        # request for local DHT files
+        #TODO: Consider doing parsing(say by comma) instead of maintaining a super rigid structure.
         if request_type.decode() == '000c':
-            #TODO: Figure out the parsing of the Hash
-            mrt.mrt_send1(id, str(fInfo))
+            request_file_length = msg[8:9]
+            if request_file_length.decode() == '0000':
+                #TODO: Do the formatting............................................
+                 mrt.mrt_send1(id, str(fInfo)) #TODO: what does str(finfo) look like?
+            else:
+                #TODO: Figure out if it is possible to use FIT to get a formatting mandated by the protocol.md
+                file_id = msg[9:9+int(request_file_length)/2].decode()
+                file_entries= fInfo.getFileInfoDict(file_id)
+                #TODO: File entries having the protocol.md may require some changes to FIT.
+                toSend = str(file_id) + str(len(file_entries)) + str(file_entries)
+                if toSend:
+                    mrt.mrt_send1(id, toSend)
+                #error
+                else:
+                    mrt.mrt_send1(id, '0000')
 
+        # TODO: relay the DHT request
         if request_type.decode() == '000d':
-            #TODO: Seems like a messy way of doing this
             for supernode in supernode_list:
-                #TODO: See if we can have MRT work with ip-addresses
                 #TODO: Interface with client side to use their "000c"
-                mrt.mrt_send1(supernode, "")
+                sup_id = mrt.ip2id_lut(supernode)
+                mrt.mrt_send1(sup_id, "")
 
 
         if request_type.decode() == '000e':
+            file_id_length = msg[6:7].decode()
+            id_end = 7+int(file_id_length)
+            file_id = msg[7: id_end].decode()
+            sender_ip = msg[id_end: id_end+6].decode()
+
+
             #TODO: clarify approach
             # forwarding the exact same message may be a pretty bad idea if we go toward scalaibility
             # how do we know which supernode is responsible for which part of DHT?
@@ -107,13 +139,14 @@ def msg_parser(msg):
         recv_file = msg[7:]
     # Indication of error
     if msg_type.decode() == '0000':
+        print("Error occured")
         # TODO: Figure out what we want to do... Perhaps have more details on what type of error this is.. Resend request? Send to different server..
 
 
 #TODO: MOVE MAIN INTO SEPARATE FILE
 if __name__ == '__main__':
     # Starts listening to connections
-    mrt.mrt_open() #TODO: Supply host IP and appropriate PORT
+    mrt.mrt_open(myIP,myPort) #TODO: Supply host IP and appropriate PORT
 
     supernode_list = []
 
@@ -123,3 +156,8 @@ if __name__ == '__main__':
         id = mrt.mrt_accept1()
         message = mrt.mrt_receive1(id)
         msg_parser(message)
+
+
+def append_zeroes(msg, total_len):
+    msg = msg + total_len-len(msg) * '0'
+    return msg
