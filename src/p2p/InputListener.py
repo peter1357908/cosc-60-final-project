@@ -18,6 +18,9 @@ class InputListener(threading.Thread):
         if supernodeIP == "127.0.0.1":
             self.childTable = ChildInfoTable()
             self.superList = SupernodeList()
+        get_source_addr() # set your own ip and port values from STUN server
+        connect_p2p(ip = self.supernodeIP, port = 5000) #connect to the p2p via port 5000 (handshake)
+        join_p2p() #join the network 
 
     # Methods for handling each parsed case:
     # A note on the following methods: "file" is always a File Object.
@@ -28,22 +31,28 @@ class InputListener(threading.Thread):
         if all_dht:
             print("requesting entire DHT")
         print("Requested DHT from ", self.supernodeIP)
+        request_dht(all_dht)
 
     # Request list of supernodes
     def request_supernodes(self):
         # TODO
         # CNode_helper.request_super_list()
         print("requesting all the supernodes")
+        request_super_list()
 
     # Begin a download:
     def beginDownload(self, downloadIP, file):
         # downloader = Downloader(self.supernodeIP, downloadIP, file)
         # downloader.start()
         print("Attempting to download from ", downloadIP)
+        request_file(file,supernodeIP,5001)
+
+        #TODO FIGURE OUT HOLE PUNCHING HERE
     
     # Offer a New File
     def offerNewFile(self, file):
-        # TODO
+        # TODO:
+            # STILL NEED TO FIGURE OUT FILE SIZE ETC AS PARAMETERS
         # CNode_helper.post_file(file_size, id_size, filename)
         print("Announcing a new file is being offered: ", file)
     
@@ -55,9 +64,9 @@ class InputListener(threading.Thread):
     
     # Disconnect from the network:
     def disconnect(self):
-        # TODO:
         # CNode_helper.send_disconnect()
         print("Disconnected from the network. Goodbye!")
+        send_disconnect()
 
     # Return a stirng informing user about the usage
     def usage_statement(self):
