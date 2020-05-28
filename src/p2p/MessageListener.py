@@ -97,48 +97,48 @@ class MessageListener(threading.Thread):
             #TODO: Check the type of the packet:
             messageType = 'parsed'
             
-            if messageType == "Post"    # If the message is a post:
+            if messageType == "Post":    # If the message is a post:
                 # TODO: Now, parse the Post Type:
                 postType == "parsed"
-                if postType == "New File Offered"   # If the message announces a new file
+                if postType == "New File Offered":   # If the message announces a new file
                     # TODO: parse out necessary info for the file list (usually a list with 1 file)
                     self.addFiles(files)
-                else if postType == "Disconnect"    # If the messages announces a disconnect
+                else if postType == "Disconnect":    # If the messages announces a disconnect
                     # Note: a child node will never receive this message, since
                     # our network is a "structured" p2p network
                     # TODO: Parse out the disconnecting IP
                     self.processDisconnect(disconnectedIP)
-            else if messageType == "Request"    # If the message is a request:
+            else if messageType == "Request":    # If the message is a request:
                 # TODO: Now, parse the Request Type
                 requestType == "parsed"
-                if requestType == "Child Join Network"
+                if requestType == "Child Join Network":
                     # Note: a child node will never receive this message, since
                     # our network is a "structured" p2p network
                     # TODO: Parse out joining IP
                     self.acceptConnection(connectedIP)
-                else if requestType == "Supernode Join Network"
+                else if requestType == "Supernode Join Network":
                     # Note: a child node will never receive this message, since
                     # our network is a "structured" p2p network
                     # TODO: Parse out joining IP
                     self.acceptSupernodeConnection(connectedIP)
-                else if requestType == "Supernode List"
+                else if requestType == "Supernode List":
                     # Note: a child node will never receive this message, since
                     # our network is a "structured" p2p network
                     # TODO: Parse out IP to send Supernode List back to
                     self.sendBackSupernodeList(destinationIP)
-                else if requestType == "Local DHT"
+                else if requestType == "Local DHT":
                     # Note: a child node will never receive this message, since
                     # our network is a "structured" p2p network
                     # TODO: Parse out IP to send Local DHT back to
                     # TODO: Craft packet with local DHT to send
                     # TODO: Send Packet
                     self.sendBackLocalHT(destinationIP)
-                else if requestType == "Request All DHT"
+                else if requestType == "Request All DHT":
                     # Note: a child node will never receive this message, since
                     # our network is a "structured" p2p network
                     # TODO: Parse out IP to send DHT back to (should be a child node of this node, or it will be itself)
                     self.sendBackHT(destinationIP)
-                else if requestType == "File Transfer"
+                else if requestType == "File Transfer":
                     # This type of message is used for UDP holepunching.
                     # NOTE: I'm not entirely sure how this works. Is this like a handshake? A hello message?
                     # Perhaps this is used to initiate a download...?
@@ -146,19 +146,19 @@ class MessageListener(threading.Thread):
                     # Peter, do you mind writing / commenting this section of the code
                     # Since you devised that aspect of our protocol>?
                     self.acceptDownload(file, destinationIP)
-            else if messageType == "File Transfer"  # If the message is a File Transfer / Download:
+            else if messageType == "File Transfer":  # If the message is a File Transfer / Download:
                 # This message contains the binary data of the file.
                 # I would assume this message shouldn't be received on this port (5000)
                 # but only on the "File Transfer" port (5001) by the "File Receiver " Thread
                 # I put passOn here so that messages-in-transit could be sent to this port
                 # and messages-arriving-at-destination would be sent to port 5001
                 self.passOn(destinationIP)
-            else if messageType == "Error Indication"   # If the message is an error:
+            else if messageType == "Error Indication":   # If the message is an error:
                 # Its error time boyyyeeeee
                 # I don't think we specify error types as of now, so this is the default error message:
                 print("Unknown message type...now detonating computer.")
             
-            else    # If the Message Type is unknown:
+            else:    # If the Message Type is unknown:
                 print("Unknown Message Type.")
             
 
