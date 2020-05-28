@@ -18,6 +18,8 @@ conn_count = 0
 sock = 0
 recently_closed = []
 
+ip2id_lut = {}
+
 buffer_lock = threading.Lock() #buffer lock to help with data races
 
 
@@ -595,6 +597,9 @@ def reg_conn(packet,addr):
 	c = Connection(conn_id,packet.frag,addr)
 	conns[conn_count] = c
 	conn_queue.append(c)
+	# A small edit to enable the look up of IP addresses
+	ip2id_lut[addr] = c.get_id
+
 
 """
 Pads ints to have four bytes ascii
@@ -658,5 +663,13 @@ def verify_checksum(data):
 	csum_recv = int.from_bytes(data[:4],'big') # Get the first 4 bytes
 	csum_calc = ichecksum(data[4:].decode())
 	return csum_recv - csum_calc
+
+
+'''
+Finds the associated id for a certain ip addr
+'''
+def id_lookup(addr):
+	return ip2id_lut[addr]
+
 
 
