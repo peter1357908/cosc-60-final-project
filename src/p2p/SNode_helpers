@@ -64,14 +64,15 @@ def msg_parser(msg):
             if r_misc == '0000':
                 response_type = '100a'
                 snodes_num = str(len(supernode_list))
-                response = response_type+snodes_num+str(supernode_list)#Remove first and last char of list upon receiving
+                msg = snodes_num + str(supernode_list)#Remove first and last char of list upon receiving
+                response = response_type + '0000' + myAddr + str(len(msg))+msg
                 # id is returned by accept1()
                 mrt.mrt_send1(id, response)
 
             # join as a supernode
             elif r_misc == '0001':
                 for supernode in supernode_list:
-                    new_sn_msg = '000a' + '0002' + ip_addr.decode()
+                    new_sn_msg = '0101' + '0000' + ip_addr.decode() + '000a' + '0002'
                     # Find the mrt assigned id for our supernodes
                     sup_id = mrt.ip2id_lut(supernode) # TODO: Are there situations where mrt doesn't have this ip?
                     mrt.mrt_send1(sup_id, new_sn_msg)
@@ -79,6 +80,7 @@ def msg_parser(msg):
             # relayed supernode request (supernode informing other supernodes ofa new SN)
             elif r_misc == '0002':
                 #Note that IP will be a string
+
                 supernode_list.append(ip_addr.decode())
 
             # error
@@ -89,7 +91,7 @@ def msg_parser(msg):
         if request_type.decode() == '000b':
             response_type = '100b'
             snodes_num = str(len(supernode_list))
-            response = response_type + snodes_num + str(supernode_list)
+            response = response_type + '0000' + myAddr + snodes_num + str(supernode_list)
             # sends a message to the id returned by accept1
             mrt.mrt_send1(id, response)
 
@@ -100,7 +102,7 @@ def msg_parser(msg):
             request_file_length = msg[8:9]
             if request_file_length.decode() == '0000':
                 #TODO: Do the formatting.
-                 mrt.mrt_send1(id, str(fInfo)) #TODO: what does str(finfo) look like?
+                 mrt.mrt_send1(id, '100c' + '0000' + myAddr + str(fInfo)) #TODO: what does str(finfo) look like?
             else:
                 #TODO: Figure out if it is possible to use FIT to get a formatting mandated by the protocol.md
                 file_id = msg[9:9+int(request_file_length)/2].decode()
@@ -108,7 +110,7 @@ def msg_parser(msg):
                 #TODO: File entries having the protocol.md may require some changes to FIT.
                 toSend = str(file_id) + str(len(file_entries)) + str(file_entries)
                 if toSend:
-                    mrt.mrt_send1(id, toSend)
+                    mrt.mrt_send1(id, '100c' + '0000' + myAddr + toSend)
                 #error
                 else:
                     mrt.mrt_send1(id, '0000')
@@ -126,14 +128,14 @@ def msg_parser(msg):
             id_end = 7+int(file_id_length)
             file_id = msg[7: id_end].decode()
             # Ensure offerer_addr matches the format of myAddr
-            offerer_addr = '(' + msg[id_end: id_end+6].decode() + ',' + msg[id_end+6, id_end+11].decode() + ')'
+            offerer_addr = '(' + msg[id_end: id_end+6].decode() + ',' + msg[id_end+6: id_end+11].decode() + ')'
             if not ip_addr == myAddr:
                     if offerer_addr == myAddr:
                         #placeholder before adding the actual file
                         mrt.mrt_send1(id, '7777')
                     else:
                         child_id = mrt.ip2id_lut(offerer_addr)
-                        mrt.mrt_send1(child_id, '000e'+str(file_id_length)+str(file_id))
+                        mrt.mrt_send1(child_id, '000e' + '0000' + myAddr + str(file_id_length)+str(file_id))
 
     # File-transfer
     if msg_type.decode() == '1111':
@@ -162,4 +164,3 @@ if __name__ == '__main__':
 def append_zeroes(msg, total_len):
     msg = msg + total_len-len(msg) * '0'
     return msg
-    
