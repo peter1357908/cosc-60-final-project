@@ -124,6 +124,25 @@ def post_file(file_size,id_size,filename):
 	msg = ''.join([POST,f'{msg_len:04d}',SOURCE_IP,SOURCE_PORT,values])
 	send_p2p_msg(msg)
 
+
+"""
+Function to request a file
+PARAMETERS:
+	file_id: str
+	ip: ip string in standard format ie 'xxx.xxx.xxx.xxx'
+	port: integer
+"""
+def request_file(file_id,ip,port):
+	id_len = len(file_id)
+	ip = str(ip).split('.')
+	ip = [x.zfill(3) for x in ip]
+	ip = ''.join(ip)
+	port = port.zfill(5)
+	values = ''.join([R_FILE_TRANS,f'{id_len:04d}',file_id,ip,port])
+	msg_len = len(values)
+	msg = ''.join([REQUEST,f'{msg_len:04d}',SOURCE_IP,SOURCE_PORT,values])
+
+
 """
 Function to send request to disconnect
 """
