@@ -82,12 +82,12 @@ def main():
     #     exit(-1)
 
     # Begin The User Input Thread
-    inputListener = InputListener(supernodeIP)
+    inputListener = InputListener.InputListener(supernodeIP)
     inputListener.start()
     
     # Begin The Packet / main Listener Thread
-    mainListener = MainListener(supernodeIP)
-    MainListener.start()
+    mainListener = MainListener.MainListener(supernodeIP)
+    mainListener.start()
 
 if __name__ == "__main__":
     main()
