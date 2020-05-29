@@ -1,17 +1,14 @@
 #! /usr/bin/python3
 
 import threading
-import InputListener
 import MainListener
 import sys
 sys.path.append('../mrt/')
 sys.path.append('../../../src/data-structures/')
-import FileInfoTable
 import argparse
 import CNode_helper
 import mrt
-import sys
-
+import socket
 
 # CONST VARIABLES
 # TODO: need to change this to an established supernode
@@ -81,23 +78,11 @@ def main():
     # if not res:
     #     print(f"failed to connect to supernode at address {HARDCODED_SUPERNODE_IP}:{HARDCODED_SUPERNODE_PORT}")
     #     exit(-1)
-
-    # Begin The User Input Thread
-<<<<<<< HEAD
-    inputListener = InputListener(isSupernode, table)
-    inputListener.start()
-    
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sourceIP, sourcePort = CNode_helper.get_source_addr(sock)
     # Begin The Packet / main Listener Thread
-    mainListener = MainListener(isSupernode, table)
-    MainListener.start()
-=======
-    inputListener = InputListener.InputListener(supernodeIP)
-    inputListener.start()
-    
-    # Begin The Packet / main Listener Thread
-    mainListener = MainListener.MainListener(supernodeIP)
+    mainListener = MainListener.MainListener(isSupernode, sourceIP, sourcePort)
     mainListener.start()
->>>>>>> d3495a42beb370ade04c8b7f83d3e344f42c1a92
 
 if __name__ == "__main__":
     main()
