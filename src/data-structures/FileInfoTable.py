@@ -17,10 +17,16 @@
 #               this offer's DHT entry. (The supernode should also
 #               be the offerer's bootstrapping node)
 #
+# For ease of constructing and parsing P2P messages, FileInfoTable has
+# __len__(), __repr(), importByString(), and getFileInfoTableByID()
+#
 # (IPv4 addresses should be a 12-byte human-readable ASCII string;
 #  Port number should be a 5-byte human-readable  ASCII string)
 # (assumes sane input; does not check input sanity)
 
+NUMBER_LENGTH = 4
+IPv4_LENGTH = 12
+PORT_LENGTH = 5
 
 class FileInfo:
   def __init__(self, size, maintainer):
@@ -41,21 +47,58 @@ class FileInfoTable:
       self.tb[fileID] = fileInfoDict
     fileInfoDict[offerer] = fileInfo
 
-  # returns the inner dictionary object corresponding to the specified fileID
+  # returns the underlying dictionary object corresponding
+  # to the specified fileID
   def getFileInfoDictByID(self, fileID):
     return self.tb.get(fileID)
 
-  # 
-  def getTable()
+  # note that the data strcuture for the "table" is a Python Dictionary
+  def getTable(self):
+    return self.tb
 
-  # returns a FileInfoTable object (so the user can call str() on it)
+  # returns a newly instantiated FileInfoTable object with only one entry:
+  # the fileID to its fileInfoDict (to enable usage of __repr__(self))
   def getFileInfoTableByID(self, fileID):
-
-  # 
-  def importByString(self, string):
+    fileInfoDict = self.tb.get(fileID)
+    if fileInfoDict is None:
+      return None
+    # DANGEROUS: nested class usage... might be a better way to this
+    newFileInfoTable = FileInfoTable()
+    newFileInfoTable.tb[fileID] = fileInfoDict
+    return newFileInfoTable
   
+  # only for handling the content of "request response 100c"
+  # maintainer should be the (Source IPv4, Source port) string tuple
+  # from the "request response 100c" message in question
+  def importByString(self, string, maintainer):
+    numLDHTEntries = int(string[0:NUMBER_LENGTH])
+    fileEntryIndex = NUMBER_LENGTH
+    for _i in range(numLDHTEntries):
+      fileIDLength = int(string[fileEntryIndex:fileEntryIndex+NUMBER_LENGTH])
+      fileIDIndex = fileEntryIndex + NUMBER_LENGTH
+      fileID = string[fileIDIndex:fileIDIndex+fileIDLength]
 
-  
+      fileInfoDict = self.tb.get(fileID)
+      if fileInfoDict is None:
+          fileInfoDict = dict()
+          self.tb[fileID] = fileInfoDict
+
+      numFileEntriesIndex = fileIDIndex + fileIDLength
+      numFileEntries = int(string[numFileEntriesIndex:numFileEntriesIndex+4])
+      IPv4Index = numFileEntriesIndex + NUMBER_LENGTH
+      for _j in range(numFileEntries):
+        offererIPv4 = string[IPv4Index:IPv4Index+IPv4_LENGTH]
+        PortIndex = IPv4Index + IPv4_LENGTH
+        offererPort = string[PortIndex:PortIndex+PORT_LENGTH]
+        fileSizeIndex = PortIndex + PORT_LENGTH
+        fileSize = int(string[fileSizeIndex:fileSizeIndex+NUMBER_LENGTH])
+        IPv4Index = fileSizeIndex + NUMBER_LENGTH
+
+        fileInfo = FileInfo(fileSize, maintainer)
+        fileInfoDict[(offererIPv4, offererPort)] = fileInfo
+      
+      # by this point IPv4Index from inside the file entry loop actually points to the next file entry
+      fileEntryIndex = IPv4Index
 
   def hasFile(self, fileID):
     return (fileID in self.tb)
@@ -85,22 +128,24 @@ class FileInfoTable:
         if not fileInfoDict:
           self.tb.pop(fileID)
   
-  # corresponds to `Number of Local-DHT entries` for "request response 100c"
+  # return the number of (distinct) FileIDs
   def __len__(self):
+    return len(self.tb)
 
-  # corresponds to `Local-DHT entries` for "request response 100c"
+  # essentially the message value for "request response 100c"
+  # (which includes everything except the message type "100c")
   def __repr__(self):
-    files = self.tb.keys()  # all files
-    return_string = str(len(files))
-    for file in files:  # each files
-        # dictionary of (IP,port) that have the file
-        values = self.tb.get(file)
-        return_string += str(len(file)) + str(file) + str(len(values))
-        for value in values:  # one (ip,port)
-            FileInfoObj = values.get(value)
-            return_string += str(append_zeroes(value[0], 12)) + str(
-                append_zeroes(value[1], 5)) + str(FileInfoObj.size)
-
-def append_zeroes(msg, total_len):
-    msg = msg + total_len-len(msg) * '0'
-    return msg
+    fileIDs = self.tb.keys()
+    numLDHTEntries = len(fileIDs)
+    if numLDHTEntries == 0:
+      return '0000'
+    
+    return_string = f'{numLDHTEntries:04d}'
+    for fileID in fileIDs:
+      fileInfoDict = self.tb.get(fileID)
+      return_string += f'{len(fileID):04d}{fileID}{len(fileInfoDict):04d}'
+      for offerer in fileInfoDict:
+        fileInfo = fileInfoDict.get(offerer)
+        return_string += f'{offerer[0]}{offerer[1]}{fileInfo.size:04d}'
+    
+    return return_string
