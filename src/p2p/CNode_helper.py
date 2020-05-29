@@ -10,6 +10,7 @@ import socket
 import binascii
 from mrt import * 
 from stun import *
+import socket
 
 """ DEFINITIONS """
 POST = '0001'
@@ -47,6 +48,18 @@ SOURCE IPV4 ETC
 ALSO I THINK THAT WE NEED TO HAVE SOURCE PORT IN THERE 
 AS WELL 
 """
+
+
+def startup():
+	global SOCK
+	SOCK = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+
+
+def punch(ip,port):
+	SOCK.sendto('hi'.encode(),(ip,port))
+
+def recv():
+	data,addr = SOCK.recvfrom(2048)
 
 """
 Connects to supernode using mrt_connect
@@ -158,5 +171,5 @@ Message must be in binary (use binascii.unhexlify)
 Sends to SUPERNODE_ID
 """
 def send_p2p_msg(msg):
-	mrt_send1(SUPERNODE_ID,msg)
-
+	#mrt_send1(SUPERNODE_ID,msg)
+	SOCK.sendto(msg.encode(),())
