@@ -74,14 +74,22 @@ def connect_p2p(ip = SUPERNODE_IP,port = SUPERNODE_PORT):
 Function to get the source ip and port (public) for the client
 TODO: NEED TO INITIALIZE SOCK 
 """
-def get_source_addr(sock):
+def set_source_addr(sock):
 	global SOURCE_IP,SOURCE_PORT
 	ip, SOURCE_PORT = get_address(sock)
 	SOURCE_PORT = str(SOURCE_PORT).zfill(5)
 	ip = str(ip).split('.')
 	ip = [x.zfill(3) for x in ip]
 	SOURCE_IP = ''.join(ip)
-	return (SOURCE_IP,SOURCE_PORT)
+	print(f'source_ip: {SOURCE_IP}, source_port: {SOURCE_PORT}')
+
+def get_source_addr(sock):
+	ip, port = get_address(sock)
+	port = str(port).zfill(5)
+	ip = str(ip).split('.')
+	ip = [x.zfill(3) for x in ip]
+	ip = ''.join(ip)
+	return (ip,port)
 	print(f'source_ip: {SOURCE_IP}, source_port: {SOURCE_PORT}')
 
 """
