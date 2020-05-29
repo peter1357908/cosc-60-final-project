@@ -20,9 +20,9 @@ def receiveFile(self):
     # Parse the file messages to learn how many packets the file uses
     # Reconstruct the file
     # Save the file
-    print()
+    pass
 
 def run(self):
     # Start listening on the download port (to be specified)
     # call Receive File
-    print()
+    pass
