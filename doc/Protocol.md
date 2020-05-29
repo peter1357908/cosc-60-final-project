@@ -72,7 +72,7 @@ being 4 bytes in length:
 
 * Response:
 
-  * If `request type` is `0000` or `0001`, the receiver sends the following response to the requester.
+  * If `request type` is `0000` or `0001`, the receiver sends the following response to the requester (the `Supernode entries` should not contain the requesting node).
 
     | 100a | Number of supernode entries | Supernode entries ... |
     | ---- | ---- | ---- |
