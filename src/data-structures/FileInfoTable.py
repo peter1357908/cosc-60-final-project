@@ -23,10 +23,9 @@
 
 
 class FileInfo:
-
-    def __init__(self, size, maintainer):
-      self.size = size
-      self.maintainer = maintainer
+  def __init__(self, size, maintainer):
+    self.size = size
+    self.maintainer = maintainer
 
 class FileInfoTable:
 
@@ -42,9 +41,22 @@ class FileInfoTable:
       self.tb[fileID] = fileInfoDict
     fileInfoDict[offerer] = fileInfo
 
+  # returns the inner dictionary object corresponding to the specified fileID
   def getFileInfoDictByID(self, fileID):
     return self.tb.get(fileID)
+
+  # 
+  def getTable()
+
+  # returns a FileInfoTable object (so the user can call str() on it)
+  def getFileInfoTableByID(self, fileID):
+
+  # 
+  def importByString(self, string):
   
+
+  
+
   def hasFile(self, fileID):
     return (fileID in self.tb)
   
@@ -73,3 +85,22 @@ class FileInfoTable:
         if not fileInfoDict:
           self.tb.pop(fileID)
   
+  # corresponds to `Number of Local-DHT entries` for "request response 100c"
+  def __len__(self):
+
+  # corresponds to `Local-DHT entries` for "request response 100c"
+  def __repr__(self):
+    files = self.tb.keys()  # all files
+    return_string = str(len(files))
+    for file in files:  # each files
+        # dictionary of (IP,port) that have the file
+        values = self.tb.get(file)
+        return_string += str(len(file)) + str(file) + str(len(values))
+        for value in values:  # one (ip,port)
+            FileInfoObj = values.get(value)
+            return_string += str(append_zeroes(value[0], 12)) + str(
+                append_zeroes(value[1], 5)) + str(FileInfoObj.size)
+
+def append_zeroes(msg, total_len):
+    msg = msg + total_len-len(msg) * '0'
+    return msg
