@@ -31,11 +31,11 @@ def mrt_open(host = '192.168.0.249', port = 11235,socket=0):
 	global sock,close
 	close = False
 	if socket ==0:
-		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-		s.bind((host,port))
+		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
 	else:
-		s = socket
-	sock = s
+		sock = socket
+	sock.bind((host,port))
 	threading.Thread(target=start_receiver_thread, args=[s]).start()
 
 """
