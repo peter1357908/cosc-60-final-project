@@ -175,14 +175,12 @@ being 4 bytes in length:
   
   * supernode:
     
-    * If `(Source IPv4, Source Port)` specifies the receiving supernode, ignore the message because it is a dummy message meant for UDP-holepunching.
-    * Else if `(Offerer IPv4, Offerer Port)` specifies the receiving supernode and it does offer the requested file, "forward" the exact same request message (same `(Source IPv4, Source Port)`) to the node specified by `(Source IPv4, Source Port)` for UDP-holepunching.
+    * If `(Offerer IPv4, Offerer Port)` specifies the receiving supernode and it does offer the requested file, send a dummy UDP (NOT MRT) message to the `(Source IPv4, Source Port)` for UDP-holepunching and start listening for connection from `(Source IPv4, Source Port)`.
     * Else, if `(Offerer IPv4, Offerer Port)` specifies a childnode paired with the receiving supernode and it does offer the requested file, the supernode should "forward" the exact same message (same `(Source IPv4, Source Port)`) to that childnode.
     
   * childnode:
     
-    * If `(Source IPv4, Source Port)` specifies the receiving childnode, ignore the message because it is a dummy message meant for UDP-holepunching.
-    * Else, childnode should "forward" the exact same request message (same `(Source IPv4, Source Port)`) to the node specified by `(Source IPv4, Source Port)` for UDP-holepunching.
+    * Send a dummy UDP (NOT MRT) message to the `(Source IPv4, Source Port)` for UDP-holepunching and start listening for connection from `(Source IPv4, Source Port)`.
 
 ---
 
