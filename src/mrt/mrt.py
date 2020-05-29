@@ -16,22 +16,25 @@ conn_queue = deque()
 close = False
 conn_count = 0
 sock = 0
+client_sock = 0
 recently_closed = []
 
-ip2id_lut = {}
-
 buffer_lock = threading.Lock() #buffer lock to help with data races
+
 
 """
 mrt_open: indicate ready-ness to receive incoming connections
 
 Create new socket, startup thread
 """
-def mrt_open(host = '192.168.0.249', port = 11235):
+def mrt_open(host = '192.168.0.249', port = 11235,socket=0):
 	global sock,close
 	close = False
-	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	s.bind((host,port))
+	if socket ==0:
+		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		s.bind((host,port))
+	else:
+		s = socket
 	sock = s
 	threading.Thread(target=start_receiver_thread, args=[s]).start()
 
@@ -128,9 +131,12 @@ def mrt_close():
 """
 connect to a given server (return a connection)
 """
-def mrt_connect(host  = '192.168.0.249',port = 11235):
-	global sock
-	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+def mrt_connect(host  = '192.168.0.249',port = 11235,socket=0):
+	global client_sock
+	if socket == 0:
+		client_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+	else:
+		client_sock = socket
 	addr = (host,port)
 	id = handshake(addr)
 	senders[id].receiving=True
@@ -169,10 +175,10 @@ def mrt_disconnect(id):
 
 
 	while not closed:
-		sock.settimeout(.03)
+		client_sock.settimeout(.03)
 		try:
-			sock.sendto(cls_bytes,conn.addr)
-			data, addr = sock.recvfrom(2048)
+			client_sock.sendto(cls_bytes,conn.addr)
+			data, addr = client_sock.recvfrom(2048)
 			if verify_checksum(data) != 0: # discard packet if checksum doesnt add up
 					continue
 			p = Packet()
@@ -184,7 +190,7 @@ def mrt_disconnect(id):
 		except:
 			time.sleep(.1)
 
-	sock.settimeout(None)
+	client_sock.settimeout(None)
 
 
 """
@@ -264,7 +270,7 @@ def send_window_test(id):
 	pre_message = kind+window+cid+frag+data
 	csum = ichecksum(pre_message)
 	msg_bytes = csum.to_bytes(4,'big')+pre_message.encode()
-	sock.sendto(msg_bytes,senders[id].addr)
+	client_sock.sendto(msg_bytes,senders[id].addr)
 
 
 """
@@ -274,7 +280,7 @@ Responsible for updating latest frag, sending quick responses etc
 def sender_recv_thread(id):
 	sender = senders[id]
 	while sender.is_receiving():
-		data, addr = sock.recvfrom(2048)
+		data, addr = client_sock.recvfrom(2048)
 		if verify_checksum(data) != 0: # discard packet if checksum doesnt add up
 				continue
 		p = Packet()
@@ -306,9 +312,9 @@ When 3 ou
 def quick_resend(id):
 	sender = senders[id]
 	min_frag = min(sender.send_queue.keys())
-	sock.sendto(sender.send_queue[min_frag],sender.addr)
-	sock.sendto(sender.send_queue[min_frag],sender.addr)
-	sock.sendto(sender.send_queue[min_frag],sender.addr)
+	client_sock.sendto(sender.send_queue[min_frag],sender.addr)
+	client_sock.sendto(sender.send_queue[min_frag],sender.addr)
+	client_sock.sendto(sender.send_queue[min_frag],sender.addr)
 	sender.reset_qrf()
 
 
@@ -321,7 +327,7 @@ def add_to_send_queue(sender):
 		sender.send_queue[sender.latest_frag] = bytes_message
 
 		sender.add_send_timer(send_timeout,sender,sender.latest_frag)
-		sock.sendto(bytes_message,sender.addr)
+		client_sock.sendto(bytes_message,sender.addr)
 
 	buffer_lock.release()
 
@@ -332,7 +338,7 @@ resend message on timeout
 """
 def send_timeout(sender,frag):
 	try:
-		sock.sendto(sender.send_queue[frag],sender.addr)
+		client_sock.sendto(sender.send_queue[frag],sender.addr)
 	except:
 		pass
 
@@ -362,7 +368,7 @@ the list includes messages that are ready to send
 Initiate handshake with server, return connection id and store connection stuff in senders{}
 """
 def handshake(addr):
-	global sock
+	global client_sock
 	kind = "RCON"
 	window_size = "0000"
 	id = "0000"
@@ -373,11 +379,11 @@ def handshake(addr):
 	bytes_join = jcsum.to_bytes(4,'big')+join_msg.encode()
 	joined = False
 
-	sock.settimeout(.01)
+	client_sock.settimeout(.01)
 	while not joined:
 		try:
-			sock.sendto(bytes_join,addr)
-			data, addr = sock.recvfrom(2048)
+			client_sock.sendto(bytes_join,addr)
+			data, addr = client_sock.recvfrom(2048)
 			if verify_checksum(data) != 0: # discard packet if checksum doesnt add up
 					continue
 			p = Packet()
@@ -390,7 +396,7 @@ def handshake(addr):
 		except:
 			time.sleep(.1)
 
-	sock.settimeout(None) #back into blocking mode
+	client_sock.settimeout(None) #back into blocking mode
 	return id
 
 """
@@ -596,9 +602,6 @@ def reg_conn(packet,addr):
 	c = Connection(conn_id,packet.frag,addr)
 	conns[conn_count] = c
 	conn_queue.append(c)
-	# A small edit to enable the look up of IP addresses
-	ip2id_lut[addr] = c.get_id
-
 
 """
 Pads ints to have four bytes ascii
@@ -662,13 +665,5 @@ def verify_checksum(data):
 	csum_recv = int.from_bytes(data[:4],'big') # Get the first 4 bytes
 	csum_calc = ichecksum(data[4:].decode())
 	return csum_recv - csum_calc
-
-
-'''
-Finds the associated id for a certain ip addr
-'''
-def id_lookup(addr):
-	return ip2id_lut.get(addr)
-
 
 
