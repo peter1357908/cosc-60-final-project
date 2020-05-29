@@ -1,10 +1,10 @@
-import binascii as btasc
-from dataclasses import dataclass
 from MSG_Parser_CS60 import FileInfoTable
 from MSG_Parser_CS60 import ChildrenInfoTable
+from MSG_Parser_CS60 import src_p2p_CNode_helper
 
+import socket
 import mrt
-
+from dataclasses import dataclass
 
 '''
 A temporary position for our Supernode class that is here only for ease of access. Will be its own class at
@@ -19,9 +19,6 @@ fInfo = FileInfoTable.FileInfoTable()
 childHash = ChildrenInfoTable.ChildrenInfoTable()
 sNode = SuperNode(fInfo,childHash)
 
-myAddr = '(1000,5001)' #TODO: get the actual IP
-myIP = 111111
-myPort = 5001
 
 '''
 A procedure that receives a message from a lower-ranking peer, decoded and responds if necessary.
@@ -110,7 +107,8 @@ def msg_parser(msg):
             request_file_length = msg[29:33]
             if request_file_length.decode() == '0000':
                 #TODO: Do the formatting.
-                 mrt.mrt_send1(id, '100c' + '0000' + myAddr + str(fInfo)) #TODO: what does str(finfo) look like?
+                msg ='100c' + append_zeroes(myAddr[0], 12) + append_zeroes(myAddr[1], 5)
+                mrt.mrt_send1(id, msg + str(fInfo)) #TODO: what does str(finfo) look like?
             else:
                 #TODO: Figure out if it is possible to use FIT to get a formatting mandated by the protocol.md
                 file_id = msg[33:33+int(request_file_length)/2].decode()
@@ -118,7 +116,7 @@ def msg_parser(msg):
                 #TODO: File entries having the protocol.md may require some changes to FIT.
                 toSend = str(file_id) + str(len(file_entries)) + str(file_entries)
                 if toSend:
-                    mrt.mrt_send1(id, '100c' + '0000' + myAddr + toSend)
+                    mrt.mrt_send1(id, '100c' + myAddr + toSend)
                 #error
                 else:
                     mrt.mrt_send1(id, '0000')
@@ -156,11 +154,12 @@ def msg_parser(msg):
 
 #TODO: MOVE MAIN INTO SEPARATE FILE
 if __name__ == '__main__':
-    # Starts listening to connections
-    mrt.mrt_open() #TODO: Supply host IP and appropriate PORT
-
     supernode_list = []
 
+    s = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+    Ip,port = src_p2p_CNode_helper.get_source_addr(s)
+    myAddr = (Ip, port)
+    mrt.mrt_open(s)
     # Keep handling requests while running
     # Accepts a connection, receives the message, and parses it
     while True:
