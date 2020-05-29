@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 
 import InputListener
-# import MessageListener
+import MessageListener
 # import FileInfoTable
 import argparse
 import CNode_helper
