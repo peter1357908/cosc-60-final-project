@@ -1,8 +1,11 @@
 #! /usr/bin/python3
 
+import threading
 import InputListener
 import MainListener
-sys.path.append('../data-structures/')
+import sys
+sys.path.append('../mrt/')
+sys.path.append('../../../src/data-structures/')
 import FileInfoTable
 import argparse
 import CNode_helper
@@ -57,7 +60,7 @@ def main():
 
     # The file info table to hold the files
     # used by regular node and supernode regardless
-    table  = FileInfoTable()
+    # table  = FileInfoTable()
 
     # if supernodeIP == SUPERNODE_LOOPBACK_IP:
     #     cnodeTable = ChildrenInfoTable()
@@ -80,12 +83,21 @@ def main():
     #     exit(-1)
 
     # Begin The User Input Thread
+<<<<<<< HEAD
     inputListener = InputListener(isSupernode, table)
     inputListener.start()
     
     # Begin The Packet / main Listener Thread
     mainListener = MainListener(isSupernode, table)
     MainListener.start()
+=======
+    inputListener = InputListener.InputListener(supernodeIP)
+    inputListener.start()
+    
+    # Begin The Packet / main Listener Thread
+    mainListener = MainListener.MainListener(supernodeIP)
+    mainListener.start()
+>>>>>>> d3495a42beb370ade04c8b7f83d3e344f42c1a92
 
 if __name__ == "__main__":
     main()

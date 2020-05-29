@@ -1,26 +1,29 @@
 # This is the code for the InputListener Thread:
 
 import threading
-# import File
-# import FileInfoTable
-# import SNode_helpers
-
+import asyncio
+import sys
+sys.path.append('../mrt/')
+sys.path.append('../../../src/data-structures/')
+import mrt
+import FileInfoTable
+import ChildrenInfoTable
 import CNode_helper
 
 class InputListener(threading.Thread):
 
     # Initialize InputListener Thread
     # TODO: Add paramaters as arguments are determined
-    def __init__(self,supernodeIP, table):
+    def __init__(self,supernodeIP):
         threading.Thread.__init__(self)
         self.supernodeIP = supernodeIP  # IP of supernode, 127.0.0.1 if is a supernode
-        self.table = table # File Info Table
-        if supernodeIP == "127.0.0.1":
-            self.childTable = ChildInfoTable()
-            self.superList = SupernodeList()
-        get_source_addr() # set your own ip and port values from STUN server
-        connect_p2p(ip = self.supernodeIP, port = 5000) #connect to the p2p via port 5000 (handshake)
-        join_p2p() #join the network 
+        # self.table = table # File Info Table
+        # if supernodeIP == "127.0.0.1":
+        #     self.childTable = ChildrenInfoTable()
+        #     self.superList = []
+        CNode_helper.get_source_addr() # set your own ip and port values from STUN server
+        CNode_helper.connect_p2p(ip = self.supernodeIP, port = 5000) #connect to the p2p via port 5000 (handshake)
+        CNode_helper.join_p2p() #join the network 
 
     # Methods for handling each parsed case:
     # A note on the following methods: "file" is always a File Object.
@@ -31,21 +34,21 @@ class InputListener(threading.Thread):
         if all_dht:
             print("requesting entire DHT")
         print("Requested DHT from ", self.supernodeIP)
-        request_dht(all_dht)
+        CNode_helper.request_dht(all_dht)
 
     # Request list of supernodes
     def request_supernodes(self):
         # TODO
         # CNode_helper.request_super_list()
         print("requesting all the supernodes")
-        request_super_list()
+        CNode_helper.request_super_list()
 
     # Begin a download:
     def beginDownload(self, downloadIP, file):
         # downloader = Downloader(self.supernodeIP, downloadIP, file)
         # downloader.start()
         print("Attempting to download from ", downloadIP)
-        request_file(file,supernodeIP,5001)
+        CNode_helper.request_file(file,supernodeIP,5001)
 
         #TODO FIGURE OUT HOLE PUNCHING HERE
     
@@ -66,7 +69,7 @@ class InputListener(threading.Thread):
     def disconnect(self):
         # CNode_helper.send_disconnect()
         print("Disconnected from the network. Goodbye!")
-        send_disconnect()
+        CNode_helper.send_disconnect()
 
     # Return a stirng informing user about the usage
     def usage_statement(self):

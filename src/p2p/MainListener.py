@@ -4,9 +4,9 @@ import threading
 import asyncio
 import sys
 sys.path.append('../mrt/')
-sys.path.append('../data-structures/')
+sys.path.append('../../../src/data-structures/')
 import mrt
-import FilenfoTable
+import FileInfoTable
 
 class MainListener(threading.Thread):
     def __init__(self, supernodeIP):
