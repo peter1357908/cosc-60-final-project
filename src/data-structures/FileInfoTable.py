@@ -72,4 +72,23 @@ class FileInfoTable:
         fileInfoDict.pop(offerer, None)
         if not fileInfoDict:
           self.tb.pop(fileID)
+          
+          
+#added
+def __str__(self):
+    files = self.tb.keys() # all files
+    return_string = str(len(files))
+    for file in files: # each files
+        values = self.tb.get(file) #dictionary of (IP,port) that have the file
+        return_string += str(len(file)) + str(file) + str(len(values))
+        for value in values:  # one (ip,port)
+             FileInfoObj = values.get(value)
+             return_string += str(append_zeroes(value[0], 12)) + str(append_zeroes(value[1],5)) + str(FileInfoObj.size)
+
+
+
+def append_zeroes(msg, total_len):
+    msg = msg + total_len-len(msg) * '0'
+    return msg
+
   
