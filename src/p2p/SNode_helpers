@@ -105,8 +105,7 @@ def msg_parser(msg):
             mrt.mrt_send1(id, response)
 
         # request for local DHT files
-        #TODO: Consider doing parsing(say by comma) instead of maintaining a super rigid structure.
-        #TODO: Alternative ensure that the FileInfoTable is structured in such a way that this is more easily achievable
+        #TODO: UPDATE in accordance with information received from Peter
         if request_type.decode() == '000c':
             request_file_length = msg[29:33]
             if request_file_length.decode() == '0000':
