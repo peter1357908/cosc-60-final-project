@@ -33,33 +33,34 @@ def msg_parser(msg):
     print(msg_type.decode())
     msg_len = msg[4:8]
     print(msg_len.decode())
-    peer_id = msg[8:12] # NOTE: This is currently unused since we rely on the internal mrt id
-    print(peer_id.decode())
-    ip_addr = msg[12:16]
-    print(ip_addr.decode())
-    internal_id = mrt.id_lookup(ip_addr.decode()) # TODO: See formatting of ip_addr
+    ip = msg[8:20].decode()
+    port = int(msg[20:25].decode)
+    ip_addr = (ip,port)
+    print(ip_addr)
+
+    internal_id = mrt.id_lookup(ip_addr) # TODO: See formatting of ip_addr
     print(internal_id)
     # Post
     if msg_type.decode() == '0001':
-        post_type = msg[16:20]
+        post_type = msg[25:29]
 
         # Offer of a new file
         if post_type.decode() == '000a':
-            file_size = msg[20:24]
-            file_id_length = msg[24:28]
-            file_id = msg[28:32]
-            fInfo.addFileInfo(file_id.decode(),ip_addr.decode(),file_size.decode())
+            file_size = msg[29:33]
+            file_id_length = msg[33:37]
+            file_id = msg[37:41]
+            fInfo.addFileInfo(file_id.decode(),ip_addr,file_size.decode())
 
         # Intent to disconnect
         if post_type.decode() == '000b':
             #Removes all files by this ip address
-            fInfo.removeAllFileInfoByOfferer(ip_addr.decode())
+            fInfo.removeAllFileInfoByOfferer(ip_addr)
 
 
     # Request
     if msg_type.decode() == '0101':
-        request_type = msg[16:20]
-        misc = msg[20:24]
+        request_type = msg[25:29]
+        misc = msg[29:33]
 
         # joining the network
         if request_type.decode() == '000a':
@@ -103,13 +104,13 @@ def msg_parser(msg):
         #TODO: Consider doing parsing(say by comma) instead of maintaining a super rigid structure.
         #TODO: Alternative ensure that the FileInfoTable is structured in such a way that this is more easily achievable
         if request_type.decode() == '000c':
-            request_file_length = msg[20:24]
+            request_file_length = msg[29:33]
             if request_file_length.decode() == '0000':
                 #TODO: Do the formatting.
                  mrt.mrt_send1(id, '100c' + '0000' + myAddr + str(fInfo)) #TODO: what does str(finfo) look like?
             else:
                 #TODO: Figure out if it is possible to use FIT to get a formatting mandated by the protocol.md
-                file_id = msg[24:24+int(request_file_length)/2].decode()
+                file_id = msg[33:33+int(request_file_length)/2].decode()
                 file_entries= fInfo.getFileInfoDict(file_id)
                 #TODO: File entries having the protocol.md may require some changes to FIT.
                 toSend = str(file_id) + str(len(file_entries)) + str(file_entries)
@@ -128,9 +129,9 @@ def msg_parser(msg):
 
 
         if request_type.decode() == '000e':
-            file_id_length = msg[16:20].decode()
-            id_end = 20+int(file_id_length)
-            file_id = msg[20: id_end].decode()
+            file_id_length = msg[25:29].decode()
+            id_end = 29+int(file_id_length)
+            file_id = msg[29: id_end].decode()
             # Ensure offerer_addr matches the format of myAddr
             offerer_addr = '(' + msg[id_end: id_end+12].decode() + ',' + msg[id_end+12: id_end+17].decode() + ')'
             if not ip_addr == myAddr:
@@ -143,7 +144,7 @@ def msg_parser(msg):
 
     # File-transfer
     if msg_type.decode() == '1111':
-        recv_file = msg[16:]
+        recv_file = msg[25:]
     # Indication of error
     if msg_type.decode() == '0000':
         print("Error occured")
@@ -153,7 +154,7 @@ def msg_parser(msg):
 #TODO: MOVE MAIN INTO SEPARATE FILE
 if __name__ == '__main__':
     # Starts listening to connections
-    mrt.mrt_open(myIP,myPort) #TODO: Supply host IP and appropriate PORT
+    mrt.mrt_open() #TODO: Supply host IP and appropriate PORT
 
     supernode_list = []
 
@@ -162,6 +163,7 @@ if __name__ == '__main__':
     while True:
         id = mrt.mrt_accept1()
         message = mrt.mrt_receive1(id)
+        print(message)
         msg_parser(message)
 
 
