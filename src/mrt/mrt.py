@@ -36,7 +36,7 @@ def mrt_open(host = '192.168.0.249', port = 11235,socket=0):
 	else:
 		sock = socket
 	sock.bind((host,port))
-	threading.Thread(target=start_receiver_thread, args=[s]).start()
+	threading.Thread(target=start_receiver_thread, args=[sock]).start()
 
 """
 accept an incoming connection (return a connection), guaranteed to return one (will block until there is one)
