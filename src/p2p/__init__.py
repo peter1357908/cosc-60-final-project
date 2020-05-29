@@ -1,10 +1,16 @@
 #! /usr/bin/python3
 
+import threading
 import InputListener
-# import MessageListener
-# import FileInfoTable
+import MainListener
+import sys
+sys.path.append('../mrt/')
+sys.path.append('../../../src/data-structures/')
+import FileInfoTable
 import argparse
 import CNode_helper
+import mrt
+import sys
 
 
 # CONST VARIABLES
@@ -20,16 +26,16 @@ SUPERNODE_LOOPBACK_IP = "127.0.0.1"
     Returns True for successful connect and join, False otherwise
 """
 def supernode_connect(as_supernode=False):
-    supernode_idobj = CNode_helper.connect_p2p(ip=HARDCODED_SUPERNODE_IP, port=HARDCODED_SUPERNODE_PORT)
-    if not supernode_idobj:
-        return False
+    supernode_id = CNode_helper.connect_p2p(ip=HARDCODED_SUPERNODE_IP, port=HARDCODED_SUPERNODE_PORT)
+    # assuming that 0 is the "bad case"
+    if supernode_id == 0:
+        return None
 
     if as_supernode:
         CNode_helper.join_p2p(1)
     else:
         CNode_helper.join_p2p(0)
-
-    return True
+    return supernode_id
 
 '''
     This is the entry point for the p2p network client
@@ -45,45 +51,53 @@ def main():
     args = parser.parse_args()
 
     # If the node is a supernode, supernodeIP is loopback / 127.0.0.1
+    # TODO: If the node is joining as a supernode & the network already 
     # If the node is a childnode, then the IP of the supernode to be joined is an arg
-    supernodeIP = None
+    isSupernode = False
     supernodePort = None
     if args.supernode:
-        supernodeIP = SUPERNODE_LOOPBACK_IP
+        isSupernode = True
 
     # The file info table to hold the files
     # used by regular node and supernode regardless
     # table  = FileInfoTable()
-    # TODO: instantiate tables
-    table = None
 
-    if supernodeIP == SUPERNODE_LOOPBACK_IP:
-        # If a supernode, then the childnode and supernode tables will be intantated
-        # in the INputListener thread, since it can check if supernode ip == loopback,
-        # and if so instantiate ChildNodeTable and SupernodeTable
-        # TODO: instantiate tables
-        pass
+    # if supernodeIP == SUPERNODE_LOOPBACK_IP:
+    #     cnodeTable = ChildrenInfoTable()
+    #     snodeList = []
+    #     pass
 
     # Attempt to connect to the supernode:
-    if supernodeIP == SUPERNODE_LOOPBACK_IP:
+    if isSupernode:
         print("attempting to connect to default supernode AS a supernode")
-        res = supernode_connect(True)
+        # connID = supernode_connect(True)
     else:
         print("attempting to connect to default supernode AS a child node")
-        res = supernode_connect(False)
+        # connID = supernode_connect(False)
 
-    # If not successful:
-    if not res:
-        print(f"failed to connect to supernode at address {HARDCODED_SUPERNODE_IP}:{HARDCODED_SUPERNODE_PORT}")
-        exit(-1)
+    print("connection is good")
+
+    # If not connId:
+    # if not res:
+    #     print(f"failed to connect to supernode at address {HARDCODED_SUPERNODE_IP}:{HARDCODED_SUPERNODE_PORT}")
+    #     exit(-1)
 
     # Begin The User Input Thread
-    inputListener = InputListener(supernodeIP, table)
+<<<<<<< HEAD
+    inputListener = InputListener(isSupernode, table)
     inputListener.start()
     
-    # Begin The Packet / Message Listener Thread
-    messageListener = MessageListener(table)
-    messageListener.start()
+    # Begin The Packet / main Listener Thread
+    mainListener = MainListener(isSupernode, table)
+    MainListener.start()
+=======
+    inputListener = InputListener.InputListener(supernodeIP)
+    inputListener.start()
+    
+    # Begin The Packet / main Listener Thread
+    mainListener = MainListener.MainListener(supernodeIP)
+    mainListener.start()
+>>>>>>> d3495a42beb370ade04c8b7f83d3e344f42c1a92
 
 if __name__ == "__main__":
     main()

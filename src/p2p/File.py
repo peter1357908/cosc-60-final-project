@@ -1,5 +1,5 @@
 #! /usr/bin/python3
-import FileInfo
+#import FileInfo
 import FileInfoTable
 
 # A File Class
@@ -30,7 +30,7 @@ class File():
         self.offerer = newOfferer
     
     # Get FileInfo object:
-    def getFileInfo(self)
+    def getFileInfo(self):
         return self.fileInfo
     # Set FileInfo:
     def setFileInfo(self, newFileInfo):
