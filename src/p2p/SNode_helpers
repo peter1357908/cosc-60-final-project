@@ -50,11 +50,13 @@ def msg_parser(msg):
             file_id_length = msg[33:37]
             file_id = msg[37:41]
             fInfo.addFileInfo(file_id.decode(),ip_addr,file_size.decode())
+            childHash.addFile(ip, file_id)
 
         # Intent to disconnect
         if post_type.decode() == '000b':
             #Removes all files by this ip address
-            fInfo.removeAllFileInfoByOfferer(ip_addr)
+            child_files = childHash.popChild(ip)
+            fInfo.removeAllFileInfoByOfferer(child_files, ip_addr)
 
 
     # Request
@@ -71,6 +73,8 @@ def msg_parser(msg):
                 snodes_num = str(len(supernode_list))
                 msg = snodes_num + str(supernode_list)#Remove first and last char of list upon receiving
                 response = response_type + '0000' + myAddr + str(len(msg))+msg
+                child_hash = {}
+                childHash.addChild(ip, childHash)
                 # id is returned by accept1()
                 mrt.mrt_send1(id, response)
 
