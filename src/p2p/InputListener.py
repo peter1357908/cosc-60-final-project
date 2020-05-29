@@ -1,26 +1,29 @@
 # This is the code for the InputListener Thread:
 
 import threading
-# import File
-# import FileInfoTable
-# import SNode_helpers
-
+import asyncio
+import sys
+sys.path.append('../mrt/')
+sys.path.append('../../../src/data-structures/')
+import mrt
+import FileInfoTable
+import ChildrenInfoTable
 import CNode_helper
 
 class InputListener(threading.Thread):
 
     # Initialize InputListener Thread
     # TODO: Add paramaters as arguments are determined
-    def __init__(self,supernodeIP, table):
+    def __init__(self,supernodeIP):
         threading.Thread.__init__(self)
         self.supernodeIP = supernodeIP  # IP of supernode, 127.0.0.1 if is a supernode
         self.table = table # File Info Table
         if supernodeIP == "127.0.0.1":
-            self.childTable = ChildInfoTable()
-            self.superList = SupernodeList()
-        get_source_addr() # set your own ip and port values from STUN server
-        connect_p2p(ip = self.supernodeIP, port = 5000) #connect to the p2p via port 5000 (handshake)
-        join_p2p() #join the network 
+            self.childTable = ChildrenInfoTable()
+            self.superList = []
+        mrt.get_source_addr() # set your own ip and port values from STUN server
+        mrt.connect_p2p(ip = self.supernodeIP, port = 5000) #connect to the p2p via port 5000 (handshake)
+        mrt.join_p2p() #join the network 
 
     # Methods for handling each parsed case:
     # A note on the following methods: "file" is always a File Object.
