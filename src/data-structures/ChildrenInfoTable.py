@@ -49,4 +49,4 @@ class ChildrenInfoTable:
 
   # returns None if child is not in the table, otherwise returns its fileSet
   def popChild(self, child):
-    self.tb.pop(child, None)
+    return self.tb.pop(child, None)
