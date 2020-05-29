@@ -15,7 +15,7 @@ senders = {}
 conn_queue = deque()
 close = False
 conn_count = 0
-sock = 0
+server_sock = 0
 client_sock = 0
 recently_closed = []
 
@@ -28,15 +28,14 @@ mrt_open: indicate ready-ness to receive incoming connections
 Create new socket, startup thread
 """
 def mrt_open(host = '192.168.0.249', port = 11235,s=0):
-	global sock,close
+	global server_sock,close
 	close = False
 	if s == 0:
-		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
+		server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	else:
-		sock = s
-	sock.bind((host,port))
-	threading.Thread(target=start_receiver_thread, args=[sock]).start()
+		server_sock = s
+		server_sock.settimeout(None)
+	threading.Thread(target=start_receiver_thread, args=[server_sock]).start()
 
 """
 accept an incoming connection (return a connection), guaranteed to return one (will block until there is one)
@@ -504,9 +503,9 @@ def resend_close(addr):
 	gc_msg = "ACLS000000000000"
 	gc_sum = ichecksum(gc_msg)
 	gc_bytes = gc_sum.to_bytes(4,'big')+gc_msg.encode()
-	sock.sendto(gc_bytes,addr)
-	sock.sendto(gc_bytes,addr)
-	sock.sendto(gc_bytes,addr)
+	server_sock.sendto(gc_bytes,addr)
+	server_sock.sendto(gc_bytes,addr)
+	server_sock.sendto(gc_bytes,addr)
 
 
 """
@@ -588,7 +587,7 @@ sends messages out. Takes checksum and premessage as args
 """
 def send_message(addr,checksum, pre_message):
 	final_msg = checksum.to_bytes(4,'big') + pre_message.encode()
-	sock.sendto(final_msg,addr)
+	server_sock.sendto(final_msg,addr)
 
 """
 Creates a new connection. Used when reading a packet of kind RCON and conn_id = 0
