@@ -2,6 +2,7 @@
 
 import threading
 import asyncio
+import sys
 sys.path.append('../mrt/')
 sys.path.append('../data-structures/')
 import mrt
@@ -17,35 +18,31 @@ class MainListener(threading.Thread):
         self.fileInfoTableLock = asyncio.Lock() # pass to spawned threads
         self.childTableLock = asyncio.Lock() # pass to spawned threads
         self.supernodeLock = asyncio.Lock() # pass to spawned threads
-
-    # - Get Whole Table
-    # - Get FileInfoDict
-    # - Get Specific Info
-    # - Remove File
-    # - Add File
     
-    def updateFileInfoTable(self, ):
+    # info - 0, 1, 2 
+    # 0 = regular node
+    # 1 = supernode
+    # 2 = relayed supernode
+    def handleJoinRequest(self, info):
         pass
 
-
-    def getFileInfo(self):
+    def handleSupernodeJoinRequest(self):
         pass
 
-    def removeFileInfo(self):
+    def handleSupernodeListRequest(self):
         pass
-
-    def addFile(self):
+    # handles both cases
+    def handleLocalDHTEntriesRequest(self):
         pass
-        
-
-    def updateChildrenInfoTable(self):
+    # handles both cases
+    def handleAllDHTEntriesRequest(self):
         pass
-
-    def updateSupernodeList(self):
+    
+    def handleFileTransferRequest(self):
         pass
-
+    
     def run(self):
-        
+        # TODO: may need to add an mrt_open here?? to indicate readyness to accept incoming connections
         while True:
             newConnectionID = mrt.accept1()
             # pass in mainlistener

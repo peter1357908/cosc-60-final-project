@@ -7,6 +7,7 @@ import FileInfoTable
 import argparse
 import CNode_helper
 import mrt
+import sys
 
 
 # CONST VARIABLES
@@ -49,10 +50,10 @@ def main():
     # If the node is a supernode, supernodeIP is loopback / 127.0.0.1
     # TODO: If the node is joining as a supernode & the network already 
     # If the node is a childnode, then the IP of the supernode to be joined is an arg
-    supernodeIP = None
+    isSupernode = False
     supernodePort = None
     if args.supernode:
-        supernodeIP = SUPERNODE_LOOPBACK_IP
+        isSupernode = True
 
     # The file info table to hold the files
     # used by regular node and supernode regardless
@@ -64,7 +65,7 @@ def main():
     #     pass
 
     # Attempt to connect to the supernode:
-    if supernodeIP == SUPERNODE_LOOPBACK_IP:
+    if isSupernode:
         print("attempting to connect to default supernode AS a supernode")
         # connID = supernode_connect(True)
     else:
@@ -79,11 +80,11 @@ def main():
     #     exit(-1)
 
     # Begin The User Input Thread
-    inputListener = InputListener(supernodeIP, table)
+    inputListener = InputListener(isSupernode, table)
     inputListener.start()
     
     # Begin The Packet / main Listener Thread
-    mainListener = MainListener(supernodeIP, table)
+    mainListener = MainListener(isSupernode, table)
     MainListener.start()
 
 if __name__ == "__main__":
