@@ -27,14 +27,14 @@ mrt_open: indicate ready-ness to receive incoming connections
 
 Create new socket, startup thread
 """
-def mrt_open(host = '192.168.0.249', port = 11235,socket=0):
+def mrt_open(host = '192.168.0.249', port = 11235,s=0):
 	global sock,close
 	close = False
-	if socket ==0:
+	if s == 0:
 		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 	else:
-		sock = socket
+		sock = s
 	sock.bind((host,port))
 	threading.Thread(target=start_receiver_thread, args=[sock]).start()
 
@@ -131,12 +131,12 @@ def mrt_close():
 """
 connect to a given server (return a connection)
 """
-def mrt_connect(host  = '192.168.0.249',port = 11235,socket=0):
+def mrt_connect(host  = '192.168.0.249',port = 11235,s=0):
 	global client_sock
-	if socket == 0:
+	if s == 0:
 		client_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	else:
-		client_sock = socket
+		client_sock = s
 	addr = (host,port)
 	id = handshake(addr)
 	senders[id].receiving=True
