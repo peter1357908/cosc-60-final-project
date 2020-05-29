@@ -9,9 +9,9 @@ The [requirements](https://canvas.dartmouth.edu/courses/39576/assignments/234934
 Before reading this, familiarize yourself with the jobs of supernodes and child
 nodes [here](https://gitlab.cs.dartmouth.edu/hyperistic/cosc-60-final-project/blob/master/Structure.md).
 
-Note: this document uses GitHub Markdown tables to represent the structure of a transmission. Each cell of a table should correspond to a 2 byte field. Fields that end with an ellipsis have arbitrary length.
+Note: this document uses GitHub Markdown tables to represent the structure of a transmission. Each cell of a table should correspond to a 4 byte field. Fields that end with an ellipsis have arbitrary length.
 
-All IPv4 addresses are represented by a 12-byte ASCII string, and all port numbers are represented by a 5-byte ASCII string. All other numbers (e.g. `Message Length`, `File ID Length`) are binary and in network byte order.
+All IPv4 addresses are represented by a 12-byte ASCII string, and all port numbers are represented by a 5-byte ASCII string. All other numbers (e.g. `Message Length`, `File ID Length`) are 4-byte ASCII strings. The unit for all `size` and `length` fields is **byte**.
 
 The general structure of a packet on our network will be:
 
@@ -26,24 +26,22 @@ Our protocol has following types of transimissions:
 *  Requests
 *  File-transfer
 
-Where `Posts` are notifications of new information, `Requests` are
-requests for some unknown information, and `File-transfers` are the special case
-where a file is being transferred between a requesting node and an offering node.
+Where `Posts` are notifications of new information, `Requests` are requests for some unknown information, and `File-transfers` are the special case where a file is being transferred between a requesting node and an offering node.
 
 Our P2P Protocol will be partitioned as follows, with each partition 
-being 2 bytes in length:
+being 4 bytes in length:
 
-| Type | Message Length (in bytes) |
+| Type | Message Length |
 | ---- | ---- |
 | Source IPv4 ... | Source Port ... |
 | Message ... |
 
 * `Type` specifies if the message is a(n):
 
-  *  Post - "0x0001"
-  *  Request - "0x0101"
-  *  File-transfer - "0x1111"
-  *  Indication of error - "0x0000"
+  *  Post - "0001"
+  *  Request - "0101"
+  *  File-transfer - "1111"
+  *  Indication of error - "0000"
 
 * `Message Length` is the length of the `Message` part of the transmission.
 
@@ -57,11 +55,11 @@ being 2 bytes in length:
 
 ### Requests:
 
-* Request to join the network - "0x000a"
-* Request for a supernode's supernode list - "0x000b"
-* Request for a supernode's Local-DHT (on all files/one file) - "0x000c"
-* Request for all DHT entries (on all files / one file): - "0x000d"
-* Request for a file-transfer - "0x000e"
+* Request to join the network - "000a"
+* Request for a supernode's supernode list - "000b"
+* Request for a supernode's Local-DHT (on all files/one file) - "000c"
+* Request for all DHT entries (on all files / one file): - "000d"
+* Request for a file-transfer - "000e"
 
 #### Request to join the network:
 
@@ -116,10 +114,10 @@ being 2 bytes in length:
 
 * Request:
 
-  | 000c | File ID length (in bytes) | File ID ... |
+  | 000c | File ID length | File ID ... |
   | ---- | ---- | ---- |
   
-  If the requester wants all entries, `File ID length` should be `0x0000` (and consequently have nothing for `File ID`).
+  If the requester wants all entries, `File ID length` should be `0000` (and consequently have nothing for `File ID`).
   
   Else, the requester specifies the file whose entries it wants with `File ID length` and `File ID`.
 
@@ -131,8 +129,8 @@ being 2 bytes in length:
   
   * Each `Local-DHT entry`  has the following format:
   
-    | File ID | Number of file entries | File entries ... |
-    | ---- | ---- | ---- |
+    | File ID length | File ID ... | Number of file entries | File entries ... |
+    | ---- | ---- | ---- | ---- |
 
     * Each `File entry` has the following format:
 
@@ -141,13 +139,13 @@ being 2 bytes in length:
 
       Note that the requesting node should distinguish between different supernodes' response by `(Source IPv4, Source Port)`. Knowing which supernode maintains a Local-DHT entry is necessary for crafting the request `000e` below.
   
-  For robust-ness, the supernode should always respond to request `000c` (if no entries are found, respond with `number` being `0x000` and no `Local-DHT entry`).
+  For robust-ness, the supernode should always respond to request `000c` (if no entries are found, respond with `number` being `0000` and no `Local-DHT entry`).
   
 #### Request for all DHT entries (on all files / one file):
 
 * Request:
 
-  | 000d | File ID length (in bytes) | File ID ... |
+  | 000d | File ID length | File ID ... |
   | ---- | ---- | ---- |
   
   This request should be sent from a childnode (a supernode should directly use request type `000c`) to a supernode (which does not have to be its bootstrapping supernode).
@@ -164,7 +162,7 @@ being 2 bytes in length:
 
 * Request:
 
-  | 000e | File ID length (in bytes) |
+  | 000e | File ID length |
   | ---- | ---- |
   | File ID ... | Offerer IPv4 ... |
   | Offerer Port ... | |
@@ -190,18 +188,18 @@ being 2 bytes in length:
 
 ### Posts:
 
-* Notification for offering a new file - "0x000a"
-* Notification for intention to disconnect - "0x000b"
+* Notification for offering a new file - "000a"
+* Notification for intention to disconnect - "000b"
 
 #### Notification for offering a new file:
 
 * Post:
 
-  | 000a | File Size (in bytes) |
+  | 000a | File Size |
   | ---- | ---- |
-  | File ID length (in bytes) | File ID ... |
+  | File ID length | File ID ... |
 
-  `File Size` is the size of the file in bytes (originally number of fragments).
+  `File Size` is the size of the file (originally number of fragments).
 
   This message must be from a childnode to its bootstrapping node.
   
@@ -232,7 +230,7 @@ being 2 bytes in length:
 
 * A file-transfer message contains the binary data of the file being transferred. (There is only one kind of file-transfer message - type `000a`)
 
-  | 000a | File ID length (in bytes) |
+  | 000a | File ID length |
   | ---- | ---- |
   | File ID ... | File Data ... |
 
