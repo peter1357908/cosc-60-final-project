@@ -22,6 +22,8 @@ class MessageListener(threading.Thread):
         # Connection ID
         self.connID = connID
 
+        self.manager = mainListener
+
     # Methods for handling each parsed method:
     # A note on the following methods: 'file' is always a File object
     # and 'files' is an array of File objects

@@ -23,7 +23,7 @@ ERROR = '0000'
 R_JOIN = '000a'
 R_LIST = '000b'
 R_LOCAL_DHT = '000c'
-R_ALL_DHT = '000d'
+R_GLOBAL_DHT = '000d'
 R_FILE_TRANS = '000e'
 
 
@@ -100,11 +100,21 @@ Takes one arg: all (bool)
 	all = False: send '000c'
 	default is True
 """
-def request_dht(all_dht=True):
-	if all_dht:
-		values = ''.join([R_ALL_DHT])
-	else: 
-		values = ''.join([R_LOCAL_DHT])
+def request_local_dht(filename = ''):
+	if len(filename) > 0:
+		values = ''.join([R_LOCAL_DHT,f'{len(filename):04d}',filename])
+	else:
+		values = ''.join([R_LOCAL_DHT,'0000'])
+	msg_len = len(values)
+	msg = ''.join([REQUEST,f'{msg_len:04d}',SOURCE_IP,SOURCE_PORT,values])
+	send_p2p_msg(msg)
+
+
+def request_global_dht(filename = ''):
+	if len(filename) > 0:
+		values = ''.join([R_GLOBAL_DHT,f'{len(filename):04d}',filename])
+	else:
+		values = ''.join([R_GLOBAL_DHT,'0000'])
 	msg_len = len(values)
 	msg = ''.join([REQUEST,f'{msg_len:04d}',SOURCE_IP,SOURCE_PORT,values])
 	send_p2p_msg(msg)

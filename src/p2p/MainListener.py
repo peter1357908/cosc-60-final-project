@@ -7,9 +7,17 @@ import sys
 import InputListener
 sys.path.append('../mrt/')
 sys.path.append('../../../src/data-structures/')
+from FileInfoTable import *
+from ChildrenInfoTable import *
 import mrt
-import FileInfoTable
-import ChildrenInfoTable
+
+""" DEFINITIONS """
+POST = '0001'
+REQUEST = '0101'
+FILE_TRANSFER = '1111'
+ERROR = '0000'
+
+
 
 class MainListener(threading.Thread):
     '''
@@ -34,19 +42,26 @@ class MainListener(threading.Thread):
     # 0 = regular node
     # 1 = supernode
     # 2 = relayed supernode
-    def handleJoinRequest(self, type, sourceMRTID):
+    def handleJoinRequest(self, type, connID): #TODO: add ip and port? 
         # send number of supernode entries, supernode entries
         if type == 0:
             # keep sour
             response_type = '100a'
-            snodes_num = str(len(supernode_list))
-            msg = snodes_num.zfill(4) + str(supernode_list) # TODO: format it correctly
-            response = response_type + '0000' + self.ownIP + self.ownPort + (str(len(msg))).zfill(4) + msg
+            values = ''.join([response_type, f'{len(supernode_list):04d}',str(supernode_list)])
+            response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
             # id is returned by accept1()
-            mrt.mrt_send1(sourceMRTID, response)
+            mrt.mrt_send1(connID, response)
         elif type == 1:
+            #TODO: Add functionality to keep track of supernode
+            response_type = '100a'
+            values = ''.join([response_type, f'{len(supernode_list):04d}',str(supernode_list)])
+            response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
+            # id is returned by accept1()
+            mrt.mrt_send1(connID, response)
 
         elif type == 2:
+            supernode_list.add() #(IPV4,port)
+            #TODO: add functionality for relayed supernode
             
         else:
             print(f"{type} not found")
@@ -55,15 +70,15 @@ class MainListener(threading.Thread):
     '''
         See protocol md
     '''
-    def handleSupernodeListRequest(self, sourceIP, sourcePort):
+    def handleSupernodeListRequest(self, sourceIP, sourcePort,connID):
         # 100b | Number of Supernode Entries | Supernode Entries
         # Each supernode entry has the following format:
         #   IPv4 Addr.    Port
         response_type = '100b'
         snodes_num = str(len(supernode_list))
-        # TODO: the message syntax is incorrect, look at matt's code
-        response = response_type + '0000' + myAddr + snodes_num + self.formatSupernodeList()
-        mrt.mrt_send1(id, response)
+        values = ''.join([response_type,f'{len(supernode_list):04d}',str(supernode_list)])
+        response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
+        mrt.mrt_send1(connID, response)
         pass
 
     # handles both cases
@@ -72,26 +87,101 @@ class MainListener(threading.Thread):
         request_file_length = msg[20:24]
         if all_files_requested:
             response_type = '100c'
-            mrt.mrt_send1(connID,  response_type + '0000' + myAddr + str(fInfo)) 
+            values = ''.JOIN([response_type,f'{len(self.FileInfoTable):04d}',str(self.FileInfoTable)])
+            response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
+            mrt.mrt_send1(connID, response) 
         else:
-            #TODO: Figure out if it is possible to use FIT to get a formatting mandated by the protocol.md
-            file_id = msg[24:24+int(request_file_length)/2].decode()
-            file_entries= fInfo.getFileInfoDict(file_id)
-            #TODO: File entries having the protocol.md may require some changes to FIT.
-            toSend = str(file_id) + str(len(file_entries)) + str(file_entries)
-            if toSend:
-                mrt.mrt_send1(id, '100c' + '0000' + myAddr + toSend)
+            file_id = msg[24:24+int(request_file_length)].decode()
+            file_entries = self.FileInfoTable.getTableByID(file_id)
+            values = ''.join(['100c',f'{len(file_entries):04d}',str(file_entries)])
+            response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
+            if len(file_entries) > 0:
+                mrt.mrt_send1(connID, response)
             #error
             else:
-                mrt.mrt_send1(id, '0000')
+                mrt.mrt_send1(connID, '0000')
         pass
 
     # handles both cases
     def handleAllDHTEntriesRequest(self):
         pass
+        #TODO: This one is the most complicated as we first need to collect all of the file info from the other supernodes....
+
     
-    def handleFileTransferRequest(self):
+    # see Protocol.md for 'Request for a file transfer'
+    # source is the client that sent the request
+    # offerer is the client that source would like to download the file from
+    def handleFileTransferRequest(self, connID, sourceIP, sourcePort, offererIP, offererPort, fileRequestedID):
+        if self.isSupernode:
+            if sourceIP == self.ownIP and sourcePort == self.ownPort:
+                # ignore the message
+                pass
+            elif offererIP == self.ownIP and offererPort == self.ownPort:
+                # "forward" the exact same request message (same (Source IPv4, Source Port)) to the node specified by (Source IPv4, Source Port) for UDP-holepunching.
+                response_type = '000e'
+                values = ''.join([response_type, f'{len():04d}', fileRequestedID, offererIP, offererPort])
+                response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
+                # id is returned by accept1()
+
+                # TODO: once Peter has finished the data structure updates 
+
+            else:
+                # check that the offererip and port matches a childnode
+                child = (offererIP, offererPort)
+                if self.childTable.hasChild(child) and self.childTable.childHasFile(child, fileRequested):
+                    # the supernode should "forward" the exact same message (same (Source IPv4, Source Port)) to that childnode.
+                    # TODO: wait for Peter to finish data structure updates
+                    pass
+        else:
+            if sourceIP == self.ownIP and sourcePort == self.ownPort:
+                pass
+            else:
+                # Else, childnode should "forward" the exact same request message (same (Source IPv4, Source Port)) to the node specified by (Source IPv4, Source Port) for UDP-holepunching
+                pass
+
+    '''
+        handles POSTing a file
+        notification for offering a new file 000a
+        sourceIP, sourcePort - client that sent the POST message
+        connID - connection ID of the client
+        fileID - see Protocol.md
+        fileSize
+        Updates local DHT, does not send a message
+
+    '''
+    def handleFilePost(self, sourceIP, sourcePort, connID, fileID, fileSize):
+        # update the local DHT
+        # TODO: set a lock
+        offerer = (sourceIP, sourcePort)
+        newFileInfo = FileInfo(fileSize, (self.ownIP, self.ownPort))
+        self.fileInfoTable.adddFileInfo(fileID, offerer, newFileInfo)
+
+        # update childreninfotable as well
+        assert(offerer != (self.ownIP, self.ownIP))
+        self.childTable.addFile(offerer, fileID)
+
+
+    '''
+        POST 
+        notification for request to disconnect 000b 
+    '''
+    def handleRequestDisconnect(self, sourceIP, sourcePort, connID):
+        # terminate the messagelistener thread
+        # TODO: perform the necessary clearnup eg. delete entries in the data structures
+
+        # send message indicating the node can safely disconnect
+        response_type = "100b"
+        values = ''.join([response_type])
+        response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
+        mrt.mrt_send1(connID, response)
+
+
+    '''
+        Note: not sure if we need this function - maybe it should start a downloader/uploader 
+    '''
+    def handleFileTransfer(self, sourceIP, sourcePort, connID):
         pass
+
     
     def run(self):
         # TODO: may need to add an mrt_open here?? to indicate readyness to accept incoming connections
@@ -101,8 +191,13 @@ class MainListener(threading.Thread):
         inputListener.start()
         while True:
             newConnectionID = mrt.accept1()
+            newConnectionAddress
+            
             # pass in mainlistener
             messageListener = MessageListener(self, newConnectionID)
+
+
+            
             # spawn message listener thread
             messageListener.start()
 
