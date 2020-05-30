@@ -29,10 +29,10 @@ def supernode_connect(as_supernode=False):
         return None
 
     if as_supernode:
-        CNode_helper.join_p2p(1)
+       recv_id = CNode_helper.join_p2p(1)
     else:
-        CNode_helper.join_p2p(0)
-    return supernode_id
+        recv_id = CNode_helper.join_p2p(0)
+    return (supernode_id, recv_id)
 
 '''
     This is the entry point for the p2p network client
@@ -65,12 +65,7 @@ def main():
     #     pass
 
     # Attempt to connect to the supernode:
-    if isSupernode:
-        print("attempting to connect to default supernode AS a supernode")
-        # connID = supernode_connect(True)
-    else:
-        print("attempting to connect to default supernode AS a child node")
-        # connID = supernode_connect(False)
+   
 
     print("connection is good")
 
@@ -80,8 +75,13 @@ def main():
     #     exit(-1)
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sourceIP, sourcePort = CNode_helper.get_source_addr(sock)
+
+
+    super_send_id, super_recv_id = supernode_connect(False)
+
+
     # Begin The Packet / main Listener Thread
-    mainListener = MainListener.MainListener(isSupernode, sourceIP, sourcePort)
+    mainListener = MainListener.MainListener(isSupernode, sourceIP, sourcePort, sock, super_send_id, super_recv_id)
     mainListener.start()
 
 if __name__ == "__main__":

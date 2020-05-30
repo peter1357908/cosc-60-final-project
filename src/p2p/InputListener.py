@@ -9,46 +9,62 @@ import mrt
 from FileInfoTable import *
 from ChildrenInfoTable import *
 import CNode_helper
+import os
 
 class InputListener(threading.Thread):
 
     # Initialize InputListener Thread
     # TODO: Add paramaters as arguments are determined
-    def __init__(self,supernodeIP):
+    def __init__(self,supernodeIP, supernodePort, send_id):
         threading.Thread.__init__(self)
         self.supernodeIP = supernodeIP  # IP of supernode, 127.0.0.1 if is a supernode
+        self.supernodePort = supernodePort
+        self.sendID = send_id
         # self.table = table # File Info Table
         # if supernodeIP == "127.0.0.1":
         #     self.childTable = ChildrenInfoTable()
         #     self.superList = []
-        CNode_helper.get_source_addr() # set your own ip and port values from STUN server
-        CNode_helper.connect_p2p(ip = self.supernodeIP, port = 5000) #connect to the p2p via port 5000 (handshake)
-        CNode_helper.join_p2p() #join the network 
 
     # Methods for handling each parsed case:
     # A note on the following methods: "file" is always a File Object.
 
     # Construct Request DHT packet and send to supernodeIP:
-    def requestDHT(self, all_dht):
+    def request_dht(self, filename,all_lists = False):
         # CNode_helper.requestDHT(all_dht)
-        if all_dht:
-            print("requesting entire DHT")
+        if len(filename) == 0:
+            print("Requesting entire DHT")
         print("Requested DHT from ", self.supernodeIP)
-        CNode_helper.request_dht(all_dht)
+        if all_lists:
+            print("Requesting from all Supernodes")
+            CNode_helper.request_global_dht(self.sendID, self.supernodeIP, self.supernodePort,filename)
+        else:
+            CNode_helper.request_local_dht(self.sendID,self.supernodeIP,self.supernodePort,filename)
 
     # Request list of supernodes
     def request_supernodes(self):
         # TODO
         # CNode_helper.request_super_list()
         print("requesting all the supernodes")
-        CNode_helper.request_super_list()
+        CNode_helper.request_super_list(self.sendID,self.supernodeIP,self.supernodePort)
 
     # Begin a download:
-    def beginDownload(self, downloadIP, file):
+    def beginDownload(self, file, downloadIP,downloadPort):
         # downloader = Downloader(self.supernodeIP, downloadIP, file)
         # downloader.start()
         print("Attempting to download from ", downloadIP)
-        CNode_helper.request_file(file,supernodeIP,5001)
+        transfer_id = CNode_helper.request_file(self.sendID,self.supernodeIP,self.supernodePort,file,downloadIP,downloadPort)
+
+        # Start download:
+        # constantly receive 1?
+        new_file = open(file,'a+')
+        data = mrt_receive1(transfer_id).decode()
+        new_file.write(data)
+        while len(data) >= 1024:
+            data = mrt_receive1(transfer_id).decode()
+            new_file.write(data)
+        new_file.close()
+
+        print(f'New file written to {file}')
 
         #TODO FIGURE OUT HOLE PUNCHING HERE
     
@@ -58,6 +74,8 @@ class InputListener(threading.Thread):
             # STILL NEED TO FIGURE OUT FILE SIZE ETC AS PARAMETERS
         # CNode_helper.post_file(file_size, id_size, filename)
         print("Announcing a new file is being offered: ", file)
+        file_size = os.path.getsize(file)
+        CNode_helper.post_file(self.sendID,self.supernodeIP,self.supernodePort,file_size,len(file),file)
     
     # Announce a file is no longer being offered:
     def removeOfferedFile(self, file):
@@ -69,7 +87,7 @@ class InputListener(threading.Thread):
     def disconnect(self):
         # CNode_helper.send_disconnect()
         print("Disconnected from the network. Goodbye!")
-        CNode_helper.send_disconnect()
+        CNode_helper.send_disconnect(self.sendID,self.supernodeIP,self.supernodePort)
 
     # Return a stirng informing user about the usage
     def usage_statement(self):

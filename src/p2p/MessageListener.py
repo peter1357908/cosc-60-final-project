@@ -131,6 +131,7 @@ class MessageListener(threading.Thread):
                 misc = msg[29:33]
                 if requestType == '000a':
                     rMisc = misc.decode()
+                    self.sendID=mrt_connect(ip=source_ip,port=port)
                     # join as a regular node
                     if rMisc == '0000':
 
@@ -142,12 +143,10 @@ class MessageListener(threading.Thread):
                         childHash = {}
                         childrenHash.addChild(receive_ip, childHash)
 
-                        self.sendID=mrt_connect(ip=source_ip,port=port)
-                        
-
-
+                        #TODO: I think we just need to pass everything up one level here VLADO/PETER PLEASE CONFIRM AND COMPLETE
                     # join as a supernode
                     elif r_misc == '0001':
+
                         pass
                     # relayed supernode
                     elif r_mis == '0002':
@@ -165,13 +164,16 @@ class MessageListener(threading.Thread):
                     if offerer_ipv4 == self.manager.ownIP and offerer_port == self.manager.ownPort:
                         #TODO: load file and sent (or pass to manager to handle this)
                         #1. Open file
-                        file_to_send = open(file_id, 'r', 'utf-8')
-                        #2. Get length 
-                        # Size of file in bytes:
-                        byte_size = file_to_send.tell()
+                        file_to_send = open(file_id, 'a+')
+                        byte_size = file.tell()
+                        # puts the cursor back at tbeginning
                         #3. Split into smaller fragments and loop using mrt_send1() until sent
                         # The current fragment size is maxxed at 1024 bytes.
-                        total_fragments = (byte_size / 1024) + 1
+                        if (byte_size%1024 == 0):
+                            #append a " " to the end of file
+                            file_to_send.write(' ')
+                        file_to_send.seek(0,0) #send back to start for reading
+                        total_fragments = int((byte_size / 1024)) + 1
                         # Loop using mrt_send1()
                         while True: 
                             # Read in the file_to_send into a 1024 byte buffer
@@ -180,10 +182,13 @@ class MessageListener(threading.Thread):
                             # If the end of the file is reached:
                             if len(current_part) < 1024:
                                 # Send it off using mrt_send1
-                                mrt_send(self.sendID, current_part)
+                                # TODO: need to format this as a file transfer messages
+                                mrt_send1(self.sendID, current_part)
+
                                 # Exit out of the while loop
                                 break
-                            mrt_send(self.sendID, current_part)
+                            mrt_send1(self.sendID, current_part)
+                        file_to_send.close()  
 
 
 

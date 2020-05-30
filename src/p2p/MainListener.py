@@ -27,17 +27,19 @@ class MainListener(threading.Thread):
         ownIP is a 12-byte string in ascii
         ownPort is a 5-byte string in ascii
     '''
-    def __init__(self, isSupernode, ownIP, ownPort):
+    def __init__(self, isSupernode, ownIP, ownPort, socket):
         self.threading.Thread.__init__(self)
         self.isSupernode = isSupernode
         self.ownIP = ownIP
         self.ownPort = ownPort
+        self.socket = socket
         self.fileInfoTable = FileInfoTable() # File Info Table
         self.childTable = ChildrenInfoTable() # Child Info Table
         self.supernode_list = [] # Supernodelist
         self.fileInfoTableLock = asyncio.Lock() # pass to spawned threads
         self.childTableLock = asyncio.Lock() # pass to spawned threads
         self.supernodeLock = asyncio.Lock() # pass to spawned threads
+        
     
     # type - 0, 1, 2
     # 0 = regular node
@@ -84,7 +86,7 @@ class MainListener(threading.Thread):
         pass
 
     # handles both cases
-    # all_files_requested is True/False indicating whether or not to request all files
+    # all_files_requested is True/False indicating whether or not to request all cfiles
     def handleLocalDHTEntriesRequest(self, all_files_requested, connID):
         request_file_length = msg[20:24]
         if all_files_requested:
@@ -104,7 +106,7 @@ class MainListener(threading.Thread):
                 mrt.mrt_send1(connID, '0000')
         pass
 
-    # handles both cases
+    # handles both cases 
     def handleAllDHTEntriesRequest(self):
         pass
         #TODO: This one is the most complicated as we first need to collect all of the file info from the other supernodes....
@@ -144,7 +146,10 @@ class MainListener(threading.Thread):
     def handleRelayRequest(self, connID, offererIP, offererPort, fileRequestedID):
         # TODO: for one supernode/two supernodes, this is fine, but for more supernodes interconnected
         # there may be a supernode issues
-        pass
+        child = (offererIP, offererPort)
+        if self.childTable.hasChild(child) and self.childHasFile(child, fileRequestedID):
+            # relay the message
+            
         
 
     '''
@@ -193,22 +198,38 @@ class MainListener(threading.Thread):
     
     def run(self):
         # TODO: may need to add an mrt_open here?? to indicate readyness to accept incoming connections
-        
+        mrt_open(s=self.socket) 
         # Begin The User Input Thread
-        inputListener = InputListener.InputListener(supernodeIP)
+        # Need to Pass in a SupernodePort and a SendID
+        supernodeIP = "HARDCODE (possibly clay?)"
+        supernodePort = "HARDCODE (possibly clay?)"
+        inputListener = InputListener.InputListener(self, supernodeIP, supernodePort, self.super_send_id)
         inputListener.start()
+
+        # Msg Listener super_send & super_recv
+        # Supernode Listener
+        superListener = MessageListener(self, self.super_recv_id)
+        superListener.start()
+
+        
+        # if supernode:
         while True:
-            newConnectionID = mrt.accept1()
-            newConnectionAddress
-            
-            # pass in mainlistener
-            messageListener = MessageListener(self, newConnectionID)
+            # Any new incoming connections
+            new_connections = mrt.accept_all() # This is non-blocking so that the thread can service other functions
+            if len(new_connections > 0):
+            # Get conn id
+                for connID in new_connections:
+                    # pass in mainlistener
+                    messageListener = MessageListener(self, connID)
+                    # spawn message listener thread
+                    messageListener.start()
+        # if not supernode
+            #loop until you want to leave the network.
+            # new connections (msg listener etc) should be handled by the requestForFileTransfer function
 
-
-            
-            # spawn message listener thread
-            messageListener.start()
-
+        # if supernode: 
+            # listen for new connections
+            # spawn new listeners if a new connection comes in 
 
     ''' Utility functions '''
     def formatFileInfoTable(self):
