@@ -208,7 +208,7 @@ class MainListener(threading.Thread):
     def run(self):
 
         print(f'Coming alive... IP: {self.ownIP} port: {self.ownPort}, socket: {self.recv_sock}')
-        mrt_open(s=self.recv_sock) 
+        mrt_open(ip = '',port = 5000,s=self.recv_sock) 
         # Begin The User Input Thread
         # Need to Pass in a SupernodePort and a SendID
         supernodeIP = "HARDCODE (possibly clay?)"
