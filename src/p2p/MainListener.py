@@ -1,7 +1,6 @@
 #! /usr/bin/python3
 
 import threading
-import asyncio
 import sys
 
 import InputListener
@@ -40,9 +39,9 @@ class MainListener(threading.Thread):
         self.fileInfoTable = FileInfoTable() # File Info Table
         self.childTable = ChildrenInfoTable() # Child Info Table
         self.supernode_list = [] # Supernodelist
-        self.fileInfoTableLock = asyncio.Lock() # pass to spawned threads
-        self.childTableLock = asyncio.Lock() # pass to spawned threads
-        self.supernodeLock = asyncio.Lock() # pass to spawned threads
+        self.fileInfoTableLock = threading.Lock() # pass to spawned threads
+        self.childTableLock = threading.Lock() # pass to spawned threads
+        self.supernodeLock = threading.Lock() # pass to spawned threads
         
     
     # type - 0, 1, 2
@@ -175,12 +174,14 @@ class MainListener(threading.Thread):
         # TODO: set a lock
         offerer = (sourceIP, sourcePort)
         newFileInfo = FileInfo(fileSize, (self.ownIP, self.ownPort))
-        self.fileInfoTable.adddFileInfo(fileID, offerer, newFileInfo)
+        self.fileInfoTable.addFileInfo(fileID, offerer, newFileInfo)
 
         # update childreninfotable as well
         assert(offerer != (self.ownIP, self.ownIP))
         self.childTable.addFile(offerer, fileID)
 
+        print(f"handle file post in mainlistener {fileID} of size {fileSize} from {sourceIP}:{sourcePort}")
+        print(f'hash table now looks like: {self.fileInfoTable}')
 
     '''
         POST 
@@ -205,7 +206,8 @@ class MainListener(threading.Thread):
 
     
     def run(self):
-        # TODO: may need to add an mrt_open here?? to indicate readyness to accept incoming connections
+
+        print(f'Coming alive... IP: {self.ownIP} port: {self.ownPort}, socket: {self.recv_sock}')
         mrt_open(s=self.recv_sock) 
         # Begin The User Input Thread
         # Need to Pass in a SupernodePort and a SendID
@@ -225,7 +227,9 @@ class MainListener(threading.Thread):
         while True:
             # Any new incoming connections
             new_connections = mrt_accept_all() # This is non-blocking so that the thread can service other functions
+            
             if len(new_connections) > 0:
+                print(f'{len(new_connections)} waiting... ')
             # Get conn id
                 for connID in new_connections:
                     # pass in mainlistener
@@ -249,5 +253,3 @@ class MainListener(threading.Thread):
     '''
     def formatSupernodeList(self):
         return "".join(ip + port for (ip, port) in self.supernode_list)
-
-

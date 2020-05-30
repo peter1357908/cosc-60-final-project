@@ -71,6 +71,7 @@ def main():
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         #sourceIP, sourcePort = CNode_helper.get_source_addr(sock)
         #static startup for clay
+        print(f'About to come alive... socket: {sock}')
         mainListener = MainListener.MainListener(True,'104055097253', 5000, sock,is_first = True).start()
     else:
 

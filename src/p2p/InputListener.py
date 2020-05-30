@@ -130,7 +130,10 @@ class InputListener(threading.Thread):
                         all_dht = True
                     self.requestDHT(all_dht)
                 elif input_tks[1] == "supernodes":
-                    self.request_supernodes()
+                    if not self.isSupernode:
+                        self.request_supernodes()
+                    else:
+                        print(f'{self.manager.supernode_list}')
                 elif input_tks[1] == "dl":
                     assert len(input_tks) >= 4
                     # Else if input is to begin a download:
@@ -151,7 +154,7 @@ class InputListener(threading.Thread):
                     if not self.isSupernode:
                         self.offerNewFile(file=None)
                     else: 
-                        self.manager.handleFilePost()
+                        self.manager.handleFilePost(self.ownIP, self.ownPort, self.sendID, file_id, os.path.getsize(file_id))
                 elif input_tks[1] == "rm":
                     assert len(input_tks) >= 3
                     file_id = input_tks[2]
