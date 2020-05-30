@@ -6,8 +6,8 @@ import sys
 sys.path.append('../mrt/')
 sys.path.append('../data-structures/')
 import argparse
-import CNode_helper
-import mrt
+#import CNode_helper
+#import mrt
 import socket
 
 # CONST VARIABLES
@@ -22,17 +22,17 @@ SUPERNODE_LOOPBACK_IP = "127.0.0.1"
     Takes an argument from the main program denoting whether to join as a supernode or regular node
     Returns True for successful connect and join, False otherwise
 """
-def supernode_connect(as_supernode=False):
-    supernode_id = CNode_helper.connect_p2p(ip=HARDCODED_SUPERNODE_IP, port=HARDCODED_SUPERNODE_PORT)
-    # assuming that 0 is the "bad case"
-    if supernode_id == 0:
-        return None
+# def supernode_connect(as_supernode=False):
+#     supernode_id = CNode_helper.connect_p2p(ip=HARDCODED_SUPERNODE_IP, port=HARDCODED_SUPERNODE_PORT)
+#     # assuming that 0 is the "bad case"
+#     if supernode_id == 0:
+#         return None
 
-    if as_supernode:
-       recv_id = CNode_helper.join_p2p(1)
-    else:
-        recv_id = CNode_helper.join_p2p(0)
-    return (supernode_id, recv_id)
+#     if as_supernode:
+#        recv_id = CNode_helper.join_p2p(1)
+#     else:
+#         recv_id = CNode_helper.join_p2p(0)
+#     return (supernode_id, recv_id)
 
 '''
     This is the entry point for the p2p network client
@@ -69,8 +69,9 @@ def main():
     if args.first:
         print(f'starting up as first ever supernode')
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sourceIP, sourcePort = CNode_helper.get_source_addr(sock)
-        print(f'ip: {sourceIP}, port: {sourcePort}')
+        #sourceIP, sourcePort = CNode_helper.get_source_addr(sock)
+        #
+        # print(f'ip: {sourceIP}, port: {sourcePort}')
         #static startup for clay
         print(f'About to come alive... socket: {sock}')
         mainListener = MainListener.MainListener(True,'104055097253', 5000, sock,is_first = True).start()
@@ -82,11 +83,11 @@ def main():
         # if not res:
         #     print(f"failed to connect to supernode at address {HARDCODED_SUPERNODE_IP}:{HARDCODED_SUPERNODE_PORT}")
         #     exit(-1)
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sourceIP, sourcePort = CNode_helper.get_source_addr(sock)
+        #sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        #sourceIP, sourcePort = CNode_helper.get_source_addr(sock)
 
         # If not a supernode:
-        super_send_id, super_recv_id = supernode_connect(False)
+        #super_send_id, super_recv_id = supernode_connect(False)
 
 
         # Begin The Packet / main Listener Thread

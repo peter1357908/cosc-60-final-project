@@ -10,6 +10,7 @@ from FileInfoTable import FileInfoTable, FileInfo
 from ChildrenInfoTable import ChildrenInfoTable
 from mrt import * 
 import MessageListener
+import time
 
 
 """ DEFINITIONS """
@@ -85,7 +86,7 @@ class MainListener(threading.Thread):
         snodes_num = str(len(supernode_list))
         values = ''.join([response_type,f'{len(supernode_list):04d}',str(supernode_list)])
         response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
-        mrt.mrt_send1(connID, response)
+        mrt_send1(connID, response)
         pass
 
     # handles both cases
@@ -96,17 +97,17 @@ class MainListener(threading.Thread):
             response_type = '100c'
             values = ''.JOIN([response_type,f'{len(self.FileInfoTable):04d}',str(self.FileInfoTable)])
             response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
-            mrt.mrt_send1(connID, response) 
+            mrt_send1(connID, response) 
         else:
             file_id = msg[24:24+int(request_file_length)].decode()
             file_entries = self.FileInfoTable.getTableByID(file_id)
             values = ''.join(['100c',f'{len(file_entries):04d}',str(file_entries)])
             response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
             if len(file_entries) > 0:
-                mrt.mrt_send1(connID, response)
+                mrt_send1(connID, response)
             #error
             else:
-                mrt.mrt_send1(connID, '0000')
+                mrt_send1(connID, '0000')
         pass
 
     # handles both cases 
@@ -135,7 +136,7 @@ class MainListener(threading.Thread):
             else:
                 # check that the offererip and port matches a childnode
                 child = (offererIP, offererPort)
-                if self.childTable.hasChild(child) and self.childTable.childHasFile(child, fileRequested):
+                if self.childTable.hasChild(child) and self.childTable.childHasFile(child, fileRequestedID):
                     # the supernode should "forward" the exact same message (same (Source IPv4, Source Port)) to that childnode.
                     # TODO: wait for Peter to finish data structure updates
                     pass
@@ -195,7 +196,7 @@ class MainListener(threading.Thread):
         response_type = "100b"
         values = ''.join([response_type])
         response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
-        mrt.mrt_send1(connID, response)
+        mrt_send1(connID, response)
 
 
     '''
@@ -208,14 +209,16 @@ class MainListener(threading.Thread):
     def run(self):
 
         print(f'Coming alive... IP: {self.ownIP} port: {self.ownPort}, socket: {self.recv_sock}')
-        mrt_open(ip = '',port = 5000,s=self.recv_sock) 
+        mrt_open() 
+        #conn = mrt_accept1()
+        #print(conn)
         # Begin The User Input Thread
         # Need to Pass in a SupernodePort and a SendID
         supernodeIP = "HARDCODE (possibly clay?)"
         supernodePort = "HARDCODE (possibly clay?)"
         inputListener = InputListener.InputListener(self, self.ownIP, self.ownPort, self.super_send_id, self.isSupernode)
         inputListener.start()
-
+        print(f'started input listener...')
         # Msg Listener super_send & super_recv
         # Supernode Listener
         if not self.is_first:
@@ -224,18 +227,24 @@ class MainListener(threading.Thread):
 
         
         # if supernode:
+        print(f'looping, waiting for connections... ')
         while True:
             # Any new incoming connections
+            #print(f'in loop')
+            time.sleep(3)
             new_connections = mrt_accept_all() # This is non-blocking so that the thread can service other functions
-            
+            print(new_connections)
             if len(new_connections) > 0:
                 print(f'{len(new_connections)} waiting... ')
             # Get conn id
                 for connID in new_connections:
                     # pass in mainlistener
-                    messageListener = MessageListener(self, connID)
+                    messageListener = MessageListener.MessageListener(self, connID)
                     # spawn message listener thread
                     messageListener.start()
+                    print(f'started message listener...')
+                    
+                
         # if not supernode
             #loop until you want to leave the network.
             # new connections (msg listener etc) should be handled by the requestForFileTransfer function

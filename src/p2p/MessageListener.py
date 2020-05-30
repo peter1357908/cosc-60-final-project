@@ -8,7 +8,7 @@ import FileInfoTable
 import sys
 sys.path.append('../mrt/')
 sys.path.append('../data-structures/')
-import mrt
+from mrt import *
 #import SNode_helpers
 
 class MessageListener(threading.Thread):
@@ -16,7 +16,8 @@ class MessageListener(threading.Thread):
     # Initialize MessageListener Thread
     # TODO: Add paramaters as arguments are determined
     def __init__(self, mainListener, connID):
-        self.threading.Thread.__init__(self)
+        print("Message Listener Instantiated")
+        threading.Thread.__init__(self)
         # Main Listener 
         self.mainListener = mainListener
         # Connection ID
@@ -95,17 +96,19 @@ class MessageListener(threading.Thread):
 
     # TODO: run() method:
     def run(self):
+
+        print("Message Listener running.")
         while True:
             
             # Accept a packet from the current connID
-            packet = mrt.receive1(self.connID)            
-            
+            packet = mrt_receive1(self.connID)            
+            print(packet)
             # Parse out the packet packets:
             # Grab the data included in the message headers
             messageType = packet[0:4]
             messageLen = packet[4:8]
             receive_ip = packet[8:20].decode()
-            port = int(packet[20:25].decode)
+            port = int(packet[20:25].decode())
             ipAddr = (receive_ip,port)            
             
             if messageType.decode() == '0001':    # If the message is a post:

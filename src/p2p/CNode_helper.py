@@ -182,5 +182,6 @@ Message must be in binary (use binascii.unhexlify)
 Sends to SUPERNODE_ID
 """
 def send_p2p_msg(sock,msg):
+	print(f'sending to: {sock}, msg: {msg}')
 	mrt_send1(sock,msg)
 

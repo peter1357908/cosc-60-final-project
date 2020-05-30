@@ -153,7 +153,7 @@ def msg_parser(msg):
 #TODO: MOVE MAIN INTO SEPARATE FILE
 if __name__ == '__main__':
     # Starts listening to connections
-    mrt.mrt_open(myIP,myPort) #TODO: Supply host IP and appropriate PORT
+    #mrt.mrt_open(myIP,myPort) #TODO: Supply host IP and appropriate PORT
 
     supernode_list = []
 
