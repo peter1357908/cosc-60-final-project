@@ -149,7 +149,11 @@ class MainListener(threading.Thread):
         child = (offererIP, offererPort)
         if self.childTable.hasChild(child) and self.childHasFile(child, fileRequestedID):
             # relay the message
-            
+            response_type = '000e'
+            values = ''.join([response_type, f'{len():04d}', fileRequestedID, offererIP, offererPort])
+            response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
+            # TODO: we need another connID
+            # mrt.mrt_send1()
         
 
     '''
