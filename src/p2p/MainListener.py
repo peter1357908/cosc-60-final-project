@@ -29,7 +29,7 @@ class MainListener(threading.Thread):
         ownIP is a 12-byte string in ascii
         ownPort is a 5-byte string in ascii
     ''' 
-    def __init__(self, isSupernode, ownIP, ownPort, recv_sock,super_send_id = '', super_recv_id = '', is_first = False):
+    def __init__(self, isSupernode, ownIP, ownPort, recv_sock, super_send_id = '', super_recv_id = '', is_first = False):
         threading.Thread.__init__(self)
         self.isSupernode = isSupernode
         self.ownIP = ownIP
@@ -41,9 +41,11 @@ class MainListener(threading.Thread):
         self.fileInfoTable = FileInfoTable()
         self.childTable = ChildrenInfoTable()
         self.supernodeSet = SupernodeSet()
+        self.addrToIDTable = dict() # maps (IP, Port) to MRT ID (send, recv)
         self.fileInfoTableLock = threading.Lock() # pass to spawned threads
         self.childTableLock = threading.Lock() # pass to spawned threads
         self.supernodeLock = threading.Lock() # pass to spawned threads
+        self.addrToIDTableLock = threading.Lock()
         
     
     # type - 0, 1, 2
@@ -53,10 +55,9 @@ class MainListener(threading.Thread):
     def handleJoinRequest(self, type, sendID, sourceIP, sourcePort): 
         # send number of supernode entries, supernode entries
         if type == 0:
-            # keep sour
             response_type = '100a'
             values = f'{response_type}{self.supernodeSet}'
-            response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
+            response = ''.join([REQUEST,f'{len(values):04d}', self.ownIP, self.ownPort, values])
             # id is returned by accept1()
             #TODO: Need to add the duplex capability here just need to figure out where and how we are storing these connections
             self.childTable.addChild((sourceIP, sourcePort))
@@ -65,7 +66,7 @@ class MainListener(threading.Thread):
             #TODO: Add functionality to keep track of supernode
             response_type = '100a'
             values = f'{response_type}{self.supernodeSet}'
-            response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
+            response = ''.join([REQUEST, f'{len(values):04d}', self.ownIP, self.ownPort, values])
             # id is returned by accept1()
             mrt_send1(sendID, response)
 

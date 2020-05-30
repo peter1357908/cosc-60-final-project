@@ -15,12 +15,12 @@ class InputListener(threading.Thread):
 
     # Initialize InputListener Thread
     # TODO: Add paramaters as arguments are determined
-    def __init__(self,main_listener,ownIP, ownPort, send_id, isSupernode):
+    def __init__(self,main_listener,ownIP, ownPort, sendID, isSupernode):
         threading.Thread.__init__(self)
         self.manager = main_listener
         self.ownIP = ownIP  # IP of supernode, 127.0.0.1 if is a supernode
         self.ownPort = ownPort
-        self.sendID = send_id
+        self.sendID = sendID
         self.isSupernode = isSupernode
         # self.table = table # File Info Table
         # if supernodeIP == "127.0.0.1":

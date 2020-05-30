@@ -165,6 +165,46 @@ class MessageListener(threading.Thread):
                     # relayed supernode
                     elif r_mis == '0002':
                         pass
+                         
+                    # join as a supernode
+                    elif r_misc == '0001':
+
+                        pass
+                    # relayed supernode
+                    elif r_mis == '0002':
+                        pass
+                         
+                    # join as a supernode
+                    elif r_misc == '0001':
+
+                        pass
+                    # relayed supernode
+                    elif r_mis == '0002':
+                        pass
+                         
+                    # join as a supernode
+                    elif r_misc == '0001':
+
+                        pass
+                    # relayed supernode
+                    elif r_mis == '0002':
+                        pass
+                         
+                    # join as a supernode
+                    elif r_misc == '0001':
+
+                        pass
+                    # relayed supernode
+                    elif r_mis == '0002':
+                        pass
+                         
+                    # join as a supernode
+                    elif r_misc == '0001':
+
+                        pass
+                    # relayed supernode
+                    elif r_mis == '0002':
+                        pass
                 elif requestType == '000b':
                     #TODO: Request for a supernode's supernode list
                     #self.manager.handleSupernodeListRequest(sourceIP,port,) 

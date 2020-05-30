@@ -24,16 +24,16 @@ SUPERNODE_LOOPBACK_IP = "127.0.0.1"
     Returns True for successful connect and join, False otherwise
 """
 def supernode_connect(sourceIP, sourcePort, as_supernode=False):
-    supernode_id = CNode_helper.connect_p2p(ip=HARDCODED_SUPERNODE_IP, port=HARDCODED_SUPERNODE_PORT)
+    sendID = CNode_helper.connect_p2p(ip=HARDCODED_SUPERNODE_IP, port=HARDCODED_SUPERNODE_PORT)
     # assuming that 0 is the "bad case"
-    if supernode_id == 0:
+    if sendID == 0:
         return None
 
     if as_supernode:
-        recv_id = CNode_helper.join_p2p(supernode_id, sourceIP, sourcePort, 1)
+        recvID = CNode_helper.join_p2p(sendID, sourceIP, sourcePort, 1)
     else:
-        recv_id = CNode_helper.join_p2p(supernode_id, sourceIP, sourcePort, 0)
-    return (supernode_id, recv_id)
+        recvID = CNode_helper.join_p2p(sendID, sourceIP, sourcePort, 0)
+    return (sendID, recv_id)
 
 '''
     This is the entry point for the p2p network client
@@ -62,14 +62,12 @@ def main():
     if args.first:
         print(f'starting up as first ever supernode')
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        #sourceIP, sourcePort = CNode_helper.get_source_addr(sock)
-        #
+        # sourceIP, sourcePort = CNode_helper.get_source_addr(sock)
         # print(f'ip: {sourceIP}, port: {sourcePort}')
         #static startup for clay
         print(f'About to come alive... socket: {sock}')
-        mainListener = MainListener.MainListener(True,'104055097253', 5000, sock,is_first = True).start()
+        mainListener = MainListener.MainListener(isSupernode=True,ownIP='104055097253',ownPort=5000,recv_sock=sock,is_first = True).start()
     else:
-
         print("connection is good")
 
         # If not connId:
