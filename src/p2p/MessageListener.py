@@ -21,12 +21,17 @@ class MessageListener(threading.Thread):
         self.mainListener = mainListener
         # Connection ID
         self.connID = connID
+        self.sendID = 0
 
         self.manager = mainListener
+    
 
     # Methods for handling each parsed method:
     # A note on the following methods: 'file' is always a File object
     # and 'files' is an array of File objects
+
+    def setSendID(self, ID):
+        self.sendID = ID
 
     # Accept a new connection
     def acceptConnection(self, connectedIP):
@@ -91,90 +96,99 @@ class MessageListener(threading.Thread):
     # TODO: run() method:
     def run(self):
         while True:
+            
             # Accept a packet from the current connID
-            packet = mrt.receive1(self.connID)
-            
-            # TODO: Accept the packet:
-            # In java, this is socket.accept(packet)
-            packetContents = ""
-            
+            packet = mrt.receive1(self.connID)            
             
             # Parse out the packet packets:
+            # Grab the data included in the message headers
+            messageType = packet[0:4]
+            messageLen = packet[4:8]
+            receive_ip = packet[8:20].decode()
+            port = int(packet[20:25].decode)
+            ipAddr = (receive_ip,port)            
             
-            #TODO: Check the type of the packet:
-            messageType = 'parsed'
-            requestType = 'parsed'
-            
-            if messageType == "Post":    # If the message is a post:
+            if messageType.decode() == '0001':    # If the message is a post:
                 # TODO: Now, parse the Post Type:
-                postType == "parsed"
-                if postType == "New File Offered":   # If the message announces a new file
+                postType = packet[25:29]
+                if postType == '000a':   # If the message announces a new file
                     # TODO: parse out necessary info for the file list (usually a list with 1 file)
-                    self.addFiles(files)
-                elif postType == "Disconnect":    # If the messages announces a disconnect
+                    fileSize = packet[29:33]
+                    fileIdLength = packet[33:37]
+                    fileId = packet[37:41]
+                    # self.manager.handlePostFile()
+                    fInfo.addFileInfo(file_id.decode(),ip_addr,file_size.decode()) # TODO: Find the actual name for these
+                    childHash.addFile(receive_ip, file_id)
+                elif postType == '000b':    # If the messages announces a disconnect
                     # Note: a child node will never receive this message, since
                     # our network is a "structured" p2p network
-                    # TODO: Parse out the disconnecting IP
-                    self.processDisconnect(disconnectedIP)
-            elif messageType == "Request":    # If the message is a request:
-                # TODO: Now, parse the Request Type
-                requestType == "parsed"
-                if requestType == "Child Join Network":
-                    # Note: a child node will never receive this message, since
-                    # our network is a "structured" p2p network
-                    # TODO: Parse out joining IP
-                    self.acceptConnection(connectedIP)
-                elif requestType == "Supernode Join Network":
-                    # Note: a child node will never receive this message, since
-                    # our network is a "structured" p2p network
-                    # TODO: Parse out joining IP
-                    self.acceptSupernodeConnection(connectedIP)
-                elif requestType == "Supernode List":
-                    # Note: a child node will never receive this message, since
-                    # our network is a "structured" p2p network
-                    # TODO: Parse out IP to send Supernode List back to
-                    self.sendBackSupernodeList(destinationIP)
-                elif requestType == "Local DHT":
-                    # Note: a child node will never receive this message, since
-                    # our network is a "structured" p2p network
-                    # TODO: Parse out IP to send Local DHT back to
-                    # TODO: Craft packet with local DHT to send
-                    # TODO: Send Packet
-                    self.sendBackLocalHT(destinationIP)
-                elif requestType == "Request All DHT":
-                    # Note: a child node will never receive this message, since
-                    # our network is a "structured" p2p network
-                    # TODO: Parse out IP to send DHT back to (should be a child node of this node, or it will be itself)
-                    self.sendBackHT(destinationIP)
-                elif requestType == "File Transfer":
-                    # This type of message is used for UDP holepunching.
-                    # NOTE: I'm not entirely sure how this works. Is this like a handshake? A hello message?
-                    # Perhaps this is used to initiate a download...?
-                    # I would assume that this message would start a "File Receiver" Thread
-                    # Peter, do you mind writing / commenting this section of the code
-                    # Since you devised that aspect of our protocol>?
-                    self.acceptDownload(file, destinationIP)
-            elif messageType == "File Transfer":  # If the message is a File Transfer / Download:
-                # This message contains the binary data of the file.
-                # I would assume this message shouldn't be received on this port (5000)
-                # but only on the "File Transfer" port (5001) by the "File Receiver " Thread
-                # I put passOn here so that messages-in-transit could be sent to this port
-                # and messages-arriving-at-destination would be sent to port 5001
-                self.passOn(destinationIP)
-            elif messageType == "Error Indication":   # If the message is an error:
-                # Its error time boyyyeeeee
-                # I don't think we specify error types as of now, so this is the default error message:
-                print("Unknown message type...now detonating computer.")
-            
-            else:    # If the Message Type is unknown:
-                print("Unknown Message Type.")
-            
+                    # TODO: Make sure that the Child hash actually takes in an ip and again, rename to self.CHild etc.
+                    child_files = childHash.popChild(ip)
+                    fInfo.removeAllFileInfoByOfferer(child_files, ip_addr)
+                    self.processDisconnect(ip)
+            elif messageType == '0101':    # If the message is a request:
+                requestType = msg[25:29]
+                misc = msg[29:33]
+                if requestType == '000a':
+                    rMisc = misc.decode()
+                    # join as a regular node
+                    if rMisc == '0000':
+
+                        #TODO: VLADO PLEASE REVIEW THIS CHUNK AND DECIDE IF YOU WANT IT OR NOT
+                        responseType = '100a'
+                        snodesNum = str(len(supernode_list)) # TODO: rename to whatever it should be
+                        msg = snodesNum + str(supernode_list)#Remove first and last char of list upon receiving
+                        response = responseType + myAddr + str(len(msg))+msg
+                        childHash = {}
+                        childrenHash.addChild(receive_ip, childHash)
+
+                        self.sendID=mrt_connect(ip=source_ip,port=port)
+                        
+
+
+                    # join as a supernode
+                    elif r_misc == '0001':
+                        pass
+                    # relayed supernode
+                    elif r_mis == '0002':
+                        pass
+                elif requestType == '000b':
+                    #TODO: Request for a supernode's supernode list
+                    self.manager.handleSupernodeListRequest(receive_ip,port,) 
+                # file transfer
+                elif requestType = '000e':
+                    end_of_id = 29+int(misc)
+                    file_id = msg[29:end_of_id]
+                    offerer_ipv4 = msg[end_of_id:end_of_id+12]
+                    offerer_port = msg[end_of_id+12:end_of_id+17]
+
+                    if offerer_ipv4 == self.manager.ownIP and offerer_port == self.manager.ownPort:
+                        #TODO: load file and sent (or pass to manager to handle this)
+                        #1. Open file
+                        file_to_send = open(file_id, 'r', 'utf-8')
+                        #2. Get length 
+                        # Size of file in bytes:
+                        byte_size = file_to_send.tell()
+                        #3. Split into smaller fragments and loop using mrt_send1() until sent
+                        # The current fragment size is maxxed at 1024 bytes.
+                        total_fragments = (byte_size / 1024) + 1
+                        # Loop using mrt_send1()
+                        while True: 
+                            # Read in the file_to_send into a 1024 byte buffer
+                            current_part = file_to_send.read(1024)
+                            # Send the packet using mrt_send1()
+                            # If the end of the file is reached:
+                            if len(current_part) < 1024:
+                                # Send it off using mrt_send1
+                                mrt_send(self.sendID, current_part)
+                                # Exit out of the while loop
+                                break
+                            mrt_send(self.sendID, current_part)
 
 
 
-
-
-
-
-
-    
+                    else: 
+                        #TODO: pass message along to the correct childnode
+                        #TODO: there should be a function in manager that will search through the childnodes and then 
+                        # relay message to them 
+                        self.manager.handleRelayRequest(self.connID, offerer_ipv4, offerer_port, file_id)

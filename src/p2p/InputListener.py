@@ -4,10 +4,10 @@ import threading
 import asyncio
 import sys
 sys.path.append('../mrt/')
-sys.path.append('../../../src/data-structures/')
+sys.path.append('../data-structures/')
 import mrt
-import FileInfoTable
-import ChildrenInfoTable
+from FileInfoTable import *
+from ChildrenInfoTable import *
 import CNode_helper
 
 class InputListener(threading.Thread):

@@ -6,10 +6,11 @@ import sys
 
 import InputListener
 sys.path.append('../mrt/')
-sys.path.append('../../../src/data-structures/')
-from FileInfoTable import *
-from ChildrenInfoTable import *
-import mrt
+sys.path.append('../data-structures/')
+from FileInfoTable import FileInfoTable, FileInfo
+from ChildrenInfoTable import ChildrenInfoTable
+from mrt import * 
+
 
 """ DEFINITIONS """
 POST = '0001'
@@ -42,7 +43,7 @@ class MainListener(threading.Thread):
     # 0 = regular node
     # 1 = supernode
     # 2 = relayed supernode
-    def handleJoinRequest(self, type, connID): #TODO: add ip and port? 
+    def handleJoinRequest(self, type, sendID): #TODO: add ip and port? 
         # send number of supernode entries, supernode entries
         if type == 0:
             # keep sour
@@ -50,14 +51,15 @@ class MainListener(threading.Thread):
             values = ''.join([response_type, f'{len(supernode_list):04d}',str(supernode_list)])
             response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
             # id is returned by accept1()
-            mrt.mrt_send1(connID, response)
+            #TODO: Need to add the duplex capability here just need to figure out where and how we are storing these connections
+            mrt_send1(sendID, response)
         elif type == 1:
             #TODO: Add functionality to keep track of supernode
             response_type = '100a'
             values = ''.join([response_type, f'{len(supernode_list):04d}',str(supernode_list)])
             response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
             # id is returned by accept1()
-            mrt.mrt_send1(connID, response)
+            mrt_send1(sendID, response)
 
         elif type == 2:
             supernode_list.add() #(IPV4,port)
@@ -138,6 +140,12 @@ class MainListener(threading.Thread):
             else:
                 # Else, childnode should "forward" the exact same request message (same (Source IPv4, Source Port)) to the node specified by (Source IPv4, Source Port) for UDP-holepunching
                 pass
+
+    def handleRelayRequest(self, connID, offererIP, offererPort, fileRequestedID):
+        # TODO: for one supernode/two supernodes, this is fine, but for more supernodes interconnected
+        # there may be a supernode issues
+        pass
+        
 
     '''
         handles POSTing a file

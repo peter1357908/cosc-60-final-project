@@ -62,7 +62,8 @@ Function to get the source ip and port (public) for the client
 TODO: NEED TO INITIALIZE SOCK 
 """
 def set_source_addr(sock):
-	global SOURCE_IP,SOURCE_PORT
+	global SOURCE_IP,SOURCE_PORT,SOCK
+	SOCK = sock
 	ip, SOURCE_PORT = get_address(sock)
 	SOURCE_PORT = str(SOURCE_PORT).zfill(5)
 	ip = str(ip).split('.')
