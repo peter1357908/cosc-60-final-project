@@ -27,14 +27,17 @@ mrt_open: indicate ready-ness to receive incoming connections
 
 Create new socket, startup thread
 """
-def mrt_open(host = '192.168.0.249', port = 11235,s=0):
+def mrt_open(host = '', port = 5000,s=0):
 	global server_sock,close
 	close = False
 	if s == 0:
 		server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		server_sock.bind((host,port))
 	else:
 		server_sock = s
 		server_sock.settimeout(None)
+
+	
 	threading.Thread(target=start_receiver_thread, args=[server_sock]).start()
 
 
@@ -137,6 +140,7 @@ def mrt_connect(host  = '192.168.0.249',port = 11235,s=0):
 		client_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	else:
 		client_sock = s
+		print(f'using passed socket: {client_sock}')
 	addr = (host,port)
 	id = handshake(addr)
 	senders[id].receiving=True
@@ -369,6 +373,8 @@ Initiate handshake with server, return connection id and store connection stuff 
 """
 def handshake(addr):
 	global client_sock
+	print(f'handshaking... socket: {client_sock}, send_addr = {addr}')
+
 	kind = "RCON"
 	window_size = "0000"
 	id = "0000"
@@ -384,6 +390,7 @@ def handshake(addr):
 		try:
 			client_sock.sendto(bytes_join,addr)
 			data, addr = client_sock.recvfrom(2048)
+			print(f'data: {data}, addr: {addr}')
 			if verify_checksum(data) != 0: # discard packet if checksum doesnt add up
 					continue
 			p = Packet()
