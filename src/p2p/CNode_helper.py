@@ -74,7 +74,7 @@ join_type:
 	1: join as supernode
 	2: join as relayed supernode
 """
-def join_p2p(send_id,source_ip,source_port,join_type = 0):
+def join_p2p(send_id, source_ip, source_port, join_type = 0):
 	global RECV_ID
 	values = ''.join([R_JOIN,f'{join_type:04d}'])
 	msg_len = len(values)

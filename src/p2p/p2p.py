@@ -9,6 +9,7 @@ import argparse
 #import CNode_helper
 #import mrt
 import socket
+import CNode_helper
 
 # CONST VARIABLES
 # TODO: need to change this to an established supernode
@@ -22,16 +23,16 @@ SUPERNODE_LOOPBACK_IP = "127.0.0.1"
     Takes an argument from the main program denoting whether to join as a supernode or regular node
     Returns True for successful connect and join, False otherwise
 """
-def supernode_connect(as_supernode=False):
+def supernode_connect(sourceIP, sourcePort, as_supernode=False):
     supernode_id = CNode_helper.connect_p2p(ip=HARDCODED_SUPERNODE_IP, port=HARDCODED_SUPERNODE_PORT)
     # assuming that 0 is the "bad case"
     if supernode_id == 0:
         return None
 
     if as_supernode:
-       recv_id = CNode_helper.join_p2p(1)
+        recv_id = CNode_helper.join_p2p(supernode_id, sourceIP, sourcePort, 1)
     else:
-        recv_id = CNode_helper.join_p2p(0)
+        recv_id = CNode_helper.join_p2p(supernode_id, sourceIP, sourcePort, 0)
     return (supernode_id, recv_id)
 
 '''
@@ -46,10 +47,10 @@ def main():
     parser = argparse.ArgumentParser(description="p2p client")
     parser.add_argument("--supernode", "-s", help="join as a supernode", action="store_true")
     parser.add_argument("--first", "-f", help="be the first supernode", action="store_true")
+    parser.add_argument("--port_forward", "-p",help="do you have port fowarding setup", action="store_true")
     args = parser.parse_args()
 
-    # If the node is a supernode, supernodeIP is loopback / 127.0.0.1
-    # TODO: If the node is joining as a supernode & the network already 
+    # TODO: If the node is joining as a supernode & the network already ??
     # If the node is a childnode, then the IP of the supernode to be joined is an arg
     supernodePort = None
     isSupernode= args.supernode
@@ -80,7 +81,12 @@ def main():
 
         # If not a supernode:
         if not isSupernode: 
-            send_id, recv_id = supernode_connect(False)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            if args.port_forward:
+                #sock.bind(('',5000))
+                sourceIP,sourcePort = CNode_helper.get_source_addr(sock)
+
+                send_id, recv_id = supernode_connect(sourceIP, sourcePort, False)
             print(f'send id : {send_id}, recv_id = {recv_id}')
             
         #super_send_id, super_recv_id = supernode_connect(False)

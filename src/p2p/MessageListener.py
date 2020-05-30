@@ -105,21 +105,22 @@ class MessageListener(threading.Thread):
             print(packet)
             # Parse out the packet packets:
             # Grab the data included in the message headers
-            messageType = packet[0:4]
-            messageLen = packet[4:8]
+            messageType = packet[0:4].decode()
+            messageLen = int(packet[4:8])
             receive_ip = packet[8:20].decode()
             port = int(packet[20:25].decode())
             ipAddr = (receive_ip,port)            
             
-            if messageType.decode() == '0001':    # If the message is a post:
+            if messageType == '0001':    # If the message is a post:
                 # TODO: Now, parse the Post Type:
-                postType = packet[25:29]
+                postType = packet[25:29].decode()
                 if postType == '000a':   # If the message announces a new file
                     # TODO: parse out necessary info for the file list (usually a list with 1 file)
-                    fileSize = packet[29:33]
-                    fileIdLength = packet[33:37]
-                    fileId = packet[37:41]
+                    fileSize = int(packet[29:33])
+                    fileIDLength = int(packet[33:37])
+                    fileID = packet[37:37+fileIDLength].decode()
                     # self.manager.handlePostFile()
+                    print(f'file post.... fsize: {fileSize}, fid_len: {fileIDLength}, fid: {fileID}')
                     fInfo.addFileInfo(file_id.decode(),ip_addr,file_size.decode()) # TODO: Find the actual name for these
                     childHash.addFile(receive_ip, file_id)
                 elif postType == '000b':    # If the messages announces a disconnect
@@ -130,11 +131,13 @@ class MessageListener(threading.Thread):
                     fInfo.removeAllFileInfoByOfferer(child_files, ip_addr)
                     self.processDisconnect(ip)
             elif messageType == '0101':    # If the message is a request:
-                requestType = msg[25:29]
+                print(f'request received')
+                requestType = msg[25:29].decode()
                 misc = msg[29:33]
                 if requestType == '000a':
                     rMisc = misc.decode()
                     self.sendID=mrt_connect(ip=source_ip,port=port)
+                    print(f'request to join received... type: {misc}')
                     # join as a regular node
                     if rMisc == '0000':
 
