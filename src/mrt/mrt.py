@@ -140,6 +140,7 @@ def mrt_connect(host  = '192.168.0.249',port = 11235,s=0):
 		client_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 	else:
 		client_sock = s
+		client_sock.settimeout(None)
 		print(f'using passed socket: {client_sock}')
 	addr = (host,port)
 	id = handshake(addr)
@@ -439,7 +440,7 @@ def start_receiver_thread(socket):
 		else:
 			if check_conn(p,addr) == 0: 
 				reg_conn(p,addr)
-
+			print(f'incoming packet: {p}')
 			direct_server_message(p)
 
 
@@ -595,6 +596,7 @@ sends messages out. Takes checksum and premessage as args
 """
 def send_message(addr,checksum, pre_message):
 	final_msg = checksum.to_bytes(4,'big') + pre_message.encode()
+	print(f'sending message to addr: {addr}')
 	server_sock.sendto(final_msg,addr)
 
 """
