@@ -49,7 +49,7 @@ class MainListener(threading.Thread):
     # 0 = regular node
     # 1 = supernode
     # 2 = relayed supernode
-    def handleJoinRequest(self, type, sendID): #TODO: add ip and port? 
+    def handleJoinRequest(self, type, sendID, sourceIP, sourcePort): 
         # send number of supernode entries, supernode entries
         if type == 0:
             # keep sour

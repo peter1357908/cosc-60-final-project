@@ -108,8 +108,8 @@ class MessageListener(threading.Thread):
             messageType = packet[0:4].decode()
             messageLen = int(packet[4:8])
             receive_ip = packet[8:20].decode()
-            port = int(packet[20:25].decode())
-            ipAddr = (receive_ip,port)            
+            receive_port = int(packet[20:25].decode())
+            ipAddr = (receive_ip, receive_port)            
             
             if messageType == '0001':    # If the message is a post:
                 # TODO: Now, parse the Post Type:
@@ -132,11 +132,11 @@ class MessageListener(threading.Thread):
                     self.processDisconnect(ip)
             elif messageType == '0101':    # If the message is a request:
                 print(f'request received')
-                requestType = msg[25:29].decode()
-                misc = msg[29:33]
+                requestType = packet[25:29].decode()
+                misc = packet[29:33]
                 if requestType == '000a':
                     rMisc = misc.decode()
-                    self.sendID=mrt_connect(ip=source_ip,port=port)
+                    #self.sendID=mrt_connect(ip=source_ip,port=receive_port)
                     print(f'request to join received... type: {misc}')
                     # join as a regular node
                     if rMisc == '0000':
@@ -144,12 +144,12 @@ class MessageListener(threading.Thread):
                         #TODO: VLADO PLEASE REVIEW THIS CHUNK AND DECIDE IF YOU WANT IT OR NOT
                         responseType = '100a'
                         snodesNum = str(len(supernode_list)) # TODO: rename to whatever it should be
-                        msg = snodesNum + str(supernode_list)#Remove first and last char of list upon receiving
-                        response = responseType + myAddr + str(len(msg))+msg
+                        packet = snodesNum + str(supernode_list)#Remove first and last char of list upon receiving
+                        response = responseType + myAddr + str(len(packet))+packet
                         childHash = {}
                         childrenHash.addChild(receive_ip, childHash)
 
-                        #TODO: I think we just need to pass everything up one level here VLADO/PETER PLEASE CONFIRM AND COMPLETE
+                        # self.manager.handleJoinRequest()
                     # join as a supernode
                     elif r_misc == '0001':
 
@@ -159,13 +159,14 @@ class MessageListener(threading.Thread):
                         pass
                 elif requestType == '000b':
                     #TODO: Request for a supernode's supernode list
-                    self.manager.handleSupernodeListRequest(receive_ip,port,) 
+                    #self.manager.handleSupernodeListRequest(receive_ip,port,) 
+                    pass
                 # file transfer
                 elif requestType == '000e':
                     end_of_id = 29+int(misc)
-                    file_id = msg[29:end_of_id]
-                    offerer_ipv4 = msg[end_of_id:end_of_id+12]
-                    offerer_port = msg[end_of_id+12:end_of_id+17]
+                    file_id = packet[29:end_of_id]
+                    offerer_ipv4 = packet[end_of_id:end_of_id+12]
+                    offerer_port = packet[end_of_id+12:end_of_id+17]
 
                     if offerer_ipv4 == self.manager.ownIP and offerer_port == self.manager.ownPort:
                         #TODO: load file and sent (or pass to manager to handle this)
