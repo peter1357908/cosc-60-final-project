@@ -12,49 +12,41 @@ import CNode_helper
 import os
 
 class InputListener(threading.Thread):
-
-    # Initialize InputListener Thread
-    # TODO: Add paramaters as arguments are determined
-    def __init__(self,main_listener,ownIP, ownPort, sendID, isSupernode):
+    def __init__(self, main_listener, ownIP, ownPort, bootstrapSendID, isSupernode):
         threading.Thread.__init__(self)
         self.manager = main_listener
-        self.ownIP = ownIP  # IP of supernode, 127.0.0.1 if is a supernode
+        self.ownIP = ownIP
         self.ownPort = ownPort
-        self.sendID = sendID
+        self.bootstrapSendID = bootstrapSendID
         self.isSupernode = isSupernode
-        # self.table = table # File Info Table
-        # if supernodeIP == "127.0.0.1":
-        #     self.childTable = ChildrenInfoTable()
-        #     self.superList = []
 
     # Methods for handling each parsed case:
     # A note on the following methods: "file" is always a File Object.
 
     # Construct Request DHT packet and send to supernodeIP:
-    def request_dht(self, filename,all_lists = False):
-        # CNode_helper.requestDHT(all_dht)
-        if len(filename) == 0:
-            print("Requesting entire DHT")
-        print("Requested DHT from ", self.supernodeIP)
-        if all_lists:
-            print("Requesting from all Supernodes")
-            CNode_helper.request_global_dht(self.sendID, self.ownIP, self.ownPort,filename)
+    def requestDHT(self, filename, isRequestingGlobalDHT):
+        if isRequestingGlobalDHT:
+            CNode_helper.request_global_dht(
+                self.bootstrapSendID, self.ownIP, self.ownPort, filename)
         else:
-            CNode_helper.request_local_dht(self.sendID,self.ownIP,self.ownPort,filename)
+            CNode_helper.request_local_dht(
+                self.bootstrapSendID, self.ownIP, self.ownPort, filename)
 
     # Request list of supernodes
-    def request_supernodes(self):
+    def requestSupernodes(self):
         # TODO
         # CNode_helper.request_super_list()
         print("requesting all the supernodes")
-        CNode_helper.request_super_list(self.sendID,self.ownIP,self.ownPort)
+        CNode_helper.request_super_list(
+            self.bootstrapSendID, self.ownIP, self.ownPort)
 
     # Begin a download:
     def beginDownload(self, file, downloadIP,downloadPort):
         # downloader = Downloader(self.supernodeIP, downloadIP, file)
         # downloader.start()
         print("Attempting to download from ", downloadIP)
-        transfer_id = CNode_helper.request_file(self.sendID,self.ownIP,self.ownPort,file,downloadIP,downloadPort)
+        transfer_id = CNode_helper.request_file(
+            self.bootstrapSendID, self.ownIP, self.ownPort, file, downloadIP, downloadPort)
 
         # Start download:
         # constantly receive 1?
@@ -77,7 +69,8 @@ class InputListener(threading.Thread):
         # CNode_helper.post_file(file_size, id_size, filename)
         print("Announcing a new file is being offered: ", file)
         file_size = os.path.getsize(file)
-        CNode_helper.post_file(self.sendID,self.ownIP,self.ownPort,file_size,len(file),file)
+        CNode_helper.post_file(
+            self.bootstrapSendID, self.ownIP, self.ownPort, file_size, len(file), file)
     
     # Announce a file is no longer being offered:
     def removeOfferedFile(self, file):
@@ -89,7 +82,8 @@ class InputListener(threading.Thread):
     def disconnect(self):
         # CNode_helper.send_disconnect()
         print("Disconnected from the network. Goodbye!")
-        CNode_helper.send_disconnect(self.sendID,self.ownIP,self.ownPort)
+        CNode_helper.send_disconnect(
+            self.bootstrapSendID, self.ownIP, self.ownPort)
 
     # Return a stirng informing user about the usage
     def usage_statement(self):
@@ -100,6 +94,7 @@ class InputListener(threading.Thread):
     # TODO: run() method of the listener: constantly listen for input and parse it out:
     # I Think SNode_helpers can 'help' with parsing and calling these methods
     def run(self):
+        print(f'InputListener started...')
         while True:
             # # If the command requires a file as an arg: 
             #     fileID = 'parsed'
@@ -124,11 +119,11 @@ class InputListener(threading.Thread):
             if input_tks[0] == "req":
                 assert len(input_tks) >= 2
                 if input_tks[1] == "files":
-                    # If input is request for information:
-                    all_dht = False
+                    # If input is request for info on all offered files:
+                    isRequestingGlobalDHT = False
                     if len(input_tks) >= 3 and input_tks[2] == "all":
-                        all_dht = True
-                    self.requestDHT(all_dht)
+                        isRequestingGlobalDHT = True
+                    self.requestDHT('', isRequestingGlobalDHT)
                 elif input_tks[1] == "supernodes":
                     if not self.isSupernode:
                         self.request_supernodes()

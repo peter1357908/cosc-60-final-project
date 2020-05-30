@@ -104,10 +104,9 @@ class MessageListener(threading.Thread):
 
     # TODO: run() method:
     def run(self):
+        print("MessageListener started...")
 
-        print("Message Listener running.")
-        while True:
-            
+        while True:    
             # Accept a packet from the current connID
             packet = mrt_receive1(self.connID)            
             print(packet)

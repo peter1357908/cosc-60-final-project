@@ -29,15 +29,17 @@ class MainListener(threading.Thread):
         ownIP is a 12-byte string in ascii
         ownPort is a 5-byte string in ascii
     ''' 
-    def __init__(self, isSupernode, ownIP, ownPort, recv_sock, super_send_id = '', super_recv_id = '', is_first = False):
+
+    def __init__(self, isSupernode, ownIP, ownPort, bootstrapSendID='', bootstrapRecvID='', is_first=False):
         threading.Thread.__init__(self)
         self.isSupernode = isSupernode
         self.ownIP = ownIP
         self.ownPort = ownPort
-        self.recv_sock = recv_sock
-        self.super_send_id = super_send_id
-        self.super_recv_id = super_recv_id
+        self.bootstrapSendID = bootstrapSendID
+        self.bootstrapRecvID = bootstrapRecvID
         self.is_first = is_first
+
+        # data structures and respective locks
         self.fileInfoTable = FileInfoTable()
         self.childTable = ChildrenInfoTable()
         self.supernodeSet = SupernodeSet()
@@ -46,7 +48,10 @@ class MainListener(threading.Thread):
         self.childTableLock = threading.Lock() # pass to spawned threads
         self.supernodeLock = threading.Lock() # pass to spawned threads
         self.addrToIDTableLock = threading.Lock()
-        
+
+        # to block this MainListener until user decides to quit
+        self.shouldQuit = False
+        self.quitCV = threading.Condition()
     
     # type - 0, 1, 2
     # 0 = regular node
@@ -76,7 +81,6 @@ class MainListener(threading.Thread):
             
         else:
             print(f"{type} not found")
-
 
     '''
         See protocol md
@@ -208,60 +212,34 @@ class MainListener(threading.Thread):
     def handleFileTransfer(self, sourceIP, sourcePort, connID):
         pass
 
+    def handleUserQuitInput(self):
+        self.shouldQuit = True
+        self.quitCV.notify()
     
     def run(self):
-
-        print(f'Coming alive... IP: {self.ownIP} port: {self.ownPort}, socket: {self.recv_sock}')
-        mrt_open() 
-        #conn = mrt_accept1()
-        #print(conn)
-        # Begin The User Input Thread
-        # Need to Pass in a SupernodePort and a SendID
-        supernodeIP = "HARDCODE (possibly clay?)"
-        supernodePort = "HARDCODE (possibly clay?)"
-        inputListener = InputListener.InputListener(self, self.ownIP, self.ownPort, self.super_send_id, self.isSupernode)
+        print(f'MainListener starting... IP: {self.ownIP} port: {self.ownPort}')
+        mrt_open()
+        inputListener = InputListener.InputListener(self, self.ownIP, self.ownPort, self.bootstrapSendID, self.isSupernode)
         inputListener.start()
-        print(f'started input listener...')
-        # Msg Listener super_send & super_recv
-        # Supernode Listener
+        
         if not self.is_first:
-            superListener = MessageListener(self, self.super_recv_id)
-            superListener.start()
-
+            # start listening to the bootstrapping supernode
+            bootstrapListener = MessageListener.MessageListener(self, self.bootstrapRecvID)
+            bootstrapListener.start()
         
-        
-        print(f'looping, waiting for connections... ')
-        while True:
-            # Any new incoming connections
-            #print(f'in loop')
-            time.sleep(3)
-            new_connections = mrt_accept_all() # This is non-blocking so that the thread can service other functions
-            print(new_connections)
-            if len(new_connections) > 0:
-                print(f'{len(new_connections)} waiting... ')
-            # Get conn id
-                for connID in new_connections:
-                    # pass in mainlistener
-                    messageListener = MessageListener.MessageListener(self, connID)
-                    # spawn message listener thread
-                    messageListener.start()
-                    print(f'started message listener...')
-                    
-                
-        # if not supernode
-            #loop until you want to leave the network.
-            # new connections (msg listener etc) should be handled by the requestForFileTransfer function
-
-        # if supernode: 
-            # listen for new connections
-            # spawn new listeners if a new connection comes in 
-
-    ''' Utility functions '''
-    def formatFileInfoTable(self):
-        pass
-    
-    '''
-        Format supernode list for message sending 
-    '''
-    def formatSupernodeList(self):
-        return "".join(ip + port for (ip, port) in self.supernode_list)
+        if self.isSupernode:
+            print('MainListener going into connection accepting loop...')
+            # TODO: why not accept1()?
+            while True:
+                time.sleep(3)
+                new_connections = mrt_accept_all() # This is non-blocking so that the thread can service other functions
+                print(new_connections)
+                if len(new_connections) > 0:
+                    print(f'{len(new_connections)} waiting... ')
+                    for connID in new_connections:
+                        messageListener = MessageListener.MessageListener(self, connID)
+                        messageListener.start()
+        else:
+            with self.quitCV:
+                self.quitCV.wait_for(self.shouldQuit)
+                return
