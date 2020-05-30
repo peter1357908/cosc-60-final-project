@@ -12,8 +12,8 @@ import socket
 
 # CONST VARIABLES
 # TODO: need to change this to an established supernode
-HARDCODED_SUPERNODE_IP = "127.0.0.1"
-HARDCODED_SUPERNODE_PORT = "5000"
+HARDCODED_SUPERNODE_IP = "104.55.97.253"
+HARDCODED_SUPERNODE_PORT = 5000
 
 SUPERNODE_LOOPBACK_IP = "127.0.0.1"
 
@@ -22,17 +22,17 @@ SUPERNODE_LOOPBACK_IP = "127.0.0.1"
     Takes an argument from the main program denoting whether to join as a supernode or regular node
     Returns True for successful connect and join, False otherwise
 """
-# def supernode_connect(as_supernode=False):
-#     supernode_id = CNode_helper.connect_p2p(ip=HARDCODED_SUPERNODE_IP, port=HARDCODED_SUPERNODE_PORT)
-#     # assuming that 0 is the "bad case"
-#     if supernode_id == 0:
-#         return None
+def supernode_connect(as_supernode=False):
+    supernode_id = CNode_helper.connect_p2p(ip=HARDCODED_SUPERNODE_IP, port=HARDCODED_SUPERNODE_PORT)
+    # assuming that 0 is the "bad case"
+    if supernode_id == 0:
+        return None
 
-#     if as_supernode:
-#        recv_id = CNode_helper.join_p2p(1)
-#     else:
-#         recv_id = CNode_helper.join_p2p(0)
-#     return (supernode_id, recv_id)
+    if as_supernode:
+       recv_id = CNode_helper.join_p2p(1)
+    else:
+        recv_id = CNode_helper.join_p2p(0)
+    return (supernode_id, recv_id)
 
 '''
     This is the entry point for the p2p network client
@@ -54,14 +54,6 @@ def main():
     supernodePort = None
     isSupernode= args.supernode
 
-    # The file info table to hold the files
-    # used by regular node and supernode regardless
-    # table  = FileInfoTable()
-
-    # if supernodeIP == SUPERNODE_LOOPBACK_IP:
-    #     cnodeTable = ChildrenInfoTable()
-    #     snodeList = []
-    #     pass
 
     # Attempt to connect to the supernode:
 
@@ -87,6 +79,10 @@ def main():
         #sourceIP, sourcePort = CNode_helper.get_source_addr(sock)
 
         # If not a supernode:
+        if not isSupernode: 
+            send_id, recv_id = supernode_connect(False)
+            print(f'send id : {send_id}, recv_id = {recv_id}')
+            
         #super_send_id, super_recv_id = supernode_connect(False)
 
 
