@@ -93,19 +93,6 @@ class MessageListener(threading.Thread):
         # TODO: Send message
         pass
 
-    '''
-
-    '''
-    def splitIP(self, ip):
-        ip1 = ip[:3].lstrip('0')
-        ip2 = ip[3:6].lstrip('0')
-        ip3 = ip[6:9].lstrip('0')
-        ip4 = ip[9:12].lstrip('0')
-        ips = [ip1,ip2,ip3,ip4]
-        ip_full = ''
-        for ip in ips:
-            if ip == '':
-                ip_full +=
 
 
     def splitIP(self, ip):
