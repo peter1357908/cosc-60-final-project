@@ -8,6 +8,7 @@ sys.path.append('../mrt/')
 sys.path.append('../data-structures/')
 from FileInfoTable import FileInfoTable, FileInfo
 from ChildrenInfoTable import ChildrenInfoTable
+from SupernodeSet import SupernodeSet
 from mrt import * 
 import MessageListener
 import time
@@ -37,9 +38,9 @@ class MainListener(threading.Thread):
         self.super_send_id = super_send_id
         self.super_recv_id = super_recv_id
         self.is_first = is_first
-        self.fileInfoTable = FileInfoTable() # File Info Table
-        self.childTable = ChildrenInfoTable() # Child Info Table
-        self.supernode_list = [] # Supernodelist
+        self.fileInfoTable = FileInfoTable()
+        self.childTable = ChildrenInfoTable()
+        self.supernodeSet = SupernodeSet()
         self.fileInfoTableLock = threading.Lock() # pass to spawned threads
         self.childTableLock = threading.Lock() # pass to spawned threads
         self.supernodeLock = threading.Lock() # pass to spawned threads
@@ -54,15 +55,16 @@ class MainListener(threading.Thread):
         if type == 0:
             # keep sour
             response_type = '100a'
-            values = ''.join([response_type, f'{len(supernode_list):04d}',str(supernode_list)])
+            values = f'{response_type}{self.supernodeSet}'
             response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
             # id is returned by accept1()
             #TODO: Need to add the duplex capability here just need to figure out where and how we are storing these connections
+            self.childTable.addChild((sourceIP, sourcePort))
             mrt_send1(sendID, response)
         elif type == 1:
             #TODO: Add functionality to keep track of supernode
             response_type = '100a'
-            values = ''.join([response_type, f'{len(supernode_list):04d}',str(supernode_list)])
+            values = f'{response_type}{self.supernodeSet}'
             response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
             # id is returned by accept1()
             mrt_send1(sendID, response)
@@ -226,7 +228,7 @@ class MainListener(threading.Thread):
             superListener.start()
 
         
-        # if supernode:
+        
         print(f'looping, waiting for connections... ')
         while True:
             # Any new incoming connections

@@ -19,7 +19,6 @@ class MessageListener(threading.Thread):
         print("Message Listener Instantiated")
         threading.Thread.__init__(self)
         # Main Listener 
-        self.mainListener = mainListener
         # Connection ID
         self.connID = connID
         self.sendID = 0
@@ -94,6 +93,28 @@ class MessageListener(threading.Thread):
         # TODO: Send message
         pass
 
+    '''
+
+    '''
+    def splitIP(self, ip):
+        ip1 = ip[:3].lstrip('0')
+        ip2 = ip[3:6].lstrip('0')
+        ip3 = ip[6:9].lstrip('0')
+        ip4 = ip[9:12].lstrip('0')
+        ips = [ip1,ip2,ip3,ip4]
+        ip_full = ''
+        for ip in ips:
+            if ip == '':
+                ip_full +=
+
+
+    def splitIP(self, ip):
+        ip_split = [int(ip[i:i+3]) for i in range(0, len(ip), 3)]
+        return ".".join([str(x) for x in ip_split])   
+
+
+
+
     # TODO: run() method:
     def run(self):
 
@@ -103,13 +124,13 @@ class MessageListener(threading.Thread):
             # Accept a packet from the current connID
             packet = mrt_receive1(self.connID)            
             print(packet)
-            # Parse out the packet packets:
+            # Parse the packet:
             # Grab the data included in the message headers
             messageType = packet[0:4].decode()
-            messageLen = int(packet[4:8])
-            receive_ip = packet[8:20].decode()
-            receive_port = int(packet[20:25].decode())
-            ipAddr = (receive_ip, receive_port)            
+            messageLen = int(packet[4:8].decode())
+            sourceIP = packet[8:20].decode()
+            sourcePort = int(packet[20:25].decode())
+            sourceAddrTuple = (sourceIP, sourcePort)
             
             if messageType == '0001':    # If the message is a post:
                 # TODO: Now, parse the Post Type:
@@ -122,7 +143,7 @@ class MessageListener(threading.Thread):
                     # self.manager.handlePostFile()
                     print(f'file post.... fsize: {fileSize}, fid_len: {fileIDLength}, fid: {fileID}')
                     fInfo.addFileInfo(file_id.decode(),ip_addr,file_size.decode()) # TODO: Find the actual name for these
-                    childHash.addFile(receive_ip, file_id)
+                    childHash.addFile(sourceIP, file_id)
                 elif postType == '000b':    # If the messages announces a disconnect
                     # Note: a child node will never receive this message, since
                     # our network is a "structured" p2p network
@@ -133,23 +154,23 @@ class MessageListener(threading.Thread):
             elif messageType == '0101':    # If the message is a request:
                 print(f'request received')
                 requestType = packet[25:29].decode()
-                misc = packet[29:33]
+                misc = packet[29:33].decode()
                 if requestType == '000a':
-                    rMisc = misc.decode()
-                    #self.sendID=mrt_connect(ip=source_ip,port=receive_port)
                     print(f'request to join received... type: {misc}')
+
+                    send_id = mrt_connect(host=self.splitIP(sourceIP), port=int(sourcePort))
                     # join as a regular node
-                    if rMisc == '0000':
+                    if misc == '0000':
+                        self.manager.handleJoinRequest(0, send_id, sourceIP, sourcePort)
+                         
+                    # join as a supernode
+                    elif r_misc == '0001':
 
-                        #TODO: VLADO PLEASE REVIEW THIS CHUNK AND DECIDE IF YOU WANT IT OR NOT
-                        responseType = '100a'
-                        snodesNum = str(len(supernode_list)) # TODO: rename to whatever it should be
-                        packet = snodesNum + str(supernode_list)#Remove first and last char of list upon receiving
-                        response = responseType + myAddr + str(len(packet))+packet
-                        childHash = {}
-                        childrenHash.addChild(receive_ip, childHash)
-
-                        # self.manager.handleJoinRequest()
+                        pass
+                    # relayed supernode
+                    elif r_mis == '0002':
+                        pass
+                         
                     # join as a supernode
                     elif r_misc == '0001':
 
@@ -159,7 +180,7 @@ class MessageListener(threading.Thread):
                         pass
                 elif requestType == '000b':
                     #TODO: Request for a supernode's supernode list
-                    #self.manager.handleSupernodeListRequest(receive_ip,port,) 
+                    #self.manager.handleSupernodeListRequest(sourceIP,port,) 
                     pass
                 # file transfer
                 elif requestType == '000e':

@@ -134,7 +134,7 @@ def mrt_close():
 """
 connect to a given server (return a connection)
 """
-def mrt_connect(host  = '192.168.0.249',port = 11235,s=0):
+def mrt_connect(host='192.168.0.249',port=11235,s=0):
 	global client_sock
 	if s == 0:
 		client_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

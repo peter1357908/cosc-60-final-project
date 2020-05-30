@@ -76,6 +76,7 @@ join_type:
 """
 def join_p2p(send_id, source_ip, source_port, join_type = 0):
 	global RECV_ID
+	mrt_open()
 	values = ''.join([R_JOIN,f'{join_type:04d}'])
 	msg_len = len(values)
 	msg = ''.join([REQUEST,f'{msg_len:04d}',source_ip,source_port,values])
