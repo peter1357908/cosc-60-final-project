@@ -45,15 +45,14 @@ def main():
     # If the connection is successful, then the __init__ file will begin the two main threads
     parser = argparse.ArgumentParser(description="p2p client")
     parser.add_argument("--supernode", "-s", help="join as a supernode", action="store_true")
+    parser.add_argument("--first", "-f", help="be the first supernode", action="store_true")
     args = parser.parse_args()
 
     # If the node is a supernode, supernodeIP is loopback / 127.0.0.1
     # TODO: If the node is joining as a supernode & the network already 
     # If the node is a childnode, then the IP of the supernode to be joined is an arg
-    isSupernode = False
     supernodePort = None
-    if args.supernode:
-        isSupernode = True
+    isSupernode= args.supernode
 
     # The file info table to hold the files
     # used by regular node and supernode regardless
@@ -65,24 +64,32 @@ def main():
     #     pass
 
     # Attempt to connect to the supernode:
-   
 
-    print("connection is good")
+    ### Logic for first ever supernode 
+    if args.first:
+        print(f'starting up as first ever supernode')
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        #sourceIP, sourcePort = CNode_helper.get_source_addr(sock)
+        #static startup for clay
+        mainListener = MainListener.MainListener(True,'104055097253', 5000, sock,is_first = True).start()
+    else:
 
-    # If not connId:
-    # if not res:
-    #     print(f"failed to connect to supernode at address {HARDCODED_SUPERNODE_IP}:{HARDCODED_SUPERNODE_PORT}")
-    #     exit(-1)
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sourceIP, sourcePort = CNode_helper.get_source_addr(sock)
+        print("connection is good")
+
+        # If not connId:
+        # if not res:
+        #     print(f"failed to connect to supernode at address {HARDCODED_SUPERNODE_IP}:{HARDCODED_SUPERNODE_PORT}")
+        #     exit(-1)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sourceIP, sourcePort = CNode_helper.get_source_addr(sock)
+
+        # If not a supernode:
+        super_send_id, super_recv_id = supernode_connect(False)
 
 
-    super_send_id, super_recv_id = supernode_connect(False)
-
-
-    # Begin The Packet / main Listener Thread
-    mainListener = MainListener.MainListener(isSupernode, sourceIP, sourcePort, sock, super_send_id, super_recv_id)
-    mainListener.start()
+        # Begin The Packet / main Listener Thread
+        mainListener = MainListener.MainListener(isSupernode, sourceIP, sourcePort, sock, super_send_id, super_recv_id)
+        mainListener.start()
 
 if __name__ == "__main__":
     main()

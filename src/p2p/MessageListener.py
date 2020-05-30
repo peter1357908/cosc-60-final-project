@@ -155,7 +155,7 @@ class MessageListener(threading.Thread):
                     #TODO: Request for a supernode's supernode list
                     self.manager.handleSupernodeListRequest(receive_ip,port,) 
                 # file transfer
-                elif requestType = '000e':
+                elif requestType == '000e':
                     end_of_id = 29+int(misc)
                     file_id = msg[29:end_of_id]
                     offerer_ipv4 = msg[end_of_id:end_of_id+12]

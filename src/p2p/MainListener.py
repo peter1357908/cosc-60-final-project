@@ -10,6 +10,7 @@ sys.path.append('../data-structures/')
 from FileInfoTable import FileInfoTable, FileInfo
 from ChildrenInfoTable import ChildrenInfoTable
 from mrt import * 
+import MessageListener
 
 
 """ DEFINITIONS """
@@ -26,13 +27,16 @@ class MainListener(threading.Thread):
         isSupernode is a boolean
         ownIP is a 12-byte string in ascii
         ownPort is a 5-byte string in ascii
-    '''
-    def __init__(self, isSupernode, ownIP, ownPort, socket):
-        self.threading.Thread.__init__(self)
+    ''' 
+    def __init__(self, isSupernode, ownIP, ownPort, recv_sock,super_send_id = '', super_recv_id = '', is_first = False):
+        threading.Thread.__init__(self)
         self.isSupernode = isSupernode
         self.ownIP = ownIP
         self.ownPort = ownPort
-        self.socket = socket
+        self.recv_sock = recv_sock
+        self.super_send_id = super_send_id
+        self.super_recv_id = super_recv_id
+        self.is_first = is_first
         self.fileInfoTable = FileInfoTable() # File Info Table
         self.childTable = ChildrenInfoTable() # Child Info Table
         self.supernode_list = [] # Supernodelist
@@ -202,25 +206,26 @@ class MainListener(threading.Thread):
     
     def run(self):
         # TODO: may need to add an mrt_open here?? to indicate readyness to accept incoming connections
-        mrt_open(s=self.socket) 
+        mrt_open(s=self.recv_sock) 
         # Begin The User Input Thread
         # Need to Pass in a SupernodePort and a SendID
         supernodeIP = "HARDCODE (possibly clay?)"
         supernodePort = "HARDCODE (possibly clay?)"
-        inputListener = InputListener.InputListener(self, supernodeIP, supernodePort, self.super_send_id)
+        inputListener = InputListener.InputListener(self, self.ownIP, self.ownPort, self.super_send_id, self.isSupernode)
         inputListener.start()
 
         # Msg Listener super_send & super_recv
         # Supernode Listener
-        superListener = MessageListener(self, self.super_recv_id)
-        superListener.start()
+        if not self.is_first:
+            superListener = MessageListener(self, self.super_recv_id)
+            superListener.start()
 
         
         # if supernode:
         while True:
             # Any new incoming connections
-            new_connections = mrt.accept_all() # This is non-blocking so that the thread can service other functions
-            if len(new_connections > 0):
+            new_connections = mrt_accept_all() # This is non-blocking so that the thread can service other functions
+            if len(new_connections) > 0:
             # Get conn id
                 for connID in new_connections:
                     # pass in mainlistener

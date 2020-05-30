@@ -149,4 +149,3 @@ class FileInfoTable:
         return_string += f'{offerer[0]}{offerer[1]}{fileInfo.size:04d}'
     
     return return_string
-``

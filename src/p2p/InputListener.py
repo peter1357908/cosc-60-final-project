@@ -15,11 +15,13 @@ class InputListener(threading.Thread):
 
     # Initialize InputListener Thread
     # TODO: Add paramaters as arguments are determined
-    def __init__(self,supernodeIP, supernodePort, send_id):
+    def __init__(self,main_listener,ownIP, ownPort, send_id, isSupernode):
         threading.Thread.__init__(self)
-        self.supernodeIP = supernodeIP  # IP of supernode, 127.0.0.1 if is a supernode
-        self.supernodePort = supernodePort
+        self.manager = main_listener
+        self.ownIP = ownIP  # IP of supernode, 127.0.0.1 if is a supernode
+        self.ownPort = ownPort
         self.sendID = send_id
+        self.isSupernode = isSupernode
         # self.table = table # File Info Table
         # if supernodeIP == "127.0.0.1":
         #     self.childTable = ChildrenInfoTable()
@@ -36,23 +38,23 @@ class InputListener(threading.Thread):
         print("Requested DHT from ", self.supernodeIP)
         if all_lists:
             print("Requesting from all Supernodes")
-            CNode_helper.request_global_dht(self.sendID, self.supernodeIP, self.supernodePort,filename)
+            CNode_helper.request_global_dht(self.sendID, self.ownIP, self.ownPort,filename)
         else:
-            CNode_helper.request_local_dht(self.sendID,self.supernodeIP,self.supernodePort,filename)
+            CNode_helper.request_local_dht(self.sendID,self.ownIP,self.ownPort,filename)
 
     # Request list of supernodes
     def request_supernodes(self):
         # TODO
         # CNode_helper.request_super_list()
         print("requesting all the supernodes")
-        CNode_helper.request_super_list(self.sendID,self.supernodeIP,self.supernodePort)
+        CNode_helper.request_super_list(self.sendID,self.ownIP,self.ownPort)
 
     # Begin a download:
     def beginDownload(self, file, downloadIP,downloadPort):
         # downloader = Downloader(self.supernodeIP, downloadIP, file)
         # downloader.start()
         print("Attempting to download from ", downloadIP)
-        transfer_id = CNode_helper.request_file(self.sendID,self.supernodeIP,self.supernodePort,file,downloadIP,downloadPort)
+        transfer_id = CNode_helper.request_file(self.sendID,self.ownIP,self.ownPort,file,downloadIP,downloadPort)
 
         # Start download:
         # constantly receive 1?
@@ -75,7 +77,7 @@ class InputListener(threading.Thread):
         # CNode_helper.post_file(file_size, id_size, filename)
         print("Announcing a new file is being offered: ", file)
         file_size = os.path.getsize(file)
-        CNode_helper.post_file(self.sendID,self.supernodeIP,self.supernodePort,file_size,len(file),file)
+        CNode_helper.post_file(self.sendID,self.ownIP,self.ownPort,file_size,len(file),file)
     
     # Announce a file is no longer being offered:
     def removeOfferedFile(self, file):
@@ -87,7 +89,7 @@ class InputListener(threading.Thread):
     def disconnect(self):
         # CNode_helper.send_disconnect()
         print("Disconnected from the network. Goodbye!")
-        CNode_helper.send_disconnect(self.sendID,self.supernodeIP,self.supernodePort)
+        CNode_helper.send_disconnect(self.sendID,self.ownIP,self.ownPort)
 
     # Return a stirng informing user about the usage
     def usage_statement(self):
@@ -145,7 +147,11 @@ class InputListener(threading.Thread):
                     assert len(input_tks) >= 3
                     # Else if input is to offer a new file:
                     file_id = input_tks[2]
-                    self.offerNewFile(file=None)
+
+                    if not self.isSupernode:
+                        self.offerNewFile(file=None)
+                    else: 
+                        self.manager.handleFilePost()
                 elif input_tks[1] == "rm":
                     assert len(input_tks) >= 3
                     file_id = input_tks[2]
