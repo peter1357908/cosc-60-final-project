@@ -49,7 +49,9 @@ Connects to supernode using mrt_connect
 Returns an ID connection object
 """
 def connect_p2p(ip = SUPERNODE_IP,port = SUPERNODE_PORT):
-	global SUPERNODE_ID
+	global SUPERNODE_ID,SUPERNODE_IP,SUPERNODE_PORT
+	SUPERNODE_IP = ip
+	SUPERNODE_PORT = port
 	SUPERNODE_ID = mrt_connect(ip,port)
 	print(SUPERNODE_ID)
 	return SUPERNODE_ID
@@ -70,13 +72,12 @@ def get_own_addr(sock):
 """
 Function to join the network, takes one parameter
 join_type:
-	0: join as chlid node
+	0: join as chlidnode
 	1: join as supernode
-	2: join as relayed supernode
 """
-def join_p2p(send_id, source_ip, source_port, join_type = 0):
+def join_p2p(recv_sock,send_id, source_ip, source_port, join_type = 0):
 	global RECV_ID
-	mrt_open()
+	mrt_open(s=recv_sock)
 	values = ''.join([R_JOIN,f'{join_type:04d}'])
 	msg_len = len(values)
 	msg = ''.join([REQUEST, f'{msg_len:04d}', source_ip, source_port, values])
@@ -148,20 +149,24 @@ PARAMETERS:
 
 def request_file(send_id, source_ip, source_port, file_id, ip, port):
 	# Send request for file along to supernode:
+	# ip is the ip of the client that you'd like to download from
 	id_len = len(file_id)
-	ip = str(ip).split('.')
-	ip = [x.zfill(3) for x in ip]
-	ip = ''.join(ip)
-	port = port.zfill(5)
-	values = ''.join([R_FILE_TRANS,f'{id_len:04d}',file_id,ip,port])
+	padded_ip = str(ip).split('.')
+	padded_ip = [x.zfill(3) for x in padded_ip]
+	padded_ip = ''.join(padded_ip)
+	padded_port = port.zfill(5)
+	values = ''.join([R_FILE_TRANS,f'{id_len:04d}',file_id,padded_ip,padded_port])
 	msg_len = len(values)
 	msg = ''.join([REQUEST, f'{msg_len:04d}', source_ip, source_port, values])
 	send_p2p_msg(send_id, msg)
-	# Start UDP hole punch with direct peer:
-	sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	sock.sendto('UDP-holepunch'.encode(),(ip, port)) # hole punch
-	download_id = mrt_accept1()
-	return download_id #TODO: Need to actually download file with mrt_receive1(download_id) in the input listener
+
+	print(f'SUPERNODE_IP: {SUPERNODE_IP}, SUPERNODE_PORT: {SUPERNODE_PORT}, dl_ip: {ip}, dl_port: {port}')
+	if ip != SUPERNODE_IP:
+		mrt_hole_punch(ip,port)
+		download_id = mrt_accept1()
+		return download_id #TODO: Need to actually download file with mrt_receive1(download_id) in the input listener
+	else: 
+		return SUPERNODE_ID
 
 	#TODO: 1. Send first request to supernode to relay message along
 	# 2. Start UDP hole punch with direct peer

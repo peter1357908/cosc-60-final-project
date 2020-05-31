@@ -22,17 +22,24 @@ recently_closed = []
 buffer_lock = threading.Lock() #buffer lock to help with data races
 
 
+
+def get_server_sock():
+	global server_sock
+	return server_sock
+
 """
 mrt_open: indicate ready-ness to receive incoming connections
 
 Create new socket, startup thread
 """
-def mrt_open(host = '', port = 5000,s=0):
+def mrt_open(host='', port=5000,s=0):
 	global server_sock,close
 	close = False
-	if s == 0:
+	if s == 1:
 		server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		server_sock.bind((host,port))
+	elif s == 0:
+		pass
 	else:
 		server_sock = s
 		server_sock.settimeout(None)
@@ -134,14 +141,12 @@ def mrt_close():
 """
 connect to a given server (return a connection)
 """
-def mrt_connect(host='192.168.0.249',port=11235,s=0):
+def mrt_connect(host='192.168.0.249',port=11235):
 	global client_sock
-	if s == 0:
+	if type(client_sock) == int:
 		client_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	else:
-		client_sock = s
-		client_sock.settimeout(None)
-		#print(f'using passed socket: {client_sock}')
+		client_sock.bind(('',5001))
+	client_sock.settimeout(None)
 	addr = (host,port)
 	id = handshake(addr)
 	senders[id].receiving=True
@@ -283,8 +288,10 @@ Spins up a receiever thread to handle all incoming messages for the sender
 Responsible for updating latest frag, sending quick responses etc
 """
 def sender_recv_thread(id):
+	global client_sock
 	sender = senders[id]
 	while sender.is_receiving():
+		client_sock.settimeout(None)
 		data, addr = client_sock.recvfrom(2048)
 		if verify_checksum(data) != 0: # discard packet if checksum doesnt add up
 				continue
@@ -385,7 +392,7 @@ def handshake(addr):
 	jcsum = ichecksum(join_msg)
 	bytes_join = jcsum.to_bytes(4,'big')+join_msg.encode()
 	joined = False
-
+	print(client_sock)
 	client_sock.settimeout(.01)
 	while not joined:
 		try:
@@ -673,5 +680,23 @@ def verify_checksum(data):
 	csum_recv = int.from_bytes(data[:4],'big') # Get the first 4 bytes
 	csum_calc = ichecksum(data[4:].decode())
 	return csum_recv - csum_calc
+
+
+"""
+MRT Hole Punch function
+Will send out a hole punch message using server_sock, no reliability
+"""
+def mrt_hole_punch(ip,port):
+	global server_sock
+	if type(server_sock) == int:
+		print(f'Initialize mrt_open before calling hole punch....')
+	else:
+		try:
+			assert(type(port) == int)
+			assert(type(ip) == str)
+			server_sock.sendto('HOLE PUNCH'.encode(),(ip,port))
+		except: 
+			print(f'port must be integer and ip must be str')
+
 
 
