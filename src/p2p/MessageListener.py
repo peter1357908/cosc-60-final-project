@@ -129,7 +129,7 @@ class MessageListener(threading.Thread):
                             total_fragments = int((byte_size / 1024)) + 1
                             # Loop using mrt_send1()
                             filedata = file_to_send.read().encode().decode()
-                            while len(filedata > 1024): 
+                            while len(filedata) > 1024: 
                                 # Read in the file_to_send into a 1024 byte buffer
                                 current_part = filedata[:1024]
                                 filedata = filedata[1024:]
