@@ -154,60 +154,13 @@ class MessageListener(threading.Thread):
                         self.manager.handleJoinRequest(0, send_id, sourceIP, sourcePort)
                          
                     # join as a supernode
-                    elif r_misc == '0001':
+                    elif misc == '0001':
 
                         pass
                     # relayed supernode
-                    elif r_mis == '0002':
+                    elif misc == '0002':
                         pass
-                         
-                    # join as a supernode
-                    elif r_misc == '0001':
-
-                        pass
-                    # relayed supernode
-                    elif r_mis == '0002':
-                        pass
-                         
-                    # join as a supernode
-                    elif r_misc == '0001':
-
-                        pass
-                    # relayed supernode
-                    elif r_mis == '0002':
-                        pass
-                         
-                    # join as a supernode
-                    elif r_misc == '0001':
-
-                        pass
-                    # relayed supernode
-                    elif r_mis == '0002':
-                        pass
-                         
-                    # join as a supernode
-                    elif r_misc == '0001':
-
-                        pass
-                    # relayed supernode
-                    elif r_mis == '0002':
-                        pass
-                         
-                    # join as a supernode
-                    elif r_misc == '0001':
-
-                        pass
-                    # relayed supernode
-                    elif r_mis == '0002':
-                        pass
-                         
-                    # join as a supernode
-                    elif r_misc == '0001':
-
-                        pass
-                    # relayed supernode
-                    elif r_mis == '0002':
-                        pass
+                    
                 elif requestType == '000b':
                     #TODO: Request for a supernode's supernode list
                     #self.manager.handleSupernodeListRequest(sourceIP,port,) 

@@ -41,16 +41,16 @@ class InputListener(threading.Thread):
             self.bootstrapSendID, self.ownIP, self.ownPort)
 
     # Begin a download:
-    def beginDownload(self, file, downloadIP,downloadPort):
+    def beginDownload(self, filename, downloadIP,downloadPort):
         # downloader = Downloader(self.supernodeIP, downloadIP, file)
         # downloader.start()
         print("Attempting to download from ", downloadIP)
         transfer_id = CNode_helper.request_file(
-            self.bootstrapSendID, self.ownIP, self.ownPort, file, downloadIP, downloadPort)
+            self.bootstrapSendID, self.ownIP, self.ownPort, filename, downloadIP, downloadPort)
 
         # Start download:
         # constantly receive 1?
-        new_file = open(file,'a+')
+        new_file = open(filename,'a+')
         data = mrt_receive1(transfer_id).decode()
         new_file.write(data)
         while len(data) >= 1024:
@@ -58,25 +58,25 @@ class InputListener(threading.Thread):
             new_file.write(data)
         new_file.close()
 
-        print(f'New file written to {file}')
+        print(f'New file written to {filename}')
 
         #TODO FIGURE OUT HOLE PUNCHING HERE
     
     # Offer a New File
-    def offerNewFile(self, file):
+    def offerNewFile(self, filename):
         # TODO:
             # STILL NEED TO FIGURE OUT FILE SIZE ETC AS PARAMETERS
         # CNode_helper.post_file(file_size, id_size, filename)
-        print("Announcing a new file is being offered: ", file)
-        file_size = os.path.getsize(file)
+        print("Announcing a new file is being offered: ", filename)
+        file_size = os.path.getsize(filename)
         CNode_helper.post_file(
-            self.bootstrapSendID, self.ownIP, self.ownPort, file_size, len(file), file)
+            self.bootstrapSendID, self.ownIP, self.ownPort, file_size, len(filename), filename)
     
     # Announce a file is no longer being offered:
-    def removeOfferedFile(self, file):
+    def removeOfferedFile(self, filename):
         # TODO:
         # need corresponding protocol message?
-        print(f"{file} is no longer being offered")
+        print(f"{filename} is no longer being offered")
     
     # Disconnect from the network:
     def disconnect(self):
@@ -135,19 +135,18 @@ class InputListener(threading.Thread):
                     file_id = input_tks[2]
                     # TODO: need to add validation for IP:port
                     file_host = input_tks[3].split(":")
-                    file = None
                     downloadIP = None
-                    self.beginDownload(downloadIP, file)
+                    self.beginDownload(downloadIP, file_id)
             elif input_tks[0] == "post":
                 assert len(input_tks) >= 2
 
                 if input_tks[1] == "offer":
-                    assert len(input_tks) >= 3
+                    assert len(input_tks) == 3
                     # Else if input is to offer a new file:
                     file_id = input_tks[2]
 
                     if not self.isSupernode:
-                        self.offerNewFile(file=None)
+                        self.offerNewFile(file_id)
                     else: 
                         self.manager.handleFilePost(self.ownIP, self.ownPort, self.sendID, file_id, os.path.getsize(file_id))
                 elif input_tks[1] == "rm":

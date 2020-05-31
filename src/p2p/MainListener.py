@@ -219,6 +219,9 @@ class MainListener(threading.Thread):
     def handleUserQuitInput(self):
         self.shouldQuit = True
         self.quitCV.notify()
+
+    def isQuit(self):
+        return self.shouldQuit
     
     def run(self):
         print(f'MainListener starting... IP: {self.ownIP} port: {self.ownPort}')
@@ -245,5 +248,5 @@ class MainListener(threading.Thread):
                         messageListener.start()
         else:
             with self.quitCV:
-                self.quitCV.wait_for(self.shouldQuit)
+                self.quitCV.wait_for(self.isQuit)
                 return

@@ -22,6 +22,11 @@ recently_closed = []
 buffer_lock = threading.Lock() #buffer lock to help with data races
 
 
+
+def get_server_sock():
+	global server_sock
+	return server_sock
+
 """
 mrt_open: indicate ready-ness to receive incoming connections
 
@@ -30,9 +35,11 @@ Create new socket, startup thread
 def mrt_open(host = '', port = 5000,s=0):
 	global server_sock,close
 	close = False
-	if s == 0:
+	if s == 1:
 		server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		server_sock.bind((host,port))
+	elif s == 0:
+		pass
 	else:
 		server_sock = s
 		server_sock.settimeout(None)
@@ -136,12 +143,11 @@ connect to a given server (return a connection)
 """
 def mrt_connect(host='192.168.0.249',port=11235,s=0):
 	global client_sock
-	if s == 0:
+	if s == 1:
 		client_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		client_sock.bind(('',5001))
 	else:
-		client_sock = s
-		client_sock.settimeout(None)
-		#print(f'using passed socket: {client_sock}')
+		pass
 	addr = (host,port)
 	id = handshake(addr)
 	senders[id].receiving=True
