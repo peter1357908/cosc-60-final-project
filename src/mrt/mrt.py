@@ -167,7 +167,7 @@ def mrt_disconnect(id):
 	data = ''
 	cls_msg = kind+window+conn_id+frag+data
 	cls_sum = ichecksum(cls_msg)
-	cls_bytes = cls_sum.to_bytes(4,'big')+cls_msg.encode()
+	cls_bytes = cls_sum.to_bytes(4,'big')+cls_msg.encode('utf-8')
 
 	while len(conn.buffer) > 0 or len(conn.send_queue) > 0:
 		time.sleep(.5)
@@ -234,7 +234,7 @@ def mrt_send1(id, data):
 	while not copied:
 		if senders[id].check_buffer_size() > len(data):
 			buffer_lock.acquire()
-			senders[id].add_to_buffer(data.encode())
+			senders[id].add_to_buffer(data.encode('utf-8'))
 			buffer_lock.release()
 			copied = True
 		else:
@@ -279,7 +279,7 @@ def send_window_test(id):
 	data = ''
 	pre_message = kind+window+cid+frag+data
 	csum = ichecksum(pre_message)
-	msg_bytes = csum.to_bytes(4,'big')+pre_message.encode()
+	msg_bytes = csum.to_bytes(4,'big')+pre_message.encode('utf-8')
 	client_sock.sendto(msg_bytes,senders[id].addr)
 
 
@@ -366,7 +366,7 @@ def build_data_message(sender,data):
 	frag = pad(sender.get_latest_frag())
 	pre_message = kind+window+sid+frag+data.decode()
 	icsum = ichecksum(pre_message)
-	bytes_message = icsum.to_bytes(4,'big') + pre_message.encode()
+	bytes_message = icsum.to_bytes(4,'big') + pre_message.encode('utf-8')
 	return bytes_message
 
 """
@@ -390,7 +390,7 @@ def handshake(addr):
 	data = ''
 	join_msg = kind+window_size+id+frag+data
 	jcsum = ichecksum(join_msg)
-	bytes_join = jcsum.to_bytes(4,'big')+join_msg.encode()
+	bytes_join = jcsum.to_bytes(4,'big')+join_msg.encode('utf-8')
 	joined = False
 	print(client_sock)
 	client_sock.settimeout(.01)
@@ -518,7 +518,7 @@ resent the close connection message
 def resend_close(addr):
 	gc_msg = "ACLS000000000000"
 	gc_sum = ichecksum(gc_msg)
-	gc_bytes = gc_sum.to_bytes(4,'big')+gc_msg.encode()
+	gc_bytes = gc_sum.to_bytes(4,'big')+gc_msg.encode('utf-8')
 	server_sock.sendto(gc_bytes,addr)
 	server_sock.sendto(gc_bytes,addr)
 	server_sock.sendto(gc_bytes,addr)
@@ -602,7 +602,7 @@ def send_ack_message(id,msg_kind):
 sends messages out. Takes checksum and premessage as args
 """
 def send_message(addr,checksum, pre_message):
-	final_msg = checksum.to_bytes(4,'big') + pre_message.encode()
+	final_msg = checksum.to_bytes(4,'big') + pre_message.encode('utf-8')
 	server_sock.sendto(final_msg,addr)
 
 """
@@ -694,7 +694,7 @@ def mrt_hole_punch(ip,port):
 		try:
 			assert(type(port) == int)
 			assert(type(ip) == str)
-			server_sock.sendto('HOLE PUNCH'.encode(),(ip,port))
+			server_sock.sendto('HOLE PUNCH'.encode('utf-8'),(ip,port))
 		except: 
 			print(f'port must be integer and ip must be str')
 
