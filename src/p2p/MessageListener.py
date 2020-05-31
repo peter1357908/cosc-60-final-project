@@ -67,19 +67,11 @@ class MessageListener(threading.Thread):
                     # Request to join the network:
                     if requestType == '000a':
                         print(f'request to join received... type: {misc}')
-                        # need to connect back to the childnode to send stuff
-                        print(f"trying to connect to {splitIP(sourceIP)}:{sourcePort}")
+                        print(f'trying to connect to {splitIP(sourceIP)}:{sourcePort}')
+                        # TODO: make this connection attempt non-blocking / timeout?
                         sendID = mrt_connect(host=splitIP(sourceIP), port=int(sourcePort))
-                        print("request: connected back to childnode")
-                        # join as a regular node
-                        if misc == '0000':
-                            self.manager.handleJoinRequest(0, sendID, sourceIP, sourcePort)
-                        # join as a supernode
-                        elif misc == '0001':
-                            self.manager.handleJoinRequest(1, sendID, sourceIP, sourcePort)
-                        # relayed supernode
-                        elif misc == '0002':
-                            self.manager.handleJoinRequest(2, sendID, sourceIP, sourcePort)
+                        print("connection succeeded")
+                        self.manager.handleJoinRequest(int(misc), sendID, sourceIP, sourcePort)
                     
                     # Request for a supernode's supernode set:
                     elif requestType == '000b':
@@ -99,11 +91,11 @@ class MessageListener(threading.Thread):
                         fileIDLength = int(misc)
                         fileID = ''
                         if fileIDLength > 0:
-                            # The index where the fileindex starts in message
                             fileIDIndex = 33
                             fileID = packet[fileIDIndex:fileIDIndex+fileIDLength].decode()
                         self.manager.handleAllDHTEntriesRequest(sourceIP, sourcePort, misc, fileID)
 
+                    # TODO: put things in self.manager.handleFileTransferRequest()
                     # file transfer
                     elif requestType == '000e':
                         fileIDLength = int(misc)

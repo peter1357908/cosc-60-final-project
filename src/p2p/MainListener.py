@@ -59,25 +59,20 @@ class MainListener(threading.Thread):
     def handleJoinRequest(self, type, sendID, sourceIP, sourcePort): 
         # send number of supernode entries, supernode entries
         if type == 0:
-            print("sending receive message back, type 100a")
-            response_type = '100a'
-            values = f'{response_type}{self.supernodeSet}'
-            response = ''.join([REQUEST,f'{len(values):04d}', self.ownIP, self.ownPort, values])
-            # id is returned by accept1()
-            #TODO: Need to add the duplex capability here just need to figure out where and how we are storing these connections
+            # keep track of the childnode before responding
             childAddr = (sourceIP, sourcePort)
             with self.childTableLock:
                 self.childTable.addChild(childAddr)
             with self.addrToIDTableLock:
-                self.addrToIDTable[childAddr]=sendID
+                self.addrToIDTable[childAddr] = sendID
+            
+            # craft and send response `100a`
+            response_type = '100a'
+            values = f'{response_type}{self.supernodeSet}'
+            response = f'{REQUEST}{len(values):04d}{self.ownIP}{self.ownPort}{values}'
             mrt_send1(sendID, response)
             
         elif type == 1:
-            print("sending receive message back, type 100a")
-            response_type = '100a'
-            values = f'{response_type}{self.supernodeSet}'
-            response = ''.join([REQUEST, f'{len(values):04d}', self.ownIP, self.ownPort, values])
-
             # relay supernode join request
             # DANGEROUS: nested locks (but by itself it is fine)
             with self.supernodeSetLock:
@@ -96,6 +91,12 @@ class MainListener(threading.Thread):
             with self.addrToIDTableLock:
                 self.addrToIDTable[superAddr]=sendID
 
+            # craft and send response `100a`
+            response_type = '100a'
+            values = f'{response_type}{self.supernodeSet}'
+            response = f'{REQUEST}{len(values):04d}{self.ownIP}{self.ownPort}{values}'
+            mrt_send1(sendID, response)
+
         elif type == 2:
             # keep track of the supernode
             superAddr = (sourceIP, sourcePort)
@@ -113,7 +114,7 @@ class MainListener(threading.Thread):
     def handleSupernodeSetRequest(self, sourceIP, sourcePort):
         response_type = '100a'
         values = f'{response_type}{self.supernodeSet}'
-        response = ''.join([response_type,f'{len(values):04d}', self.ownIP, self.ownPort, values])
+        response = f'{REQUEST}{len(values):04d}{self.ownIP}{self.ownPort}{values}'
 
         with self.addrToIDTableLock:
             sourceSendID = self.addrToIDTable[(sourceIP, sourcePort)]
@@ -121,20 +122,19 @@ class MainListener(threading.Thread):
         print(f"sending supernode set back to {sourceIP}:{sourcePort} using {sourceSendID}")
         mrt_send1(sourceSendID, response)
 
-    # handles both cases
-    # all_files_requested is True/False indicating whether or not to request all cfiles
+    # handles both cases of request `000c`
     def handleLocalDHTEntriesRequest(self, sourceIP, sourcePort, fileID):
         response_type = '100c'
 
         if len(fileID) > 0:
             # requested entries on one particular file
             tempFileInfoTable = self.fileInfoTable.getFileInfoTableByID(fileID)
-            values = ''.join([response_type,str(tempFileInfoTable)])
+            values = f'{response_type}{tempFileInfoTable}'
         else:
             # requested entries on ALL files
-            values = ''.join([response_type,str(self.fileInfoTable)])
+            values = f'{response_type}{self.fileInfoTable}'
         
-        response = ''.join([response_type,f'{len(values):04d}',self.ownIP,self.ownPort,values])
+        response = f'{REQUEST}{len(values):04d}{self.ownIP}{self.ownPort}{values}'
 
         with self.addrToIDTableLock:
             sourceSendID = self.addrToIDTable[(sourceIP, sourcePort)]
@@ -161,41 +161,20 @@ class MainListener(threading.Thread):
                         else:
                             values = '000c0000'
 
-                        msg_len = len(values)
-                        msg = ''.join(['0101', f'{msg_len:04d}', sourceIP, sourcePort, values])
+                        msg = f'{REQUEST}{len(values):04d}{self.ownIP}{self.ownPort}{values}'
                         mrt_send1(supernodeSendID, msg)
 
-    
-    # see Protocol.md for 'Request for a file transfer'
-    # source is the client that sent the request
-    # offerer is the client that source would like to download the file from
-    def handleFileTransferRequest(self, sourceIP, sourcePort, offererIP, offererPort, fileRequestedID):
-        if self.isSupernode:
-            if sourceIP == self.ownIP and sourcePort == self.ownPort:
-                # ignore the message
-                pass
-            elif offererIP == self.ownIP and offererPort == self.ownPort:
-                # "forward" the exact same request message (same (Source IPv4, Source Port)) to the node specified by (Source IPv4, Source Port) for UDP-holepunching.
-                response_type = '000e'
-                values = ''.join([response_type, f'{len():04d}', fileRequestedID, offererIP, offererPort])
-                response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
-                # id is returned by accept1()
-
-                # TODO: once Peter has finished the data structure updates 
-
-            else:
-                # check that the offererip and port matches a childnode
-                child = (offererIP, offererPort)
-                if self.childTable.hasChild(child) and self.childTable.childHasFile(child, fileRequestedID):
-                    # the supernode should "forward" the exact same message (same (Source IPv4, Source Port)) to that childnode.
-                    # TODO: wait for Peter to finish data structure updates
-                    pass
-        else:
-            if sourceIP == self.ownIP and sourcePort == self.ownPort:
-                pass
-            else:
-                # Else, childnode should "forward" the exact same request message (same (Source IPv4, Source Port)) to the node specified by (Source IPv4, Source Port) for UDP-holepunching
-                pass
+    # handles content from request 000e
+    def handleFileTransferRequest(self, sourceIP, sourcePort, offererIP, offererPort, fileIDLengthString, fileID):
+        if offererIP == self.ownIP and offererPort == self.ownPort:
+            # TODO: send the requested file to (sourceIP, sourcePort)
+        elif self.isSupernode:
+            offererAddr = (offererIP, offererPort)
+            if self.childTable.childHasFile(offererAddr, fileID):
+                # TODO: consider taking in the original message to allow forwarding
+                values = f'000e{fileIDLengthString}{fileID}{offererIP}{offererPort}'
+                msg = f'{REQUEST}{len(values):04d}{self.ownIP}{self.ownPort}{values}'
+                mrt_send1(supernodeSendID, msg)
 
     def handleRelayRequest(self, offererIP, offererPort, fileRequestedID):
         # TODO: for one supernode/two supernodes, this is fine, but for more supernodes interconnected
@@ -294,14 +273,12 @@ class MainListener(threading.Thread):
         
         if self.isSupernode:
             print('MainListener going into connection accepting loop...')
-            # TODO: why not accept1()?
+            # TODO: mrt_accept1() blocks by sleeping; update with condition variable?
             while True:
-                time.sleep(2)
-                new_connections = mrt_accept_all() # This is non-blocking so that the thread can service other functions
-                if len(new_connections) > 0:
-                    for recvID in new_connections:
-                        messageListener = MessageListener.MessageListener(self, recvID)
-                        messageListener.start()
+                recvID = mrt_accept1()
+                messageListener = MessageListener.MessageListener(self, recvID)
+                messageListener.start()
+                        
         else:
             with self.quitCV:
                 self.quitCV.wait_for(self.isQuit)
