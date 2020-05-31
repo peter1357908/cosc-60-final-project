@@ -235,7 +235,7 @@ class MainListener(threading.Thread):
 
 
     '''
-        Note: not sure if we need this function - maybe it should start a downloader/uploader 
+        This function is invoked by message listener upon receiving a file transfer request
     '''
     def handleFileTransfer(self, sourceIP, sourcePort, curr_file_part,fileID):
         response_type = '000a'
