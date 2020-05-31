@@ -39,17 +39,10 @@ class InputListener(threading.Thread):
         CNode_helper.request_super_list(
             self.bootstrapSendID, self.ownIP, self.ownPort)
 
-    # Begin a download:
-    def beginDownload(self, filename, downloadIP, downloadPort):
-        # downloader = Downloader(self.supernodeIP, downloadIP, file)
-        # downloader.start()
-        print("Attempting to download from ", downloadIP)
-        transfer_id = CNode_helper.request_file(
-            self.bootstrapSendID, self.ownIP, self.ownPort, filename, downloadIP, downloadPort)
-
-        print(f'New file written to {filename}')
-
-        #TODO FIGURE OUT HOLE PUNCHING HERE
+    # Begin a download (input are all in P2P format):
+    def beginDownload(self, fileID, maintainerIP, maintainerPort, offererIP, offererPort):
+        CNode_helper.request_file(self.bootstrapSendID, self.ownIP, self.ownPort,
+                                  fileID, maintainerIP, maintainerPort, offererIP, offererPort)
     
     # Offer a New File
     def offerNewFile(self, filename):
@@ -145,12 +138,22 @@ class InputListener(threading.Thread):
                     try:
                         assert(len(file_host) == 2)
                     except:
-                        print(f'Usage: req dl file_id (download_ip:download_port)')
+                        print(f'Usage: req dl file_id (offererIP:offererPort)')
                         continue
-                    downloadIP = file_host[0].strip('(')
-                    downloadPort = file_host[1].strip(')')
-                    print(f'ip: {downloadIP}, port: {downloadPort}. Beginning download... ')
-                    self.beginDownload(file_id, downloadIP, downloadPort)
+
+                    # convert the input IPv4 and Port to P2P format
+                    offererIP = ''.join([x.zfill(3) for x in (file_host[0].strip('(').split('.'))])
+                    offererPort = file_host[1].strip(')').zfill(5)
+                    
+                    # TODO: move the following logic to MainListener:
+                    with self.manager.fileInfoTableLock
+                        tempFileInfoDict = self.manager.fileInfoTable.getFileInfoDictByID(file_id)
+                        maintainerIP, maintainerPort = (tempFileInfoDict[(offererIP, offererPort)]).maintainer
+
+                    print(
+                        f'Attempting to download \'{file_id}\' from {offererIP}:{offererPort}. Contacting the file\'s DHT entry maintainer at {maintainerIP}:{maintainerPort}. The addresses are in P2P format.')
+                    self.beginDownload(file_id, maintainerIP, maintainerPort, offererIP, offererPort)
+
             elif input_tks[0] == "post":
                 try:
                     assert len(input_tks) >= 2

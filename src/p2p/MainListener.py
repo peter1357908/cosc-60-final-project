@@ -47,10 +47,6 @@ class MainListener(threading.Thread):
         self.childTableLock = threading.Lock() # pass to spawned threads
         self.supernodeSetLock = threading.Lock() # pass to spawned threads
         self.addrToIDTableLock = threading.Lock()
-
-        # to block this MainListener until user decides to quit
-        self.shouldQuit = False
-        self.quitCV = threading.Condition()
     
     # type - 0, 1, 2
     # 0 = regular node
@@ -164,17 +160,31 @@ class MainListener(threading.Thread):
                         msg = f'{REQUEST}{len(values):04d}{self.ownIP}{self.ownPort}{values}'
                         mrt_send1(supernodeSendID, msg)
 
-    # handles content from request 000e
-    def handleFileTransferRequestIfNotOfferer(self, sourceIP, sourcePort, offererIP, offererPort, fileIDLengthString, fileID):
-        offererAddr = (offererIP, offererPort)
-        with self.childTableLock:
-            if self.childTable.childHasFile(offererAddr, fileID):
-                with self.addrToIDTableLock:
-                    offererSendID = self.addrToIDTable.get(offererAddr, None)
-                # TODO: consider taking in the original message to allow forwarding
-                values = f'000e{fileIDLengthString}{fileID}{offererIP}{offererPort}'
-                msg = f'{REQUEST}{len(values):04d}{sourceIP}{sourcePort}{values}'
-                mrt_send1(offererSendID, msg)
+    # handles message-forwarding for request 000e
+    def forwardFileTransferRequest(self, sourceIP, sourcePort, offererIPv4, offererPort, maintainerIPv4, maintainerPort, fileIDLengthString, fileID):
+        if not self.isSupernode:
+            # should not even attempt forwarding if self is not supernode
+            return
+
+        targetSendID = None
+        maintainerAddr = (maintainerIPv4, maintainerPort)
+        # if self is maintainer
+        if maintainerAddr == (self.ownIP, self.ownPort):
+            with self.childTableLock:
+                offererAddr = (offererIPv4, offererPort)
+                if self.childTable.childHasFile(offererAddr, fileID):
+                    with self.addrToIDTableLock:
+                        targetSendID = self.addrToIDTable.get(offererAddr, None)
+                else:
+                    return
+        else:
+            with self.addrToIDTableLock:
+                targetSendID = self.addrToIDTable.get(maintainerAddr, None)
+        
+        # TODO: consider taking in the original message to allow forwarding
+        values = f'000e{fileIDLengthString}{fileID}{offererIPv4}{offererPort}{maintainerIPv4}{maintainerPort}'
+        msg = f'{REQUEST}{len(values):04d}{sourceIP}{sourcePort}{values}'
+        mrt_send1(targetSendID, msg)
 
     '''
         handles POSTing a file
