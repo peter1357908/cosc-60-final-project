@@ -77,8 +77,8 @@ class MainListener(threading.Thread):
             # DANGEROUS: nested locks (but by itself it is fine)
             with self.supernodeSetLock:
                 with self.addrToIDTableLock:
-                    for supernode in self.supernodeSet.getSet():
-                        supernodeSendID = self.addrToIDTable.get(supernode)
+                    for supernodeAddr in self.supernodeSet.getSet():
+                        supernodeSendID = self.addrToIDTable.get(supernodeAddr, None)
                         values = '000a0002'
                         msg_len = len(values)
                         msg = ''.join(['0101', f'{msg_len:04d}', sourceIP, sourcePort, values])
@@ -117,7 +117,7 @@ class MainListener(threading.Thread):
         response = f'{REQUEST}{len(values):04d}{self.ownIP}{self.ownPort}{values}'
 
         with self.addrToIDTableLock:
-            sourceSendID = self.addrToIDTable[(sourceIP, sourcePort)]
+            sourceSendID = self.addrToIDTable.get((sourceIP, sourcePort), None)
 
         print(f"sending supernode set back to {sourceIP}:{sourcePort} using {sourceSendID}")
         mrt_send1(sourceSendID, response)
@@ -137,7 +137,7 @@ class MainListener(threading.Thread):
         response = f'{REQUEST}{len(values):04d}{self.ownIP}{self.ownPort}{values}'
 
         with self.addrToIDTableLock:
-            sourceSendID = self.addrToIDTable[(sourceIP, sourcePort)]
+            sourceSendID = self.addrToIDTable.get((sourceIP, sourcePort), None)
 
         mrt_send1(sourceSendID, response)
 
@@ -153,7 +153,7 @@ class MainListener(threading.Thread):
             with self.supernodeSetLock:
                 with self.addrToIDTableLock:
                     for supernode in self.supernodeSet.getSet():
-                        supernodeSendID = self.addrToIDTable.get(supernode)
+                        supernodeSendID = self.addrToIDTable.get(supernode, None)
                         
                         if len(fileID) > 0:
                             values = f'000c{fileIDLengthString}{fileID}'
@@ -170,7 +170,7 @@ class MainListener(threading.Thread):
         with self.childTableLock:
             if self.childTable.childHasFile(offererAddr, fileID):
                 with self.addrToIDTableLock:
-                    offererSendID = self.addrToIDTable([offererAddr])
+                    offererSendID = self.addrToIDTable.get(offererAddr, None)
                 # TODO: consider taking in the original message to allow forwarding
                 values = f'000e{fileIDLengthString}{fileID}{offererIP}{offererPort}'
                 msg = f'{REQUEST}{len(values):04d}{sourceIP}{sourcePort}{values}'
@@ -183,7 +183,6 @@ class MainListener(threading.Thread):
         fileID - see Protocol.md
         fileSize
         Updates local DHT, does not send a message
-
     '''
     def handleFilePost(self, offerIP, offerPort, fileID, fileSize):
         # update the local DHT
@@ -193,7 +192,7 @@ class MainListener(threading.Thread):
             self.fileInfoTable.addFileInfo(fileID, offerer, newFileInfo)
 
         # update childreninfotable as well
-        if offerer != (self.ownIP, self.ownIP):
+        if offerer != (self.ownIP, self.ownPort):
             with self.childTableLock:
                 self.childTable.addFile(offerer, fileID)
 
@@ -225,7 +224,7 @@ class MainListener(threading.Thread):
     '''
         This function is invoked by message listener upon receiving a file transfer request
     '''
-    def handleFileTransfer(self, sourceIP, sourcePort, curr_file_part,fileID,eof = False):
+    def handleFileTransfer(self, sourceIP, sourcePort, curr_file_part, fileID, eof=False):
         recvAddr = (sourceIP, sourcePort)
         with self.addrToIDTableLock:
             recvSendID = self.addrToIDTable[recvAddr]
