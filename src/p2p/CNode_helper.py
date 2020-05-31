@@ -148,11 +148,11 @@ PARAMETERS:
 def request_file(send_id, source_ip, source_port, file_id, ip, port):
 	# Send request for file along to supernode:
 	id_len = len(file_id)
-	ip = str(ip).split('.')
-	ip = [x.zfill(3) for x in ip]
-	ip = ''.join(ip)
-	port = port.zfill(5)
-	values = ''.join([R_FILE_TRANS,f'{id_len:04d}',file_id,ip,port])
+	padded_ip = str(ip).split('.')
+	padded_ip = [x.zfill(3) for x in padded_ip]
+	padded_ip = ''.join(padded_ip)
+	padded_port = port.zfill(5)
+	values = ''.join([R_FILE_TRANS,f'{id_len:04d}',file_id,padded_ip,padded_port])
 	msg_len = len(values)
 	msg = ''.join([REQUEST, f'{msg_len:04d}', source_ip, source_port, values])
 	send_p2p_msg(send_id, msg)

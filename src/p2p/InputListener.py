@@ -106,13 +106,25 @@ class InputListener(threading.Thread):
             # user input tokens are space delimited
 
             input_tks = user_input.split(" ")
-            assert len(input_tks) > 0
+            try:
+                assert len(input_tks) > 0
+            except: 
+                print(f'Usage: [req,post] arg2 arg3 See Userguide.md for details')
+                continue
             print(f"input tks are {input_tks}")
             isRequestingGlobalDHT = False
             if input_tks[0] == "req":
-                assert len(input_tks) >= 2
+                try:
+                    assert len(input_tks) >= 2
+                except:
+                    print(f'Usage: req files (all/local)')
+                    continue
                 if input_tks[1] == "files":
-                    assert len(input_tks) >= 3
+                    try:
+                        assert len(input_tks) >= 3
+                    except:
+                        print(f'Usage: req [files,supernodes,dl] arg3')
+                        continue
                     if input_tks[2] == "all" and len(input_tks) >= 4:
                         file_id = input_tks[3]
                         self.requestDHT(file_id, isRequestingGlobalDHT)
@@ -134,7 +146,11 @@ class InputListener(threading.Thread):
                     else:
                         print(f'{self.manager.supernode_list}')
                 elif input_tks[1] == "dl":
-                    assert len(input_tks) >= 4
+                    try: 
+                        assert len(input_tks) >= 4
+                    except:
+                        print("usage: dl file_id file_host")
+                        continue
                     # Else if input is to begin a download:
                     file_id = input_tks[2]
                     # TODO: need to add validation for IP:port
@@ -142,10 +158,17 @@ class InputListener(threading.Thread):
                     downloadIP = None
                     self.beginDownload(downloadIP, file_id)
             elif input_tks[0] == "post":
-                assert len(input_tks) >= 2
-
+                try:
+                    assert len(input_tks) >= 2
+                except:
+                    print("Usage: post (offer/rm/disconnect)")
+                    continue
                 if input_tks[1] == "offer":
-                    assert len(input_tks) == 3
+                    try:
+                        assert len(input_tks) == 3
+                    except:
+                        print("Usage: post offer file_id")
+                        continue
                     # Else if input is to offer a new file:
                     file_id = input_tks[2]
 
@@ -154,7 +177,11 @@ class InputListener(threading.Thread):
                     else: 
                         self.manager.handleFilePost(self.ownIP, self.ownPort, file_id, os.path.getsize(file_id))
                 elif input_tks[1] == "rm":
-                    assert len(input_tks) >= 3
+                    try:
+                        assert len(input_tks) >= 3
+                    except:
+                        print("Usage: post rm file_id")
+                        continue
                     file_id = input_tks[2]
                     self.removeOfferedFile(file_id)
                 elif input_tks[1] == "disconnect":
