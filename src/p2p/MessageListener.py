@@ -128,25 +128,23 @@ class MessageListener(threading.Thread):
                             file_to_send.seek(0,0) #send back to start for reading
                             total_fragments = int((byte_size / 1024)) + 1
                             # Loop using mrt_send1()
-                            while True: 
+                            filedata = file_to_send.read().encode().decode()
+                            while len(filedata > 1024): 
                                 # Read in the file_to_send into a 1024 byte buffer
-                                current_part = file_to_send.read(1024)
-                                print(f'length of current read: {len(current_part)}\n')
-                                print(current_part.encode())
+                                current_part = filedata[:1024]
+                                filedata = filedata[1024:]
                                 # Send the packet using mrt_send1()
                                 # If the end of the file is reached:
-                                if len(current_part) < 1024:
-                                    # Send it off using mrt_send1
-                                    # TODO: need to format this as a file transfer messages
+                                # if len(current_part) < 1024:
+                                #     # Send it off using mrt_send1
+                                #     # TODO: need to format this as a file transfer messages
                                     
-                                    self.manager.handleFileTransfer(sourceIP,sourcePort, current_part,fileID)
-
-
-                                    # Exit out of the while loop
-                                    break
-                                
+                                #     self.manager.handleFileTransfer(sourceIP,sourcePort, current_part,fileID)
+                                #     # Exit out of the while loop
+                                #     break
                                 self.manager.handleFileTransfer(sourceIP,sourcePort,current_part,fileID)
                                 time.sleep(1)
+                            self.manager.handleFileTransfer(sourceIP,sourcePort,filedata,fileID)
                             file_to_send.close()
 
                         else: 
