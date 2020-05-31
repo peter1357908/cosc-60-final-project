@@ -13,9 +13,9 @@ import os
 import CNode_helper
 
 class InputListener(threading.Thread):
-    def __init__(self, main_listener, ownIP, ownPort, bootstrapSendID, isSupernode):
+    def __init__(self, mainListener, ownIP, ownPort, bootstrapSendID, isSupernode):
         threading.Thread.__init__(self)
-        self.manager = main_listener
+        self.manager = mainListener
         self.ownIP = ownIP
         self.ownPort = ownPort
         self.bootstrapSendID = bootstrapSendID

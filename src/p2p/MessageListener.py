@@ -5,6 +5,7 @@ import threading
 import File
 import FileInfoTable
 import sys
+import time
 sys.path.append("../mrt/")
 sys.path.append('../data-structures/')
 from mrt import *
@@ -32,8 +33,7 @@ class MessageListener(threading.Thread):
 
         while True:    
             # Accept a packet from the current recvID
-            packet = mrt_receive1(self.recvID)            
-            print(packet)
+            packet = mrt_receive1(self.recvID)           
 
             while len(packet) > 0:
                 # Parse the packet:
@@ -138,6 +138,7 @@ class MessageListener(threading.Thread):
                                     # TODO: need to format this as a file transfer messages
                                     
                                     self.manager.handleFileTransfer(sourceIP,sourcePort, current_part,fileID)
+                                    time.sleep(1)
 
                                     # Exit out of the while loop
                                     break
@@ -151,8 +152,7 @@ class MessageListener(threading.Thread):
                             # relay message to them 
                             self.manager.handleRelayRequest(offerer_ipv4, offerer_port, file_id)
 
-                elif message_type == '1111':
-                    response_type = packet[25:29].decode()
+                elif messageType == '1111':
                     fileIDIndex = 33
                     fileIDLength = int(packet[29:33])
                     fileID = packet[fileIDIndex:fileIDIndex + fileIDLength].decode()
@@ -164,6 +164,8 @@ class MessageListener(threading.Thread):
                         infile.write(data)
 
                 #update packet because this is stream based
+                print(f'last packet = {packet[:25+messageLen]}\n\n\n')
+                print(f'new paket = {packet[25+messageLen:]}\n\n\n')
                 packet = packet[25+messageLen:]
 
 

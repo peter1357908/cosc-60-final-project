@@ -159,8 +159,6 @@ def request_file(send_id, source_ip, source_port, file_id, ip, port):
 	msg_len = len(values)
 	msg = ''.join([REQUEST, f'{msg_len:04d}', source_ip, source_port, values])
 	send_p2p_msg(send_id, msg)
-	# Start UDP hole punch with direct peer:
-	# This doesnt work....
 
 	print(f'SUPERNODE_IP: {SUPERNODE_IP}, SUPERNODE_PORT: {SUPERNODE_PORT}, dl_ip: {ip}, dl_port: {port}')
 	if ip != SUPERNODE_IP:
