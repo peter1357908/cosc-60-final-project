@@ -47,8 +47,6 @@ class InputListener(threading.Thread):
         transfer_id = CNode_helper.request_file(
             self.bootstrapSendID, self.ownIP, self.ownPort, filename, downloadIP, downloadPort)
 
-        print(f'New file written to {filename}')
-
         #TODO FIGURE OUT HOLE PUNCHING HERE
     
     # Offer a New File

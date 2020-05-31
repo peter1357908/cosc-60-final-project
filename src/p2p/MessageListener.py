@@ -217,6 +217,8 @@ class MessageListener(threading.Thread):
                     with open(fileID,'a+') as infile:
                         infile.write(data)
 
+                        print(f'Writing file to {fileID}')
+
 
 
                 #update packet because this is stream based
