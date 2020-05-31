@@ -30,11 +30,6 @@ For each mode, you can request either:
 1. Just one file 
 2. All the files available for the local/entire DHT
 
-            # req files one - gets local DHT
-            # req files all - gets entire DHT
-            # req files one <specific-file-name> - gets just one file from local DHT
-            # req files all <specific-file-name> - gets just one file from the entire DHT
-
 
 - `req files all <specific-file-name>`
 
