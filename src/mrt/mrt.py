@@ -288,8 +288,10 @@ Spins up a receiever thread to handle all incoming messages for the sender
 Responsible for updating latest frag, sending quick responses etc
 """
 def sender_recv_thread(id):
+	global client_sock
 	sender = senders[id]
 	while sender.is_receiving():
+		client_sock.settimeout(None)
 		data, addr = client_sock.recvfrom(2048)
 		if verify_checksum(data) != 0: # discard packet if checksum doesnt add up
 				continue
