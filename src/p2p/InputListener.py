@@ -35,8 +35,6 @@ class InputListener(threading.Thread):
 
     # Request list of supernodes
     def requestSupernodes(self):
-        # TODO
-        # CNode_helper.request_super_list()
         print("requesting all the supernodes")
         CNode_helper.request_super_list(
             self.bootstrapSendID, self.ownIP, self.ownPort)
@@ -97,14 +95,6 @@ class InputListener(threading.Thread):
     def run(self):
         print(f'InputListener started...')
         while True:
-            # # If the command requires a file as an arg: 
-            #     fileID = 'parsed'
-            #     offerer = 'parsed'
-            #     fileInfo = 'parsed'
-            #     name = 'parsed'
-            #     file = File(fileID, offerer, fileInfo, name)
-            #     downloadIP = file.getOfferer()
-
             # Parse out user input
             user_input = input("> ")
 
@@ -114,17 +104,30 @@ class InputListener(threading.Thread):
                 continue
 
             # user input tokens are space delimited
+
             input_tks = user_input.split(" ")
             assert len(input_tks) > 0
             print(f"input tks are {input_tks}")
+            isRequestingGlobalDHT = False
             if input_tks[0] == "req":
                 assert len(input_tks) >= 2
                 if input_tks[1] == "files":
-                    # If input is request for info on all offered files:
-                    isRequestingGlobalDHT = False
-                    if len(input_tks) >= 3 and input_tks[2] == "all":
+                    assert len(input_tks) >= 3
+                    if input_tks[2] == "all" and len(input_tks) >= 4:
+                        file_id = input_tks[3]
+                        self.requestDHT(file_id, isRequestingGlobalDHT)
+                    elif input_tks[2] == "all":
                         isRequestingGlobalDHT = True
-                    self.requestDHT('', isRequestingGlobalDHT)
+                        self.requestDHT('', isRequestingGlobalDHT)
+                    elif input_tks[2] == "local" and len(input_tks) >= 4:
+                        file_id = input_tks[3]
+                        self.requestDHT(file_id, isRequestingGlobalDHT)
+                    elif input_tks[2] == "local":
+                        isRequestingGlobalDHT = True
+                        self.requestDHT('', isRequestingGlobalDHT)
+                    else:
+                        print("ERR")
+                        self.usage_statement()
                 elif input_tks[1] == "supernodes":
                     if not self.isSupernode:
                         self.request_supernodes()

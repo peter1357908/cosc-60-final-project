@@ -110,14 +110,10 @@ class MainListener(threading.Thread):
     '''
         See Protocol.md
     '''
-    def handleSupernodeListRequest(self, sourceIP, sourcePort):
-        # 100b | Number of Supernode Entries | Supernode Entries
-        # Each supernode entry has the following format:
-        #   IPv4 Addr.    Port
-        response_type = '100b'
-        snodes_num = str(len(supernode_list))
-        values = ''.join([response_type,f'{len(supernode_list):04d}',str(supernode_list)])
-        response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
+    def handleSupernodeSetRequest(self, sourceIP, sourcePort):
+        response_type = '100a'
+        values = f'{response_type}{self.supernodeSet}'
+        response = ''.join([REQUEST,f'{len(values):04d}', self.ownIP, self.ownPort, values])
 
         with self.addrToIDTableLock:
             sourceSendID = self.addrToIDTable[(sourceIP, sourcePort)]
