@@ -155,7 +155,7 @@ class MessageListener(threading.Thread):
                     response_type = packet[25:29].decode()
                     fileIDIndex = 33
                     fileIDLength = int(packet[29:33])
-                    fileID = [fileIDIndex:fileIDIndex + fileIDLength].decode()
+                    fileID = packet[fileIDIndex:fileIDIndex + fileIDLength].decode()
                     chunk_size_index = fileIDIndex + fileIDLength
                     chunk_size = int(packet[chunk_size_index:chunk_size_index+4])
                     data = packet[chunk_size_index+4:chunk_size_index+ 4 + chunk_size].decode()
