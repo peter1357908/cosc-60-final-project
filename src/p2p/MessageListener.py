@@ -126,7 +126,7 @@ class MessageListener(threading.Thread):
                     fileSize = int(packet[29:33])
                     fileIDLength = int(packet[33:37])
                     fileID = packet[37:37+fileIDLength].decode()
-                    self.manager.handleFilePost(sourceIP, sourcePort, self.connID, fileID, fileSize)
+                    self.manager.handleFilePost(sourceIP, sourcePort, fileID, fileSize)
                     print(f'file post.... fsize: {fileSize}, fid_len: {fileIDLength}, fid: {fileID}')
                 elif postType == '000b':    # If the messages announces a disconnect
                     # Note: a child node will never receive this message, since

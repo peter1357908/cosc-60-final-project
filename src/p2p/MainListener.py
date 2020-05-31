@@ -181,7 +181,7 @@ class MainListener(threading.Thread):
         Updates local DHT, does not send a message
 
     '''
-    def handleFilePost(self, offerIP, offerPort, connID, fileID, fileSize):
+    def handleFilePost(self, offerIP, offerPort, fileID, fileSize):
         # update the local DHT
         # TODO: set a lock
         offerer = (offerIP, offerPort)
@@ -189,8 +189,8 @@ class MainListener(threading.Thread):
         self.fileInfoTable.addFileInfo(fileID, offerer, newFileInfo)
 
         # update childreninfotable as well
-        assert(offerer != (self.ownIP, self.ownIP))
-        self.childTable.addFile(offerer, fileID)
+        if offerer != (self.ownIP, self.ownIP):
+            self.childTable.addFile(offerer, fileID)
 
         print(f"handle file post in mainlistener {fileID} of size {fileSize} from {offerIP}:{offerPort}")
         print(f'hash table now looks like: {self.fileInfoTable}')

@@ -149,7 +149,7 @@ class InputListener(threading.Thread):
                     if not self.isSupernode:
                         self.offerNewFile(file_id)
                     else: 
-                        self.manager.handleFilePost(self.ownIP, self.ownPort, self.sendID, file_id, os.path.getsize(file_id))
+                        self.manager.handleFilePost(self.ownIP, self.ownPort, file_id, os.path.getsize(file_id))
                 elif input_tks[1] == "rm":
                     assert len(input_tks) >= 3
                     file_id = input_tks[2]
