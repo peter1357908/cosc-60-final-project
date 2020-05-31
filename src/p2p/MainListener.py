@@ -181,10 +181,10 @@ class MainListener(threading.Thread):
         Updates local DHT, does not send a message
 
     '''
-    def handleFilePost(self, sourceIP, sourcePort, connID, fileID, fileSize):
+    def handleFilePost(self, offerIP, offerPort, connID, fileID, fileSize):
         # update the local DHT
         # TODO: set a lock
-        offerer = (sourceIP, sourcePort)
+        offerer = (offerIP, offerPort)
         newFileInfo = FileInfo(fileSize, (self.ownIP, self.ownPort))
         self.fileInfoTable.addFileInfo(fileID, offerer, newFileInfo)
 
@@ -192,7 +192,7 @@ class MainListener(threading.Thread):
         assert(offerer != (self.ownIP, self.ownIP))
         self.childTable.addFile(offerer, fileID)
 
-        print(f"handle file post in mainlistener {fileID} of size {fileSize} from {sourceIP}:{sourcePort}")
+        print(f"handle file post in mainlistener {fileID} of size {fileSize} from {offerIP}:{offerPort}")
         print(f'hash table now looks like: {self.fileInfoTable}')
 
     '''
@@ -240,11 +240,9 @@ class MainListener(threading.Thread):
             print('MainListener going into connection accepting loop...')
             # TODO: why not accept1()?
             while True:
-                time.sleep(3)
+                time.sleep(2)
                 new_connections = mrt_accept_all() # This is non-blocking so that the thread can service other functions
-                print(new_connections)
                 if len(new_connections) > 0:
-                    print(f'{len(new_connections)} waiting... ')
                     for connID in new_connections:
                         messageListener = MessageListener.MessageListener(self, connID)
                         messageListener.start()
