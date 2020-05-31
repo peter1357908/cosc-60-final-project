@@ -90,7 +90,7 @@ class MessageListener(threading.Thread):
                     fileID = ''
                     if fileIDLength > 0:
                         fileIDIndex = 29
-                        fileID = packet[fileIDIndex:fileIDIndex+fileIDLength]
+                        fileID = packet[fileIDIndex:fileIDIndex+fileIDLength].decode()
                     self.manager.handleLocalDHTEntriesRequest(sourceIP, sourcePort, fileID)
                 
                 # Request for all DHT entrie (on all files / one file):
@@ -100,20 +100,20 @@ class MessageListener(threading.Thread):
                     if fileIDLength > 0:
                         # The index where the fileindex starts in message
                         fileIDIndex = 29
-                        fileID = packet[fileIDIndex:fileIDIndex+fileIDLength]
+                        fileID = packet[fileIDIndex:fileIDIndex+fileIDLength].decode()
                     self.manager.handleAllDHTEntriesRequest(sourceIP, sourcePort, misc, fileID)
 
                 # file transfer
                 elif requestType == '000e':
                     fileIDLength = int(misc)
                     fileIDIndex = 29
-                    fileID = packet[fileIDIndex:fileIDIndex+fileIDLength]
+                    fileID = packet[fileIDIndex:fileIDIndex+fileIDLength].decode()
                     OffererIPv4Index = fileIDIndex + fileIDLength
-                    offerer_ipv4 = packet[OffererIPv4Index:OffererIPv4Index+12]
+                    offerer_ipv4 = packet[OffererIPv4Index:OffererIPv4Index+12].decode()
                     OffererPortIndex = OffererIPv4Index + 12
-                    offerer_port = packet[OffererPortIndex:OffererPortIndex+5]
-
-                    if offerer_ipv4 == self.manager.ownIP and offerer_port == self.manager.ownPort:
+                    offerer_port = int(packet[OffererPortIndex:OffererPortIndex+5])
+                    print(f'id: {fileID}, offererIP: {offerer_ipv4}')
+                    if offerer_ipv4 == self.manager.ownIP and offerer_port == int(self.manager.ownPort):
                         #TODO: load file and sent (or pass to manager to handle this)
                         #1. Open file
                         file_to_send = open(fileID, 'a+')

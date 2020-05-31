@@ -45,7 +45,7 @@ class InputListener(threading.Thread):
         # downloader.start()
         print("Attempting to download from ", downloadIP)
         transfer_id = CNode_helper.request_file(
-            self.bootstrapSendID, self.ownIP, self.ownPort, filename, downloadIP, int(downloadPort))
+            self.bootstrapSendID, self.ownIP, self.ownPort, filename, downloadIP, downloadPort)
 
         # Start download:
         # constantly receive 1?
@@ -162,6 +162,7 @@ class InputListener(threading.Thread):
                         continue
                     downloadIP = file_host[0].strip('(')
                     downloadPort = file_host[1].strip(')')
+                    print(f'ip: {downloadIP}, port: {downloadPort}. Beginning download... ')
                     self.beginDownload(file_id, downloadIP, downloadPort)
             elif input_tks[0] == "post":
                 try:
