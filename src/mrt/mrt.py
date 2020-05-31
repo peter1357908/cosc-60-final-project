@@ -146,6 +146,7 @@ def mrt_connect(host='192.168.0.249',port=11235):
 	if type(client_sock) == int:
 		client_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		client_sock.bind(('',5001))
+	client_sock.settimeout(None)
 	addr = (host,port)
 	id = handshake(addr)
 	senders[id].receiving=True
