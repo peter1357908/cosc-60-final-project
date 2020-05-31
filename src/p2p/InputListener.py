@@ -10,6 +10,7 @@ from FileInfoTable import *
 from ChildrenInfoTable import *
 from MainListener import *
 import os
+import CNode_helper
 
 class InputListener(threading.Thread):
     def __init__(self, main_listener, ownIP, ownPort, bootstrapSendID, isSupernode):

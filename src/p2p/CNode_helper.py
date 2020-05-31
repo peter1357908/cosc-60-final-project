@@ -50,7 +50,7 @@ Returns an ID connection object
 """
 def connect_p2p(ip = SUPERNODE_IP,port = SUPERNODE_PORT):
 	global SUPERNODE_ID
-	SUPERNODE_ID = mrt_connect(ip,port,s=1)
+	SUPERNODE_ID = mrt_connect(ip,port)
 	print(SUPERNODE_ID)
 	return SUPERNODE_ID
 
