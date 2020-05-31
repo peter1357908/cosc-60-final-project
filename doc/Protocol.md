@@ -56,7 +56,7 @@ being 4 bytes in length:
 ### Requests:
 
 * Request to join the network - "000a"
-* Request for a supernode's supernode list - "000b"
+* Request for a supernode's supernode set - "000b"
 * Request for a supernode's Local-DHT (on all files/one file) - "000c"
 * Request for all DHT entries (on all files / one file): - "000d"
 * Request for a file-transfer - "000e"
@@ -91,7 +91,7 @@ being 4 bytes in length:
     | 000a | 0002 |
     | ---- | ---- |
   
-#### Request for a supernode's supernode list:
+#### Request for a supernode's supernode set:
 
 * Request:
 
@@ -102,7 +102,7 @@ being 4 bytes in length:
 
 * Response:
 
-  | 100b | Number of supernode entries | Supernode entries ... |
+  | 100a | Number of supernode entries | Supernode entries ... |
   | ---- | ---- | ---- |
   
   Each `supernode entry` has the following format:
@@ -110,12 +110,16 @@ being 4 bytes in length:
   | IPv4 ... | Port ... |
   | ---- | ---- |
   
+  (which is the same as the response for Request `000a`)
+  
 #### Request for a supernode's Local-DHT entries (on all files / one file):
 
 * Request:
 
   | 000c | File ID length | File ID ... |
   | ---- | ---- | ---- |
+  
+  (currently, the supernode can send this request to all known supernodes, but a childnode can only send this request to its bootstrapping supernode)
   
   If the requester wants all entries, `File ID length` should be `0000` (and consequently have nothing for `File ID`).
   
@@ -137,7 +141,7 @@ being 4 bytes in length:
       | Offerer IPv4 ... | Offerer Port ... | File Size |
       | ---- | ---- | ---- |
 
-      Note that the requesting node should distinguish between different supernodes' response by `(Source IPv4, Source Port)`. Knowing which supernode maintains a Local-DHT entry is necessary for crafting the request `000e` below.
+      NOTE: the requesting node should distinguish between different supernodes' response by `(Source IPv4, Source Port)`. Knowing which supernode maintains a Local-DHT entry is necessary for crafting the request `000e` below.
   
   For robust-ness, the supernode should always respond to request `000c` (if no entries are found, respond with `number` being `0000` and no `Local-DHT entry`).
   
@@ -145,18 +149,38 @@ being 4 bytes in length:
 
 * Request:
 
-  | 000d | File ID length | File ID ... |
-  | ---- | ---- | ---- |
+  | 000d | Requester IPv4 | Requester Port | File ID length | File ID ... |
+  | ---- | ---- | ---- | ---- | ---- |
   
-  This request should be sent from a childnode (a supernode should directly use request type `000c`) to a supernode (which does not have to be its bootstrapping supernode).
+  This request should be sent from a childnode (a supernode should directly use request type `000c`) to a supernode (which does not have to be its bootstrapping supernode); in this case, `(Requester IPv4, Requester Port)` is the same as `(Source IPv4, Source Port)` because they both specify the requesting childnode.
 
 * Response:
 
-  The supernode that receives the request will perform two tasks if `(Source IPv4, Source Port)` is not its own address:
+  If `(Requester IPv4, Requester Port)` specifies a child of the receiving supernode:
   
-  1. Respond to the requesting node as if the request is of type `000c`
+    1. Respond to `(Source IPv4, Source Port)` as if the request is of type `000c` (craft a `100c` response)
+
+    1. Craft the same message with its own `(IPv4, Port)` as the `(Source IPv4, Source Port)` (keep all other fields the same) and send it to all known supernodes
   
-  1. Forward the message with type `000c` instead of `000d` to all the supernodes it knows (so the other supernode will respond to the requesting node directly).
+  Else (it has received a relayed request as crafted above):
+  
+    Respond to `(Source IPv4, Source Port)` with the following format:
+
+    | 100d | Requester IPv4 | Requester Port | Number of Local-DHT entries | Local-DHT entries ... |
+    | ---- | ---- | ---- | ---- | ---- |
+
+    * Each `Local-DHT entry`  has the following format:
+
+        | File ID length | File ID ... | Number of file entries | File entries ... |
+        | ---- | ---- | ---- | ---- |
+
+        * Each `File entry` has the following format:
+
+          | Offerer IPv4 ... | Offerer Port ... | File Size |
+          | ---- | ---- | ---- |
+    
+    **Upon receiving request `100d`**, craft a `100c` response with the received information to `(Requester IPv4, Requester Port)` with `(Source IPv4, Source Port)` being the same as that from the `100d` (see "NOTE" for `100c` for why this is important).
+  
 
 #### Request for a file-transfer:
 
