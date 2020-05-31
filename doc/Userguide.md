@@ -20,13 +20,37 @@ Currently, two command types are supported:
 
 ### Request
 
+There are four types of requests **for files** you can make. There are two modes:
+
+1. Request from the local DHTs
+2. Request from all the DHTs
+
+For each mode, you can request either:
+
+1. Just one file 
+2. All the files available for the local/entire DHT
+
+            # req files one - gets local DHT
+            # req files all - gets entire DHT
+            # req files one <specific-file-name> - gets just one file from local DHT
+            # req files all <specific-file-name> - gets just one file from the entire DHT
+
+
+- `req files all <specific-file-name>`
+
+This requests just one specific file from the entire DHT
+
 - `req files all`
 
-This requests the entire DHT.
+This requests the entire DHT
 
-- `req files`
+- `req files one <specific-file-name>`
 
-This requests only the local DHT.
+This requests just one specific file from the local DHT
+
+- `req files one`
+
+This requests the local DHT
 
 - `req supernodes`
 
