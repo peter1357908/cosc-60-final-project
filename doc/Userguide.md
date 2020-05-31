@@ -39,11 +39,11 @@ This requests just one specific file from the entire DHT
 
 This requests the entire DHT
 
-- `req files one <specific-file-name>`
+- `req files local <specific-file-name>`
 
 This requests just one specific file from the local DHT
 
-- `req files one`
+- `req files local`
 
 This requests the local DHT
 
