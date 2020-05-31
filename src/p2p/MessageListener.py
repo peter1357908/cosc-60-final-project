@@ -186,7 +186,7 @@ class MessageListener(threading.Thread):
                     chunk_size = int(packet[chunk_size_index:chunk_size_index+4])
                     # data = packet[chunk_size_index+4:chunk_size_index+ 4 + chunk_size].decode('utf-8')
 
-                    end_of_data = packet.find(packet[8:25],chunk_size) - 8
+                    end_of_data = packet.find(packet[8:25],chunk_size_index) - 8
                     if end_of_data == -1:
                         data = packet[chunk_size_index+4:]
                     else:
