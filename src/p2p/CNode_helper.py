@@ -155,7 +155,7 @@ def request_file(send_id, source_ip, source_port, file_id, maintainer_ip, mainta
 		# TODO: make it so that the holepunching only stops after the connection is accepted
 		for _i in range(3):
 			offerer_ip_split = [int(offerer_ip[i:i+3]) for i in range(0, 12, 3)]
-    	offerer_ip_with_dots = ".".join([str(x) for x in offerer_ip_split])
+			offerer_ip_with_dots = ".".join([str(x) for x in offerer_ip_split])
 			mrt_hole_punch(offerer_ip_with_dots, int(offerer_port))
 			time.sleep(.2)
 
