@@ -113,11 +113,12 @@ class MainListener(threading.Thread):
     def handleSupernodeSetRequest(self, sourceIP, sourcePort):
         response_type = '100a'
         values = f'{response_type}{self.supernodeSet}'
-        response = ''.join([REQUEST,f'{len(values):04d}', self.ownIP, self.ownPort, values])
+        response = ''.join([response_type,f'{len(values):04d}', self.ownIP, self.ownPort, values])
 
         with self.addrToIDTableLock:
             sourceSendID = self.addrToIDTable[(sourceIP, sourcePort)]
 
+        print(f"sending supernode list back to {sourceIP}:{sourcePort} using {sourceSendID}")
         mrt_send1(sourceSendID, response)
 
     # handles both cases

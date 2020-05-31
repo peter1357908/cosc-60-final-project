@@ -79,10 +79,9 @@ class MessageListener(threading.Thread):
                     elif misc == '0002':
                         self.manager.handleJoinRequest(2, sendID, sourceIP, sourcePort)
                 
-                # Request for a supernode's supernode list:
+                # Request for a supernode's supernode set:
                 elif requestType == '000b':
-                    #TODO: Request for a supernode's supernode list
-                    #self.manager.handleSupernodeListRequest(sourceIP,port) 
+                    self.manager.handleSupernodeSetRequest(sourceIP, sourcePort) 
                     pass
 
                 # Request for a supernode's Local-DHT entries (on all files / one file):
