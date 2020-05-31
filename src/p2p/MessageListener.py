@@ -89,7 +89,7 @@ class MessageListener(threading.Thread):
                     fileIDLength = int(misc)
                     fileID = ''
                     if fileIDLength > 0:
-                        fileIDIndex = 29
+                        fileIDIndex = 33
                         fileID = packet[fileIDIndex:fileIDIndex+fileIDLength].decode()
                     self.manager.handleLocalDHTEntriesRequest(sourceIP, sourcePort, fileID)
                 
@@ -99,14 +99,14 @@ class MessageListener(threading.Thread):
                     fileID = ''
                     if fileIDLength > 0:
                         # The index where the fileindex starts in message
-                        fileIDIndex = 29
+                        fileIDIndex = 33
                         fileID = packet[fileIDIndex:fileIDIndex+fileIDLength].decode()
                     self.manager.handleAllDHTEntriesRequest(sourceIP, sourcePort, misc, fileID)
 
                 # file transfer
                 elif requestType == '000e':
                     fileIDLength = int(misc)
-                    fileIDIndex = 29
+                    fileIDIndex = 33
                     fileID = packet[fileIDIndex:fileIDIndex+fileIDLength].decode()
                     OffererIPv4Index = fileIDIndex + fileIDLength
                     offerer_ipv4 = packet[OffererIPv4Index:OffererIPv4Index+12].decode()
