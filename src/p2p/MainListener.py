@@ -2,15 +2,15 @@
 
 import threading
 import sys
-
-import InputListener
 sys.path.append('../mrt/')
 sys.path.append('../data-structures/')
+from mrt import *
+import InputListener
 from FileInfoTable import FileInfoTable, FileInfo
 from ChildrenInfoTable import ChildrenInfoTable
 from SupernodeSet import SupernodeSet
-from mrt import * 
 import MessageListener
+import CNode_helper
 import time
 
 
@@ -19,7 +19,6 @@ POST = '0001'
 REQUEST = '0101'
 FILE_TRANSFER = '1111'
 ERROR = '0000'
-
 
 
 class MainListener(threading.Thread):
@@ -60,6 +59,7 @@ class MainListener(threading.Thread):
     def handleJoinRequest(self, type, sendID, sourceIP, sourcePort): 
         # send number of supernode entries, supernode entries
         if type == 0:
+            print("sending receive message back, type 100a")
             response_type = '100a'
             values = f'{response_type}{self.supernodeSet}'
             response = ''.join([REQUEST,f'{len(values):04d}', self.ownIP, self.ownPort, values])
@@ -69,6 +69,8 @@ class MainListener(threading.Thread):
             mrt_send1(sendID, response)
         elif type == 1:
             #TODO: Add functionality to keep track of supernode
+
+            print("sending receive message back")
             response_type = '100a'
             values = f'{response_type}{self.supernodeSet}'
             response = ''.join([REQUEST, f'{len(values):04d}', self.ownIP, self.ownPort, values])

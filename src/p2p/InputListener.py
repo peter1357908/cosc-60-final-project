@@ -5,10 +5,10 @@ import asyncio
 import sys
 sys.path.append('../mrt/')
 sys.path.append('../data-structures/')
-import mrt
+from mrt import *
 from FileInfoTable import *
 from ChildrenInfoTable import *
-import CNode_helper
+from MainListener import *
 import os
 
 class InputListener(threading.Thread):

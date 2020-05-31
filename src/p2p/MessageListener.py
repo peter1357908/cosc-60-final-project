@@ -1,15 +1,14 @@
 #! /usr/bin/python3
 
 # Message Listener Thread:
-
 import threading
 import File
 import FileInfoTable
 import sys
-sys.path.append('../mrt/')
+sys.path.append("../mrt/")
 sys.path.append('../data-structures/')
 from mrt import *
-#import SNode_helpers
+
 
 class MessageListener(threading.Thread):
 
@@ -118,6 +117,7 @@ class MessageListener(threading.Thread):
             sourcePort = int(packet[20:25].decode())
             sourceAddrTuple = (sourceIP, sourcePort)
             
+            # POST 
             if messageType == '0001':    # If the message is a post:
                 # TODO: Now, parse the Post Type:
                 postType = packet[25:29].decode()
@@ -137,13 +137,15 @@ class MessageListener(threading.Thread):
                     child_files = childHash.popChild(ip)
                     fInfo.removeAllFileInfoByOfferer(child_files, ip_addr)
                     self.processDisconnect(ip)
-            elif messageType == '0101':    # If the message is a request:
+
+            # REQUEST
+            elif messageType == '0101':
                 print(f'request received')
                 requestType = packet[25:29].decode()
                 misc = packet[29:33].decode()
                 if requestType == '000a':
                     print(f'request to join received... type: {misc}')
-
+                    # need to connect back to the childnode to send stuff
                     send_id = mrt_connect(host=self.splitIP(sourceIP), port=int(sourcePort))
                     # join as a regular node
                     if misc == '0000':

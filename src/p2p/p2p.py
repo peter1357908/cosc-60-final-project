@@ -1,23 +1,18 @@
 #! /usr/bin/python3
 
 import threading
-import MainListener
+from MainListener import *
 import sys
-sys.path.append('../mrt/')
 sys.path.append('../data-structures/')
 import argparse
-#import CNode_helper
-#import mrt
 import socket
-import CNode_helper
 
 # CONST VARIABLES
 # TODO: need to change this to an established supernode
-HARDCODED_SUPERNODE_IP = "104.55.97.253"
-HARDCODED_SUPERNODE_IP_DOTLESS = "104055097253"
+HARDCODED_SUPERNODE_IP = "35.212.76.82"
+HARDCODED_SUPERNODE_IP_DOTLESS = "352127682"
 HARDCODED_SUPERNODE_PORT = 5000
 
-SUPERNODE_LOOPBACK_IP = "127.0.0.1"
 
 '''
     bootstrap_connect attempts to connect to supernodeIP:supernodePort by using cnode_helper's connect and join
@@ -52,7 +47,7 @@ def main():
     ### Logic for first ever supernode 
     if args.first:
         print(f'starting up as first ever supernode')
-        mainListener = MainListener.MainListener(
+        mainListener = MainListener(
             isSupernode=True, ownIP=HARDCODED_SUPERNODE_IP_DOTLESS, ownPort=HARDCODED_SUPERNODE_PORT, is_first=True).start()
     else:
         isSupernode = args.supernode
@@ -65,7 +60,7 @@ def main():
 
                 bootstrapSendID, bootstrapRecvID = bootstrap_connect(ownIP, ownPort, HARDCODED_SUPERNODE_IP, HARDCODED_SUPERNODE_PORT, False)
 
-                mainListener = MainListener.MainListener(isSupernode, ownIP, ownPort, bootstrapSendID, bootstrapRecvID, False)
+                mainListener = MainListener(isSupernode, ownIP, ownPort, bootstrapSendID, bootstrapRecvID, False)
                 mainListener.start()
 
 if __name__ == "__main__":
