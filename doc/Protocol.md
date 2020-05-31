@@ -189,19 +189,27 @@ being 4 bytes in length:
   | 000e | File ID length |
   | ---- | ---- |
   | File ID ... | Offerer IPv4 ... |
-  | Offerer Port ... | |
+  | Offerer Port ... | Maintainer IPv4 ... |
+  | Maintainer Port ... |
   
   If the offerer is not a supernode, send a dummy UDP-holepunching message to the offerer.
   
-  This message needs to be sent to the supernode that maintains the file's Local-DHT entry (the maintainer information should have been recorded from a request response `100c`. This message would be forwarded to the offering childnode if the file is not offered by the supernode itself)
+  This message needs to be sent to the requester's bootstrapping supernode, which, if not the maintainer, would forward the request to the supernode that maintains the file's Local-DHT entry, who, if not the offerer, would ultimately forward the message to the offerer.
+  
+  NOTE: `(Maintainer IPv4, Maintainer Port)` should have been recorded from a request response `100c`.
 
 * Response: 
   
-  Since the current protocol **does not require back-and-forth on the P2P layer**:
+  * If `(Offerer IPv4, Offerer Port)` specifies the receiving node, connect to `(Source IPv4, Source Port)` and start sending File-Transfer messages accordingly
   
-  * If `(Offerer IPv4, Offerer Port)` specifies the receiving node, connect to `(Source IPv4, Source Port)` and start sending File-Transfer messages accordingly (hole-punching is already)
-  
-  * Else if the receiving node is a supernode **AND** if `(Offerer IPv4, Offerer Port)` specifies a childnode paired with the receiving supernode and it does offer the requested file, the supernode should "forward" the exact same message (same `(Source IPv4, Source Port)`) to that childnode.
+  * Else if the receiving node is a supernode:
+    
+    * if `(Maintainer IPv4, Maintainer Port)` specifies the receiving node AND `(Offerer IPv4, Offerer Port)` specifies a childnode paired with the receiving node AND it does offer the requested file, the supernode should "forward" the exact same message (same `(Source IPv4, Source Port)`) to that childnode.
+    
+    * otherwise, "forward" the exact same message (keeping `(Source IPv4, Source Port)`) to `(Maintainer IPv4, Maintainer Port)`, which would be another supernode known by the receiving node.
+
+
+  (Since the current protocol does not require back-and-forth on the P2P layer, only the requester needs to do UDP-holepunching to allow receiving the File-Transfer from the offerer)
 
 ---
 
