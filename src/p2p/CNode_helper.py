@@ -32,10 +32,10 @@ R_FILE_TRANS = '000e'
 P_NEW_FILE = '000a'
 P_DISCONNECT = '000b'
 
-SUPERNODE_IP = '192.168.0.249'
-SUPERNODE_PORT = 11235
-SUPERNODE_ID = 0
-RECV_ID = 0
+# The following three values will be updated by connect_p2p()
+bootstrapper_ip = '192.168.0.249'
+bootstrapper_port = 11235
+bootstrapper_sendID = 0
 
 
 """
@@ -49,13 +49,12 @@ AS WELL
 Connects to supernode using mrt_connect
 Returns an ID connection object
 """
-def connect_p2p(ip = SUPERNODE_IP,port = SUPERNODE_PORT):
-	global SUPERNODE_ID,SUPERNODE_IP,SUPERNODE_PORT
-	SUPERNODE_IP = ip
-	SUPERNODE_PORT = port
-	SUPERNODE_ID = mrt_connect(ip,port)
-	print(SUPERNODE_ID)
-	return SUPERNODE_ID
+def connect_p2p(ip, port):
+	global bootstrapper_ip, bootstrapper_port, bootstrapper_sendID
+	bootstrapper_ip = ip
+	bootstrapper_port = port
+	bootstrapper_sendID = mrt_connect(ip, port)
+	return bootstrapper_sendID
 
 """
 Function to get own ip and port (public) for the client
@@ -77,14 +76,12 @@ join_type:
 	1: join as supernode
 """
 def join_p2p(recv_sock,send_id, source_ip, source_port, join_type = 0):
-	global RECV_ID
 	mrt_open(s=recv_sock)
 	values = ''.join([R_JOIN,f'{join_type:04d}'])
 	msg_len = len(values)
 	msg = ''.join([REQUEST, f'{msg_len:04d}', source_ip, source_port, values])
 	send_p2p_msg(send_id,msg)
-	RECV_ID = mrt_accept1()
-	return RECV_ID
+	return mrt_accept1()
 	
 
 
@@ -142,29 +139,25 @@ def post_file(send_id, source_ip, source_port, file_size, id_size, filename):
 """
 Function to request a file
 PARAMETERS:
-	file_id: str
-	ip: ip string in standard format ie 'xxx.xxx.xxx.xxx'
-	port: integer
+	file_id: string
+	ip addresses: strings in P2P format (zero-padded; 12 bytes)
+	port numbers: strings in P2P format (zero-padded; 5 bytes)
 """
-def request_file(send_id, source_ip, source_port, file_id, ip, port):
-	# Send request for file along to supernode:
-	# ip is the ip of the client that you'd like to download from
-	id_len = len(file_id)
-	padded_ip = str(ip).split('.')
-	padded_ip = [x.zfill(3) for x in padded_ip]
-	padded_ip = ''.join(padded_ip)
-	padded_port = port.zfill(5)
-	values = ''.join([R_FILE_TRANS,f'{id_len:04d}',file_id,padded_ip,padded_port])
+def request_file(send_id, source_ip, source_port, file_id, maintainer_ip, maintainer_port, offerer_ip, offerer_port):
+	file_id_len = len(file_id)
+
+	values = f'{R_FILE_TRANS}{file_id_len:04d}{file_id}{offerer_ip}{offerer_port}{maintainer_ip}{maintainer_port}'
 	msg_len = len(values)
 	msg = ''.join([REQUEST, f'{msg_len:04d}', source_ip, source_port, values])
 	send_p2p_msg(send_id, msg)
 
-	print(f'SUPERNODE_IP: {SUPERNODE_IP}, SUPERNODE_PORT: {SUPERNODE_PORT}, dl_ip: {ip}, dl_port: {port}')
-	if ip != SUPERNODE_IP:
-		for i in range(3):
-			mrt_hole_punch(ip,int(port))
+	if (offerer_ip, offerer_port) != (bootstrapper_ip, bootstrapper_port):
+		# TODO: make it so that the holepunching only stops after the connection is accepted
+		for _i in range(3):
+			offerer_ip_split = [int(offerer_ip[i:i+3]) for i in range(0, 12, 3)]
+    	offerer_ip_with_dots = ".".join([str(x) for x in offerer_ip_split])
+			mrt_hole_punch(offerer_ip_with_dots, int(offerer_port))
 			time.sleep(.2)
-
 
 """
 Function to send request to disconnect
@@ -178,7 +171,6 @@ def send_disconnect(send_id, source_ip, source_port):
 """
 Function to send the pre-made p2p message. 
 Message must be in binary (use binascii.unhexlify)
-Sends to SUPERNODE_ID
 """
 def send_p2p_msg(sock,msg):
 	print(f'sending to: {sock}, msg: {msg}')
