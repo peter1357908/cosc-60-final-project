@@ -152,7 +152,7 @@ class InputListener(threading.Thread):
                 elif input_tks[1] == "rm":
                     assert len(input_tks) >= 3
                     file_id = input_tks[2]
-                    self.removeOfferedFile(file=None)
+                    self.removeOfferedFile(file_id)
                 elif input_tks[1] == "disconnect":
                     # Else if input is to disconnect from the network
                     self.disconnect()

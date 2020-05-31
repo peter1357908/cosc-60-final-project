@@ -225,7 +225,9 @@ class MainListener(threading.Thread):
     
     def run(self):
         print(f'MainListener starting... IP: {self.ownIP} port: {self.ownPort}')
-        mrt_open()
+        if self.is_first:
+            mrt_open(s=1)
+        
         inputListener = InputListener.InputListener(self, self.ownIP, self.ownPort, self.bootstrapSendID, self.isSupernode)
         inputListener.start()
         
