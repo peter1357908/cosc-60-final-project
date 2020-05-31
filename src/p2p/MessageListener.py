@@ -57,6 +57,10 @@ class MessageListener(threading.Thread):
                     elif postType == '000b':    # If the messages announces a disconnect
                         self.manager.handleRequestDisconnect(sourceIP, sourcePort)
                         return # terminate this MessageListener thread
+
+                    elif postType == '100b':
+                        # TODO: what if the user decides to rejoin?
+                        print("You can safely disconnect")
                         
                 # REQUEST
                 elif messageType == '0101':
@@ -94,7 +98,7 @@ class MessageListener(threading.Thread):
                             fileID = packet[fileIDIndex:fileIDIndex+fileIDLength].decode()
                         self.manager.handleLocalDHTEntriesRequest(sourceIP, sourcePort, fileID)
                     
-                    # Request for all DHT entrie (on all files / one file):
+                    # Request for all DHT entries (on all files / one file):
                     elif requestType == '000d':
                         fileIDLength = int(misc)
                         fileID = ''
@@ -155,6 +159,33 @@ class MessageListener(threading.Thread):
                             # relay message to them 
                             self.manager.handleRelayRequest(offerer_ipv4, offerer_port, file_id)
 
+
+                    # response from request to join 000a or request for supernodeSet
+                    elif requestType == '100a':
+                        num_supernode_entries = int(misc)
+                        cur_idx = 33
+                        print(f"100a received; number of supernode entries is {num_supernode_entries}")
+                        for i in range(num_supernode_entries):
+                            try:
+                                snodeIP = packet[cur_idx:cur_idx+12]
+                                cur_idx += 12
+                                snodePort = packet[cur_idx:cur_idx+5]
+                                cur_idx += 5
+                                print(f"100a; SUPERNODE at {splitIP(snodeIP)}:{snodePort}")
+                            except IndexError as e:
+                                print("100a received, cannot index supernode ip, port, index out of bounds")
+
+
+                    # response from request to get local DHT
+                    elif requestType == '100c':
+                        pass
+
+                    # response from request to get entire DHT
+                    elif requestType == '100d':
+                        pass
+
+
+                # FILE TRANSFER
                 elif messageType == '1111':
                     fileIDIndex = 33
                     fileIDLength = int(packet[29:33])
@@ -165,6 +196,8 @@ class MessageListener(threading.Thread):
 
                     with open(fileID,'a+') as infile:
                         infile.write(data)
+
+
 
                 #update packet because this is stream based
                 print(f'last packet = {packet[:25+messageLen]}\n\n\n')
