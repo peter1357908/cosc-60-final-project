@@ -56,7 +56,7 @@ being 4 bytes in length:
 ### Requests:
 
 * Request to join the network - "000a"
-* Request for a supernode's supernode list - "000b"
+* Request for a supernode's supernode set - "000b"
 * Request for a supernode's Local-DHT (on all files/one file) - "000c"
 * Request for all DHT entries (on all files / one file): - "000d"
 * Request for a file-transfer - "000e"
@@ -91,7 +91,7 @@ being 4 bytes in length:
     | 000a | 0002 |
     | ---- | ---- |
   
-#### Request for a supernode's supernode list:
+#### Request for a supernode's supernode set:
 
 * Request:
 
