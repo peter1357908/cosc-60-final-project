@@ -165,29 +165,13 @@ class MainListener(threading.Thread):
                         mrt_send1(supernodeSendID, msg)
 
     # handles content from request 000e
-    def handleFileTransferRequest(self, sourceIP, sourcePort, offererIP, offererPort, fileIDLengthString, fileID):
-        if offererIP == self.ownIP and offererPort == self.ownPort:
-            # TODO: send the requested file to (sourceIP, sourcePort)
-            pass
-        elif self.isSupernode:
-            offererAddr = (offererIP, offererPort)
-            if self.childTable.childHasFile(offererAddr, fileID):
-                # TODO: consider taking in the original message to allow forwarding
-                values = f'000e{fileIDLengthString}{fileID}{offererIP}{offererPort}'
-                msg = f'{REQUEST}{len(values):04d}{self.ownIP}{self.ownPort}{values}'
-                mrt_send1(supernodeSendID, msg)
-
-    def handleRelayRequest(self, offererIP, offererPort, fileRequestedID):
-        # TODO: for one supernode/two supernodes, this is fine, but for more supernodes interconnected
-        # there may be a supernode issues
-        child = (offererIP, offererPort)
-        if self.childTable.hasChild(child) and self.childHasFile(child, fileRequestedID):
-            # relay the message
-            response_type = '000e'
-            values = ''.join([response_type, f'{len():04d}', fileRequestedID, offererIP, offererPort])
-            response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
-            # mrt.mrt_send1()
-        
+    def handleFileTransferRequestIfNotOfferer(self, sourceIP, sourcePort, offererIP, offererPort, fileIDLengthString, fileID):
+        offererAddr = (offererIP, offererPort)
+        if self.childTable.childHasFile(offererAddr, fileID):
+            # TODO: consider taking in the original message to allow forwarding
+            values = f'000e{fileIDLengthString}{fileID}{offererIP}{offererPort}'
+            msg = f'{REQUEST}{len(values):04d}{self.ownIP}{self.ownPort}{values}'
+            mrt_send1(supernodeSendID, msg)
 
     '''
         handles POSTing a file
@@ -238,19 +222,21 @@ class MainListener(threading.Thread):
     '''
         This function is invoked by message listener upon receiving a file transfer request
     '''
-    def handleFileTransfer(self, sourceIP, sourcePort, curr_file_part,fileID):
+    def handleFileTransfer(self, sourceIP, sourcePort, curr_file_part,fileID,eof = False):
+        recvAddr = (sourceIP, sourcePort)
+        with self.addrToIDTableLock:
+            recvSendID = self.addrToIDTable[recvAddr]
+
         response_type = '000a'
         fileID_length = len(fileID)
-        childAddr = (sourceIP, sourcePort)
         len_data = len(curr_file_part)
         values = ''.join([response_type,f'{fileID_length:04d}',fileID,f'{len_data:04d}',curr_file_part])
         response = ''.join([FILE_TRANSFER,f'{len(values):04d}',self.ownIP,self.ownPort,values])
+        mrt_send1(recvSendID, response)
 
-
-        with self.addrToIDTableLock:
-            childSendID = self.addrToIDTable[childAddr]
-
-        mrt_send1(childSendID, response)
+        if eof:
+            if (self.isSupernode and not self.childTable.hasChild(recvAddr)) or (recvSendID != self.bootstrapSendID):
+                mrt_disconnect(recvSendID)
 
     def handleUserQuitInput(self):
         self.shouldQuit = True
@@ -272,15 +258,9 @@ class MainListener(threading.Thread):
             bootstrapListener = MessageListener.MessageListener(self, self.bootstrapRecvID)
             bootstrapListener.start()
         
-        if self.isSupernode:
-            print('MainListener going into connection accepting loop...')
-            # TODO: mrt_accept1() blocks by sleeping; update with condition variable?
-            while True:
-                recvID = mrt_accept1()
-                messageListener = MessageListener.MessageListener(self, recvID)
-                messageListener.start()
-                        
-        else:
-            with self.quitCV:
-                self.quitCV.wait_for(self.isQuit)
-                return
+        print('MainListener going into connection accepting loop...')
+        # TODO: mrt_accept1() blocks by sleeping; update with condition variable?
+        while True:
+            recvID = mrt_accept1()
+            messageListener = MessageListener.MessageListener(self, recvID)
+            messageListener.start()

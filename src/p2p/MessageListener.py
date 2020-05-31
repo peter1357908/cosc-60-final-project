@@ -56,12 +56,12 @@ class MessageListener(threading.Thread):
                         print(f'file post.... fsize: {fileSize}, fid_len: {fileIDLength}, fid: {fileID}')
                     elif postType == '000b':    # If the messages announces a disconnect
                         self.manager.handleDisconnectPost(sourceIP, sourcePort)
-                        return # terminate this MessageListener thread
+                        return
 
                     elif postType == '100b':
                         # TODO: what if the user decides to rejoin?
                         print("You can safely disconnect")
-                        
+
                 # REQUEST
                 elif messageType == '0101':
                     print(f'request received')
@@ -135,33 +135,30 @@ class MessageListener(threading.Thread):
                                     # Send it off using mrt_send1
                                     # TODO: need to format this as a file transfer messages
                                     
-                                    self.manager.handleFileTransfer(sourceIP,sourcePort, current_part,fileID)
-
-
+                                    self.manager.handleFileTransfer(sourceIP,sourcePort, current_part,fileID,eof=True)
                                     # Exit out of the while loop
                                     break
-                                
                                 self.manager.handleFileTransfer(sourceIP,sourcePort,current_part,fileID)
                                 time.sleep(1)
                             file_to_send.close()
-
+ 
                         else: 
                             #TODO: pass message along to the correct childnode
                             #TODO: there should be a function in manager that will search through the childnodes and then 
-                            # relay message to them 
-                            self.manager.handleRelayRequest(offerer_ipv4, offerer_port, file_id)
+                            # relay message to them
+                            self.manager.handleFileTransferRequestIfNotOfferer(sourceIP,sourcePort,offererIPv4,offererPort,misc,fileID)
 
 
                     # response from request to join 000a or request for supernodeSet
                     elif requestType == '100a':
                         num_supernode_entries = int(misc)
                         cur_idx = 33
-                        print(f"100a received; number of OTHER supernodes is {num_supernode_entries}")
+                        print(f"100a received; number of supernode entries is {num_supernode_entries}")
                         for i in range(num_supernode_entries):
                             try:
-                                snodeIP = packet[cur_idx:cur_idx+12]
+                                snodeIP = packet[cur_idx:cur_idx+12].decode()
                                 cur_idx += 12
-                                snodePort = packet[cur_idx:cur_idx+5]
+                                snodePort = packet[cur_idx:cur_idx+5].decode()
                                 cur_idx += 5
                                 print(f"100a; SUPERNODE at {splitIP(snodeIP)}:{snodePort}")
                             except IndexError as e:
@@ -170,10 +167,36 @@ class MessageListener(threading.Thread):
 
                     # response from request to get local DHT
                     elif requestType == '100c':
-                        pass
+                        num_DHT_entries = int(misc)
+                        cur_idx = 33
+
+                        # for each local DHT entry
+                        for i in range(num_DHT_entries):
+                            # see Protocol.md
+                            print(f"*** request type 100c - LOCAL DHT entry number {i} ***")
+                            file_id_length = int(packet[cur_idx:cur_idx + 4])
+                            cur_idx += 4
+
+                            file_id = packet[cur_idx:cur_idx + file_id_length].decode()
+                            cur_idx += file_id_length
+
+                            print(f"---- fileID : {file_id}")
+
+                            num_file_entries = int(packet[cur_idx:cur_idx +4])
+                            cur_idx += 4
+                            # for each file entry
+                            for j in range(num_file_entries):
+                                offerer_ip = packet[cur_idx:cur_idx+12].decode()
+                                cur_idx += 12
+                                offerer_port = packet[cur_idx:cur_idx+5].decode()
+                                cur_idx += 5
+                                file_size = packet[cur_idx:cur_idx+4].decode()
+                                cur_idx += 4
+                                print(f"    -- {splitIP(offerer_ip)}:{offererPort}, size: {file_size}")
 
                     # response from request to get entire DHT
                     elif requestType == '100d':
+                        
                         pass
 
 
@@ -181,16 +204,10 @@ class MessageListener(threading.Thread):
                 elif messageType == '1111':
                     fileIDIndex = 33
                     fileIDLength = int(packet[29:33])
-                    fileID = packet[fileIDIndex:fileIDIndex + fileIDLength].decode('utf-8')
+                    fileID = packet[fileIDIndex:fileIDIndex + fileIDLength].decode()
                     chunk_size_index = fileIDIndex + fileIDLength
                     chunk_size = int(packet[chunk_size_index:chunk_size_index+4])
-                    # data = packet[chunk_size_index+4:chunk_size_index+ 4 + chunk_size].decode('utf-8')
-
-                    end_of_data = packet.find(packet[8:25],chunk_size_index) - 8
-                    if end_of_data == -1:
-                        data = packet[chunk_size_index+4:]
-                    else:
-                        data = packet[chunk_size_index+4:end_of_data].decode('utf-8')
+                    data = packet[chunk_size_index+4:chunk_size_index+ 4 + chunk_size].decode()
 
                     with open(fileID,'a+') as infile:
                         infile.write(data)
@@ -198,14 +215,10 @@ class MessageListener(threading.Thread):
 
 
                 #update packet because this is stream based
-                if messageType == '1111':
-                    print(f'last packet = {packet[:25+messageLen]}\n\n\n')
-                    print(f'new paket = {packet[25+messageLen:]}\n\n\n')
-                    packet = packet[25:end_of_data]
-                else:
-                    print(f'last packet = {packet[:25+messageLen]}\n\n\n')
-                    print(f'new paket = {packet[25+messageLen:]}\n\n\n')
-                    packet = packet[25+messageLen:]
+                print(f'last packet = {packet[:25+messageLen]}\n\n\n')
+                print(f'new paket = {packet[25+messageLen:]}\n\n\n')
+                packet = packet[25+messageLen:]
 
+        # outside While loop; clean-ups?
 
 

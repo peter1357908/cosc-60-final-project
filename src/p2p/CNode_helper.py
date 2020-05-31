@@ -10,6 +10,7 @@ import socket
 import binascii
 from mrt import * 
 from stun import *
+import time
 
 """ DEFINITIONS """
 POST = '0001'
@@ -145,8 +146,6 @@ PARAMETERS:
 	ip: ip string in standard format ie 'xxx.xxx.xxx.xxx'
 	port: integer
 """
-
-
 def request_file(send_id, source_ip, source_port, file_id, ip, port):
 	# Send request for file along to supernode:
 	# ip is the ip of the client that you'd like to download from
@@ -162,16 +161,9 @@ def request_file(send_id, source_ip, source_port, file_id, ip, port):
 
 	print(f'SUPERNODE_IP: {SUPERNODE_IP}, SUPERNODE_PORT: {SUPERNODE_PORT}, dl_ip: {ip}, dl_port: {port}')
 	if ip != SUPERNODE_IP:
-		mrt_hole_punch(ip,port)
-		download_id = mrt_accept1()
-		return download_id #TODO: Need to actually download file with mrt_receive1(download_id) in the input listener
-	else: 
-		return SUPERNODE_ID
-
-	#TODO: 1. Send first request to supernode to relay message along
-	# 2. Start UDP hole punch with direct peer
-	# 3. MRT_ACCEPT() new connection from peer (hopefully hole punch worked because this blocks)
-		
+		for i in range(3):
+			mrt_hole_punch(ip,port)
+			time.sleep(.2)
 
 
 """
