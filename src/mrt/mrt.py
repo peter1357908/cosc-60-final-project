@@ -32,7 +32,7 @@ mrt_open: indicate ready-ness to receive incoming connections
 
 Create new socket, startup thread
 """
-def mrt_open(host = '', port = 5000,s=0):
+def mrt_open(host='', port=5000,s=0):
 	global server_sock,close
 	close = False
 	if s == 1:
@@ -141,13 +141,11 @@ def mrt_close():
 """
 connect to a given server (return a connection)
 """
-def mrt_connect(host='192.168.0.249',port=11235,s=0):
+def mrt_connect(host='192.168.0.249',port=11235):
 	global client_sock
-	if s == 1:
+	if type(client_sock) == int:
 		client_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		client_sock.bind(('',5001))
-	else:
-		pass
 	addr = (host,port)
 	id = handshake(addr)
 	senders[id].receiving=True
@@ -391,7 +389,7 @@ def handshake(addr):
 	jcsum = ichecksum(join_msg)
 	bytes_join = jcsum.to_bytes(4,'big')+join_msg.encode()
 	joined = False
-
+	print(client_sock)
 	client_sock.settimeout(.01)
 	while not joined:
 		try:
