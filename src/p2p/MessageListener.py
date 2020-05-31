@@ -105,13 +105,16 @@ class MessageListener(threading.Thread):
                         fileIDLength = int(misc)
                         fileIDIndex = 33
                         fileID = packet[fileIDIndex:fileIDIndex+fileIDLength].decode()
-                        OffererIPv4Index = fileIDIndex + fileIDLength
-                        offererIPv4 = packet[OffererIPv4Index:OffererIPv4Index+12].decode()
-                        OffererPortIndex = OffererIPv4Index + 12
-                        offererPort = int(packet[OffererPortIndex:OffererPortIndex+5])
-                        print(f'id: {fileID}, offererIP: {offererIPv4}, offererPort = {offererPort}')
+                        offererIPv4Index = fileIDIndex + fileIDLength
+                        offererIPv4 = packet[offererIPv4Index:offererIPv4Index+12].decode()
+                        offererPortIndex = offererIPv4Index + 12
+                        offererPort = packet[offererPortIndex:offererPortIndex+5].decode()
+                        maintainerIPv4Index = offererPortIndex + 5
+                        maintainerIPv4 = packet[maintainerIPv4Index:maintainerIPv4Index+12].decode()
+                        maintainerPortIndex = maintainerIPv4Index + 12
+                        maintainerPort = packet[maintainerPortIndex:maintainerPortIndex+5].decode()
 
-                        if offererIPv4 == self.manager.ownIP and offererPort == int(self.manager.ownPort):
+                        if offererIPv4 == self.manager.ownIP and offererPort == self.manager.ownPort:
                             #TODO: load file and sent (or pass to manager to handle this)
                             #1. Open file
                             file_to_send = open(fileID, 'a+')
@@ -143,11 +146,8 @@ class MessageListener(threading.Thread):
                                 time.sleep(1)
                             file_to_send.close()
  
-                        else: 
-                            #TODO: pass message along to the correct childnode
-                            #TODO: there should be a function in manager that will search through the childnodes and then 
-                            # relay message to them
-                            self.manager.handleFileTransferRequestIfNotOfferer(sourceIP,sourcePort,offererIPv4,offererPort,misc,fileID)
+                        else:
+                            self.manager.forwardFileTransferRequest(sourceIP, sourcePort, offererIPv4, offererPort, maintainerIPv4, maintainerPort, misc, fileID)
 
 
                     # response from request to join 000a or request for supernodeSet
