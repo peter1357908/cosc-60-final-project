@@ -156,7 +156,7 @@ class MessageListener(threading.Thread):
                     elif requestType == '100a':
                         num_supernode_entries = int(misc)
                         cur_idx = 33
-                        print(f"100a received; number of supernode entries is {num_supernode_entries}")
+                        print(f"100a received; number of OTHER supernodes is {num_supernode_entries}")
                         for i in range(num_supernode_entries):
                             try:
                                 snodeIP = packet[cur_idx:cur_idx+12]
@@ -184,7 +184,13 @@ class MessageListener(threading.Thread):
                     fileID = packet[fileIDIndex:fileIDIndex + fileIDLength].decode('utf-8')
                     chunk_size_index = fileIDIndex + fileIDLength
                     chunk_size = int(packet[chunk_size_index:chunk_size_index+4])
-                    data = packet[chunk_size_index+4:chunk_size_index+ 4 + chunk_size].decode('utf-8')
+                    # data = packet[chunk_size_index+4:chunk_size_index+ 4 + chunk_size].decode('utf-8')
+
+                    end_of_data = packet.find(packet[8:25],chunk_size) - 8
+                    if end_of_data == -1:
+                        data = packet[chunk_size_index+4:]
+                    else:
+                        data = packet[chunk_size_index+4:end_of_data].decode('utf-8')
 
                     with open(fileID,'a+') as infile:
                         infile.write(data)
@@ -192,9 +198,14 @@ class MessageListener(threading.Thread):
 
 
                 #update packet because this is stream based
-                print(f'last packet = {packet[:25+messageLen]}\n\n\n')
-                print(f'new paket = {packet[25+messageLen:]}\n\n\n')
-                packet = packet[25+messageLen:]
+                if messageType == '1111':
+                    print(f'last packet = {packet[:25+messageLen]}\n\n\n')
+                    print(f'new paket = {packet[25+messageLen:]}\n\n\n')
+                    packet = packet[25:end_of_data]
+                else:
+                    print(f'last packet = {packet[:25+messageLen]}\n\n\n')
+                    print(f'new paket = {packet[25+messageLen:]}\n\n\n')
+                    packet = packet[25+messageLen:]
 
 
 
