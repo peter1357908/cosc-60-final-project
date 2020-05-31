@@ -155,8 +155,13 @@ class InputListener(threading.Thread):
                     file_id = input_tks[2]
                     # TODO: need to add validation for IP:port
                     file_host = input_tks[3].split(":")
-                    downloadIP = None
-                    self.beginDownload(downloadIP, file_id)
+                    try:
+                        assert(len(file_host) == 2)
+                    except:
+                        print(f'Usage: req dl file_id (download_ip:download_port)')
+                    downloadIP = file_host[0]
+                    downloadPort = file_host[1]
+                    self.beginDownload(file_id, downloadIP, downloadPort)
             elif input_tks[0] == "post":
                 try:
                     assert len(input_tks) >= 2
@@ -187,6 +192,8 @@ class InputListener(threading.Thread):
                 elif input_tks[1] == "disconnect":
                     # Else if input is to disconnect from the network
                     self.disconnect()
+                else:
+                    print("Unknown 'post' command.")
 
             else:
                 print(f"command not recognized {input_tks[0]}")
