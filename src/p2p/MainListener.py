@@ -127,14 +127,14 @@ class MainListener(threading.Thread):
         response_type = '100c'
 
         if len(fileID) > 0:
-            # requested entries on ALL files
-            values = ''.join([response_type,str(self.fileInfoTable)])
-        else:
             # requested entries on one particular file
             tempFileInfoTable = self.fileInfoTable.getFileInfoTableByID(fileID)
             values = ''.join([response_type,str(tempFileInfoTable)])
+        else:
+            # requested entries on ALL files
+            values = ''.join([response_type,str(self.fileInfoTable)])
         
-        response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
+        response = ''.join([response_type,f'{len(values):04d}',self.ownIP,self.ownPort,values])
         mrt_send1(connID, response)
 
     def handleAllDHTEntriesRequest(self, sourceIP, sourcePort, connID, fileIDLengthString, fileID):

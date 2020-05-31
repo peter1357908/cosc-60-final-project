@@ -101,6 +101,7 @@ class MessageListener(threading.Thread):
                     fileIDLength = int(misc)
                     fileID = ''
                     if fileIDLength > 0:
+                        # The index where the fileindex starts in message
                         fileIDIndex = 29
                         fileID = packet[fileIDIndex:fileIDIndex+fileIDLength]
                     self.manager.handleAllDHTEntriesRequest(sourceIP, sourcePort, self.connID, misc, fileID)
