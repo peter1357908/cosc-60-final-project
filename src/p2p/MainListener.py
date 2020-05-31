@@ -110,7 +110,7 @@ class MainListener(threading.Thread):
     '''
         See Protocol.md
     '''
-    def handleSupernodeListRequest(self, sourceIP, sourcePort,connID):
+    def handleSupernodeListRequest(self, sourceIP, sourcePort):
         # 100b | Number of Supernode Entries | Supernode Entries
         # Each supernode entry has the following format:
         #   IPv4 Addr.    Port
@@ -118,12 +118,15 @@ class MainListener(threading.Thread):
         snodes_num = str(len(supernode_list))
         values = ''.join([response_type,f'{len(supernode_list):04d}',str(supernode_list)])
         response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
-        mrt_send1(connID, response)
-        pass
+
+        with self.addrToIDTableLock:
+            sourceSendID = addrToIDTable[(sourceIP, sourcePort)]
+
+        mrt_send1(sourceSendID, response)
 
     # handles both cases
     # all_files_requested is True/False indicating whether or not to request all cfiles
-    def handleLocalDHTEntriesRequest(self, sourceIP, sourcePort, connID, fileID):
+    def handleLocalDHTEntriesRequest(self, sourceIP, sourcePort, fileID):
         response_type = '100c'
 
         if len(fileID) > 0:
@@ -135,15 +138,19 @@ class MainListener(threading.Thread):
             values = ''.join([response_type,str(self.fileInfoTable)])
         
         response = ''.join([response_type,f'{len(values):04d}',self.ownIP,self.ownPort,values])
-        mrt_send1(connID, response)
 
-    def handleAllDHTEntriesRequest(self, sourceIP, sourcePort, connID, fileIDLengthString, fileID):
+        with self.addrToIDTableLock:
+            sourceSendID = addrToIDTable[(sourceIP, sourcePort)]
+
+        mrt_send1(sourceSendID, response)
+
+    def handleAllDHTEntriesRequest(self, sourceIP, sourcePort, fileIDLengthString, fileID):
         #TODO: This one is the most complicated as we first need to collect all of the file info from the other supernodes...
         supernodeAddr = (sourceIP, sourcePort)
 
         if supernodeAddr not in self.supernodeSet.getSet():
             # respond to the requesting node as if the request is of type '000c'
-            self.handleLocalDHTEntriesRequest(sourceIP, sourcePort, connID, fileID)
+            self.handleLocalDHTEntriesRequest(sourceIP, sourcePort, fileID)
 
             # forward the message with type '000c' to all the known supernodes
             with self.supernodeSetLock:
@@ -165,7 +172,7 @@ class MainListener(threading.Thread):
     # see Protocol.md for 'Request for a file transfer'
     # source is the client that sent the request
     # offerer is the client that source would like to download the file from
-    def handleFileTransferRequest(self, connID, sourceIP, sourcePort, offererIP, offererPort, fileRequestedID):
+    def handleFileTransferRequest(self, sourceIP, sourcePort, offererIP, offererPort, fileRequestedID):
         if self.isSupernode:
             if sourceIP == self.ownIP and sourcePort == self.ownPort:
                 # ignore the message
@@ -193,7 +200,7 @@ class MainListener(threading.Thread):
                 # Else, childnode should "forward" the exact same request message (same (Source IPv4, Source Port)) to the node specified by (Source IPv4, Source Port) for UDP-holepunching
                 pass
 
-    def handleRelayRequest(self, connID, offererIP, offererPort, fileRequestedID):
+    def handleRelayRequest(self, offererIP, offererPort, fileRequestedID):
         # TODO: for one supernode/two supernodes, this is fine, but for more supernodes interconnected
         # there may be a supernode issues
         child = (offererIP, offererPort)
@@ -202,7 +209,6 @@ class MainListener(threading.Thread):
             response_type = '000e'
             values = ''.join([response_type, f'{len():04d}', fileRequestedID, offererIP, offererPort])
             response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
-            # TODO: we need another connID
             # mrt.mrt_send1()
         
 
@@ -210,7 +216,6 @@ class MainListener(threading.Thread):
         handles POSTing a file
         notification for offering a new file 000a
         sourceIP, sourcePort - client that sent the POST message
-        connID - connection ID of the client
         fileID - see Protocol.md
         fileSize
         Updates local DHT, does not send a message
@@ -218,23 +223,24 @@ class MainListener(threading.Thread):
     '''
     def handleFilePost(self, offerIP, offerPort, fileID, fileSize):
         # update the local DHT
-        # TODO: set a lock
         offerer = (offerIP, offerPort)
         newFileInfo = FileInfo(fileSize, (self.ownIP, self.ownPort))
-        self.fileInfoTable.addFileInfo(fileID, offerer, newFileInfo)
+        with self.fileInfoTableLock:
+            self.fileInfoTable.addFileInfo(fileID, offerer, newFileInfo)
 
         # update childreninfotable as well
         if offerer != (self.ownIP, self.ownIP):
-            self.childTable.addFile(offerer, fileID)
+            with self.childTableLock:
+                self.childTable.addFile(offerer, fileID)
 
-        print(f"handle file post in mainlistener {fileID} of size {fileSize} from {offerIP}:{offerPort}")
+        print(f'handle file post in mainlistener {fileID} of size {fileSize} from {offerIP}:{offerPort}')
         print(f'hash table now looks like: {self.fileInfoTable}')
 
     '''
         POST 
         notification for request to disconnect 000b 
     '''
-    def handleRequestDisconnect(self, sourceIP, sourcePort, connID):
+    def handleRequestDisconnect(self, sourceIP, sourcePort):
         # TODO: handle supernode disconnection?
         childAddr = (sourceIP, sourcePort)
         with self.childTableLock:
@@ -245,13 +251,17 @@ class MainListener(threading.Thread):
         response_type = "100b"
         values = ''.join([response_type])
         response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
-        mrt_send1(connID, response)
+        
+        with self.addrToIDTableLock:
+            childSendID = addrToIDTable[childAddr]
+
+        mrt_send1(childSendID, response)
 
 
     '''
         Note: not sure if we need this function - maybe it should start a downloader/uploader 
     '''
-    def handleFileTransfer(self, sourceIP, sourcePort, connID):
+    def handleFileTransfer(self, sourceIP, sourcePort):
         pass
 
     def handleUserQuitInput(self):
@@ -281,8 +291,8 @@ class MainListener(threading.Thread):
                 time.sleep(2)
                 new_connections = mrt_accept_all() # This is non-blocking so that the thread can service other functions
                 if len(new_connections) > 0:
-                    for connID in new_connections:
-                        messageListener = MessageListener.MessageListener(self, connID)
+                    for recvID in new_connections:
+                        messageListener = MessageListener.MessageListener(self, recvID)
                         messageListener.start()
         else:
             with self.quitCV:

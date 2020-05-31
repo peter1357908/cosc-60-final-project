@@ -18,13 +18,11 @@ class MessageListener(threading.Thread):
 
     # Initialize MessageListener Thread
     # TODO: Add paramaters as arguments are determined
-    def __init__(self, mainListener, connID):
+    def __init__(self, mainListener, recvID):
         print("Message Listener Instantiated")
         threading.Thread.__init__(self)
         # Main Listener 
-        # Connection ID
-        self.connID = connID
-        self.sendID = 0
+        self.recvID = recvID
 
         self.manager = mainListener 
 
@@ -33,8 +31,8 @@ class MessageListener(threading.Thread):
         print("MessageListener started...")
 
         while True:    
-            # Accept a packet from the current connID
-            packet = mrt_receive1(self.connID)            
+            # Accept a packet from the current recvID
+            packet = mrt_receive1(self.recvID)            
             print(packet)
             # Parse the packet:
             # Grab the data included in the message headers
@@ -55,7 +53,7 @@ class MessageListener(threading.Thread):
                     self.manager.handleFilePost(sourceIP, sourcePort, fileID, fileSize)
                     print(f'file post.... fsize: {fileSize}, fid_len: {fileIDLength}, fid: {fileID}')
                 elif postType == '000b':    # If the messages announces a disconnect
-                    self.manager.handleRequestDisconnect(sourceIP, sourcePort, self.connID)
+                    self.manager.handleRequestDisconnect(sourceIP, sourcePort)
                     return # terminate this MessageListener thread
                     
             # REQUEST
@@ -94,7 +92,7 @@ class MessageListener(threading.Thread):
                     if fileIDLength > 0:
                         fileIDIndex = 29
                         fileID = packet[fileIDIndex:fileIDIndex+fileIDLength]
-                    self.manager.handleLocalDHTEntriesRequest(sourceIP, sourcePort, self.connID, fileID)
+                    self.manager.handleLocalDHTEntriesRequest(sourceIP, sourcePort, fileID)
                 
                 # Request for all DHT entrie (on all files / one file):
                 elif requestType == '000d':
@@ -104,7 +102,7 @@ class MessageListener(threading.Thread):
                         # The index where the fileindex starts in message
                         fileIDIndex = 29
                         fileID = packet[fileIDIndex:fileIDIndex+fileIDLength]
-                    self.manager.handleAllDHTEntriesRequest(sourceIP, sourcePort, self.connID, misc, fileID)
+                    self.manager.handleAllDHTEntriesRequest(sourceIP, sourcePort, misc, fileID)
 
                 # file transfer
                 elif requestType == '000e':
@@ -150,4 +148,4 @@ class MessageListener(threading.Thread):
                         #TODO: pass message along to the correct childnode
                         #TODO: there should be a function in manager that will search through the childnodes and then 
                         # relay message to them 
-                        self.manager.handleRelayRequest(self.connID, offerer_ipv4, offerer_port, file_id)
+                        self.manager.handleRelayRequest(offerer_ipv4, offerer_port, file_id)
