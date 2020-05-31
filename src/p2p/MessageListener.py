@@ -192,7 +192,7 @@ class MessageListener(threading.Thread):
                                 cur_idx += 5
                                 file_size = packet[cur_idx:cur_idx+4].decode()
                                 cur_idx += 4
-                                print(f"    -- {splitIP(offerer_ip)}:{offererPort}, size: {file_size}")
+                                print(f"    -- {splitIP(offerer_ip)}:{offerer_port}, size: {file_size}")
 
                     # response from request to get entire DHT
                     elif requestType == '100d':
