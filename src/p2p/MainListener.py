@@ -250,7 +250,7 @@ class MainListener(threading.Thread):
         response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
         
         with self.addrToIDTableLock:
-            childSendID = self.addrToIDTable[childAddr]
+            childSendID = self.addrToIDTable.pop(childAddr, None)
 
         mrt_send1(childSendID, response)
 
@@ -265,6 +265,7 @@ class MainListener(threading.Thread):
         len_data = len(curr_file_part)
         values = ''.join([response_type,f'{fileID_length:04d}',fileID,f'{len_data:04d}',curr_file_part])
         response = ''.join([FILE_TRANSFER,f'{len(values):04d}',self.ownIP,self.ownPort,values])
+
 
         with self.addrToIDTableLock:
             childSendID = self.addrToIDTable[childAddr]
