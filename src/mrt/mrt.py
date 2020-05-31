@@ -682,3 +682,21 @@ def verify_checksum(data):
 	return csum_recv - csum_calc
 
 
+"""
+MRT Hole Punch function
+Will send out a hole punch message using server_sock, no reliability
+"""
+def mrt_hole_punch(ip,port):
+	global server_sock
+	if type(server_sock) == int:
+		print(f'Initialize mrt_open before calling hole punch....')
+	else:
+		try:
+			assert(type(port) == int)
+			assert(type(ip) == str)
+			server_sock.sendto('HOLE PUNCH'.encode(),(ip,port))
+		except: 
+			print(f'port must be integer and ip must be str')
+
+
+
