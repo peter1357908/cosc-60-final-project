@@ -42,7 +42,7 @@ class MainListener(threading.Thread):
         self.fileInfoTable = FileInfoTable()
         self.childTable = ChildrenInfoTable()
         self.supernodeSet = SupernodeSet()
-        self.addrToIDTable = dict() # maps (IP, Port) to MRT ID (send, recv)
+        self.addrToIDTable = dict() # maps (IP, Port) to MRT sendID
         self.fileInfoTableLock = threading.Lock() # pass to spawned threads
         self.childTableLock = threading.Lock() # pass to spawned threads
         self.supernodeLock = threading.Lock() # pass to spawned threads
@@ -65,7 +65,9 @@ class MainListener(threading.Thread):
             response = ''.join([REQUEST,f'{len(values):04d}', self.ownIP, self.ownPort, values])
             # id is returned by accept1()
             #TODO: Need to add the duplex capability here just need to figure out where and how we are storing these connections
-            self.childTable.addChild((sourceIP, sourcePort))
+            childAddr = (sourceIP, sourcePort)
+            self.childTable.addChild(childAddr)
+            self.addrToIDTable(childAddr, sendID)
             mrt_send1(sendID, response)
         elif type == 1:
             #TODO: Add functionality to keep track of supernode
@@ -80,8 +82,12 @@ class MainListener(threading.Thread):
             mrt_send1(sendID, response)
 
         elif type == 2:
-            supernode_list.add() #(IPV4,port)
+            supernode_list.add(sourceIP, sourcePort) #(IPV4,port)
             #TODO: add functionality for relayed supernode
+            for supernode in supernode_list: #TODO: Find the ID from (IPV4,port)
+                sId = self.addrToIDTable.get(supernode)
+                #TODO: Reconstruct message and send
+                mrt_send1(sId, )
             
         else:
             print(f"{type} not found")
@@ -200,10 +206,13 @@ class MainListener(threading.Thread):
         notification for request to disconnect 000b 
     '''
     def handleRequestDisconnect(self, sourceIP, sourcePort, connID):
-        # terminate the messagelistener thread
-        # TODO: perform the necessary clearnup eg. delete entries in the data structures
+        # TODO: handle supernode disconnection?
+        childAddr = (sourceIP, sourcePort)
+        with self.childTableLock:
+            child_files = self.childTable.popChild(childAddr)
+        with self.fileInfoTableLock:
+            self.fileInfoTable.removeAllFileInfoByOfferer(child_files, childAddr)
 
-        # send message indicating the node can safely disconnect
         response_type = "100b"
         values = ''.join([response_type])
         response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])

@@ -9,6 +9,10 @@ sys.path.append("../mrt/")
 sys.path.append('../data-structures/')
 from mrt import *
 
+# helper function for converting 12-byte IP for P2P into dot-delimited IP
+def splitIP(self, ip):
+    ip_split = [int(ip[i:i+3]) for i in range(0, len(ip), 3)]
+    return ".".join([str(x) for x in ip_split]) 
 
 class MessageListener(threading.Thread):
 
@@ -22,84 +26,7 @@ class MessageListener(threading.Thread):
         self.connID = connID
         self.sendID = 0
 
-        self.manager = mainListener
-    
-
-    # Methods for handling each parsed method:
-    # A note on the following methods: 'file' is always a File object
-    # and 'files' is an array of File objects
-
-    def setSendID(self, ID):
-        self.sendID = ID
-
-    # Accept a new connection
-    def acceptConnection(self, connectedIP):
-        #TODO: Add the connected IP to the list of child nodes
-        pass
-        
-
-    # Accept a new supernode connection. This message will only be received by supernodes
-    def acceptSupernodeConnection(self, connectedIP):
-        #TODO: add the connected IP to the list of connected supernodes
-        pass
-
-    # Process a child node disconnecting. Currently, supernodes cannot disconnect without 
-    # Shutting down the network.
-    def processDisconnect(self, disconnectedIP):
-        # TODO: remove the disconnected IP from the list of child nodes
-        # Also remove the files offered by disconnectedIP from HT
-        pass
-
-    # Add a list of File objects to the HT:
-    def addFiles(self, files):
-        # TODO: For every file in files, add that file to the HT & print a debug statement
-        pass
-    
-    # Remove a list of File objects from the HT:
-    def removeFiles(self, files):
-        # TODO: For every file in files, remove file from the HT
-        pass
-
-    # Send back local-DHT
-    def sendBackHT(self, destinationIP):
-        # TODO: Craft Requests for Local DHT's from all the supernodes
-        # TODO: Receive the Local DHT's
-        # TODO: Put them into packets
-        # TODO: Send those packets to the requesting node
-        pass
-        
-    def sendBackLocalHT(self, destinationIP):
-        pass
-    
-    # Accept the request for upload from another client and start sending the file
-    def acceptUpload(self, file, destinationIP):
-        fileSender = FileSender(file, destinationIP)
-        fileSender.start()
-        pass
-    
-    # When a download message is received but the destination is not the current node
-    # pass on the packet to the appropriate node:
-    def passOn(self, destinationIP):
-        # TODO: pass on & figure out a way to do so.
-        # If the current node is not the supernode of the destination, 
-            # pass on the packet to the supernode of that packet
-        # Else, if the current node is that child node's (dest.) supernode
-            # pass on the packet to the destination.
-        pass
-        
-    def sendBackSupernodeList(self, destinationIP):
-        # TODO: Create message to send back supernode list
-        # TODO: Send message
-        pass
-
-
-
-    def splitIP(self, ip):
-        ip_split = [int(ip[i:i+3]) for i in range(0, len(ip), 3)]
-        return ".".join([str(x) for x in ip_split])   
-
-
-
+        self.manager = mainListener 
 
     # TODO: run() method:
     def run(self):
@@ -119,7 +46,6 @@ class MessageListener(threading.Thread):
             
             # POST 
             if messageType == '0001':    # If the message is a post:
-                # TODO: Now, parse the Post Type:
                 postType = packet[25:29].decode()
                 if postType == '000a':   # If the message announces a new file
                     # TODO: parse out necessary info for the file list (usually a list with 1 file)
@@ -129,12 +55,9 @@ class MessageListener(threading.Thread):
                     self.manager.handleFilePost(sourceIP, sourcePort, fileID, fileSize)
                     print(f'file post.... fsize: {fileSize}, fid_len: {fileIDLength}, fid: {fileID}')
                 elif postType == '000b':    # If the messages announces a disconnect
-                    # Note: a child node will never receive this message, since
-                    # our network is a "structured" p2p network
-                    # TODO: Make sure that the Child hash actually takes in an ip and again, rename to self.CHild etc.
-                    child_files = childHash.popChild(ip)
-                    fInfo.removeAllFileInfoByOfferer(child_files, ip_addr)
-                    self.processDisconnect(ip)
+                    self.manager.handleRequestDisconnect(sourceIP, sourcePort, connID)
+                    return # terminate this MessageListener thread
+                    
 
             # REQUEST
             elif messageType == '0101':
@@ -144,20 +67,18 @@ class MessageListener(threading.Thread):
                 if requestType == '000a':
                     print(f'request to join received... type: {misc}')
                     # need to connect back to the childnode to send stuff
-                    print(f"trying to connect to {self.splitIP(sourceIP)}:{sourcePort}")
-                    send_id = mrt_connect(host=self.splitIP(sourceIP), port=int(sourcePort))
+                    print(f"trying to connect to {splitIP(sourceIP)}:{sourcePort}")
+                    sendID = mrt_connect(host=splitIP(sourceIP), port=int(sourcePort))
                     print("request: connected back to childnode")
                     # join as a regular node
                     if misc == '0000':
-                        self.manager.handleJoinRequest(0, send_id, sourceIP, sourcePort)
-                         
+                        self.manager.handleJoinRequest(0, sendID, sourceIP, sourcePort)
                     # join as a supernode
                     elif misc == '0001':
-
-                        pass
+                        self.manager.handleJoinRequest(1, sendID, sourceIP, sourcePort)
                     # relayed supernode
                     elif misc == '0002':
-                        pass
+                        self.manager.handleJoinRequest(2, sendID, sourceIP, sourcePort)
                     
                 elif requestType == '000b':
                     #TODO: Request for a supernode's supernode list
@@ -198,7 +119,6 @@ class MessageListener(threading.Thread):
                                 break
                             mrt_send1(self.sendID, current_part)
                         file_to_send.close()  
-
 
 
                     else: 
