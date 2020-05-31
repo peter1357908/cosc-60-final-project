@@ -146,7 +146,9 @@ class MessageListener(threading.Thread):
                 if requestType == '000a':
                     print(f'request to join received... type: {misc}')
                     # need to connect back to the childnode to send stuff
+                    print(f"trying to connect to {self.splitIP(sourceIP)}:{sourcePort}")
                     send_id = mrt_connect(host=self.splitIP(sourceIP), port=int(sourcePort))
+                    print("request: connected back to childnode")
                     # join as a regular node
                     if misc == '0000':
                         self.manager.handleJoinRequest(0, send_id, sourceIP, sourcePort)
