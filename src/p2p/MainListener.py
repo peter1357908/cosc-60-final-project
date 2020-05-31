@@ -66,25 +66,26 @@ class MainListener(threading.Thread):
             # id is returned by accept1()
             #TODO: Need to add the duplex capability here just need to figure out where and how we are storing these connections
             childAddr = (sourceIP, sourcePort)
-            self.childTable.addChild(childAddr)
-            self.addrToIDTable(childAddr, sendID)
+            with self.childTableLock:
+                self.childTable.addChild(childAddr)
+            with self.addrToIDTableLock:
+                self.addrToIDTable(childAddr, sendID)
             mrt_send1(sendID, response)
         elif type == 1:
             #TODO: Add functionality to keep track of supernode
 
-            print("sending receive message back")
+            print("sending receive message back, type 100a")
             response_type = '100a'
             values = f'{response_type}{self.supernodeSet}'
-            print(self.ownIP)
-            print(self.ownPort)
             response = ''.join([REQUEST, f'{len(values):04d}', self.ownIP, self.ownPort, values])
             # id is returned by accept1()
             mrt_send1(sendID, response)
 
         elif type == 2:
-            supernode_list.add(sourceIP, sourcePort) #(IPV4,port)
+            with self.supernodeLock:
+                self.supernodeSet.add(sourceIP, sourcePort) #(IPV4,port)
             #TODO: add functionality for relayed supernode
-            for supernode in supernode_list: #TODO: Find the ID from (IPV4,port)
+            for supernode in self.supernodeSet:
                 sId = self.addrToIDTable.get(supernode)
                 #TODO: Reconstruct message and send
                 mrt_send1(sId, )
