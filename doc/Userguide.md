@@ -22,8 +22,8 @@ Currently, two command types are supported:
 
 There are four types of requests **for files** you can make. There are two modes:
 
-1. Request from the local DHTs
-2. Request from all the DHTs
+1. Request from the local DHT 
+2. Request from the entire DHT
 
 For each mode, you can request either:
 
