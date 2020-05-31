@@ -55,7 +55,7 @@ class MessageListener(threading.Thread):
                         self.manager.handleFilePost(sourceIP, sourcePort, fileID, fileSize)
                         print(f'file post.... fsize: {fileSize}, fid_len: {fileIDLength}, fid: {fileID}')
                     elif postType == '000b':    # If the messages announces a disconnect
-                        self.manager.handleRequestDisconnect(sourceIP, sourcePort)
+                        self.manager.handleDisconnectPost(sourceIP, sourcePort)
                         return # terminate this MessageListener thread
 
                     elif postType == '100b':

@@ -168,6 +168,7 @@ class MainListener(threading.Thread):
     def handleFileTransferRequest(self, sourceIP, sourcePort, offererIP, offererPort, fileIDLengthString, fileID):
         if offererIP == self.ownIP and offererPort == self.ownPort:
             # TODO: send the requested file to (sourceIP, sourcePort)
+            pass
         elif self.isSupernode:
             offererAddr = (offererIP, offererPort)
             if self.childTable.childHasFile(offererAddr, fileID):
@@ -216,7 +217,7 @@ class MainListener(threading.Thread):
         POST 
         notification for request to disconnect 000b 
     '''
-    def handleRequestDisconnect(self, sourceIP, sourcePort):
+    def handleDisconnectPost(self, sourceIP, sourcePort):
         # TODO: handle supernode disconnection?
         childAddr = (sourceIP, sourcePort)
         with self.childTableLock:
