@@ -9,10 +9,10 @@ import socket
 
 # CONST VARIABLES
 # TODO: need to change this to an established supernode
-HARDCODED_SUPERNODE_IP = "104.55.97.253"
-HARDCODED_SUPERNODE_IP_DOTLESS = "104055097253"
+HARDCODED_SUPERNODE_IP = "35.212.76.82"
+HARDCODED_SUPERNODE_IP_P2P = "352127682"
 HARDCODED_SUPERNODE_PORT = 5000
-HARDCODED_SUPERNODE_PORT_PADDED = "05000"
+HARDCODED_SUPERNODE_PORT_P2P = "05000"
 
 
 '''
@@ -51,7 +51,7 @@ def main():
     if args.first:
         print(f'starting up as first ever supernode')
         mainListener = MainListener(
-            isSupernode=True, ownIP=HARDCODED_SUPERNODE_IP_DOTLESS, ownPort=HARDCODED_SUPERNODE_PORT_PADDED, is_first=True).start()
+            isSupernode=True, ownIP=HARDCODED_SUPERNODE_IP_P2P, ownPort=HARDCODED_SUPERNODE_PORT_P2P, is_first=True).start()
     else:
         isSupernode = args.supernode
         # If not a supernode:

@@ -55,15 +55,16 @@ class MessageListener(threading.Thread):
                     self.manager.handleFilePost(sourceIP, sourcePort, fileID, fileSize)
                     print(f'file post.... fsize: {fileSize}, fid_len: {fileIDLength}, fid: {fileID}')
                 elif postType == '000b':    # If the messages announces a disconnect
-                    self.manager.handleRequestDisconnect(sourceIP, sourcePort, connID)
+                    self.manager.handleRequestDisconnect(sourceIP, sourcePort, self.connID)
                     return # terminate this MessageListener thread
                     
-
             # REQUEST
             elif messageType == '0101':
                 print(f'request received')
                 requestType = packet[25:29].decode()
                 misc = packet[29:33].decode()
+
+                # Request to join the network:
                 if requestType == '000a':
                     print(f'request to join received... type: {misc}')
                     # need to connect back to the childnode to send stuff
@@ -79,22 +80,45 @@ class MessageListener(threading.Thread):
                     # relayed supernode
                     elif misc == '0002':
                         self.manager.handleJoinRequest(2, sendID, sourceIP, sourcePort)
-                    
+                
+                # Request for a supernode's supernode list:
                 elif requestType == '000b':
                     #TODO: Request for a supernode's supernode list
-                    #self.manager.handleSupernodeListRequest(sourceIP,port,) 
+                    #self.manager.handleSupernodeListRequest(sourceIP,port) 
                     pass
+
+                # Request for a supernode's Local-DHT entries (on all files / one file):
+                elif requestType == '000c':
+                    fileIDLength = int(misc)
+                    fileID = ''
+                    if fileIDLength > 0:
+                        fileIDIndex = 29
+                        fileID = packet[fileIDIndex:fileIDIndex+fileIDLength]
+                    self.manager.handleLocalDHTEntriesRequest(sourceIP, sourcePort, self.connID, fileID)
+                
+                # Request for all DHT entrie (on all files / one file):
+                elif requestType == '000d':
+                    fileIDLength = int(misc)
+                    fileID = ''
+                    if fileIDLength > 0:
+                        fileIDIndex = 29
+                        fileID = packet[fileIDIndex:fileIDIndex+fileIDLength]
+                    self.manager.handleAllDHTEntriesRequest(sourceIP, sourcePort, self.connID, misc, fileID)
+
                 # file transfer
                 elif requestType == '000e':
-                    end_of_id = 29+int(misc)
-                    file_id = packet[29:end_of_id]
-                    offerer_ipv4 = packet[end_of_id:end_of_id+12]
-                    offerer_port = packet[end_of_id+12:end_of_id+17]
+                    fileIDLength = int(misc)
+                    fileIDIndex = 29
+                    fileID = packet[fileIDIndex:fileIDIndex+fileIDLength]
+                    OffererIPv4Index = fileIDIndex + fileIDLength
+                    offerer_ipv4 = packet[OffererIPv4Index:OffererIPv4Index+12]
+                    OffererPortIndex = OffererIPv4Index + 12
+                    offerer_port = packet[OffererPortIndex:OffererPortIndex+5]
 
                     if offerer_ipv4 == self.manager.ownIP and offerer_port == self.manager.ownPort:
                         #TODO: load file and sent (or pass to manager to handle this)
                         #1. Open file
-                        file_to_send = open(file_id, 'a+')
+                        file_to_send = open(fileID, 'a+')
                         byte_size = file.tell()
                         # puts the cursor back at tbeginning
                         #3. Split into smaller fragments and loop using mrt_send1() until sent
@@ -118,7 +142,7 @@ class MessageListener(threading.Thread):
                                 # Exit out of the while loop
                                 break
                             mrt_send1(self.sendID, current_part)
-                        file_to_send.close()  
+                        file_to_send.close()
 
 
                     else: 

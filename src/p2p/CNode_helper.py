@@ -70,9 +70,8 @@ def get_own_addr(sock):
 """
 Function to join the network, takes one parameter
 join_type:
-	0: join as chlid node
+	0: join as chlidnode
 	1: join as supernode
-	2: join as relayed supernode
 """
 def join_p2p(recv_sock,send_id, source_ip, source_port, join_type = 0):
 	global RECV_ID

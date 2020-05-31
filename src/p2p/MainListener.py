@@ -45,7 +45,7 @@ class MainListener(threading.Thread):
         self.addrToIDTable = dict() # maps (IP, Port) to MRT sendID
         self.fileInfoTableLock = threading.Lock() # pass to spawned threads
         self.childTableLock = threading.Lock() # pass to spawned threads
-        self.supernodeLock = threading.Lock() # pass to spawned threads
+        self.supernodeSetLock = threading.Lock() # pass to spawned threads
         self.addrToIDTableLock = threading.Lock()
 
         # to block this MainListener until user decides to quit
@@ -69,32 +69,46 @@ class MainListener(threading.Thread):
             with self.childTableLock:
                 self.childTable.addChild(childAddr)
             with self.addrToIDTableLock:
-                self.addrToIDTable(childAddr, sendID)
+                self.addrToIDTable[childAddr]=sendID
             mrt_send1(sendID, response)
+            
         elif type == 1:
-            #TODO: Add functionality to keep track of supernode
-
             print("sending receive message back, type 100a")
             response_type = '100a'
             values = f'{response_type}{self.supernodeSet}'
             response = ''.join([REQUEST, f'{len(values):04d}', self.ownIP, self.ownPort, values])
-            # id is returned by accept1()
-            mrt_send1(sendID, response)
+
+            # relay supernode join request
+            # DANGEROUS: nested locks (but by itself it is fine)
+            with self.supernodeSetLock:
+                with self.addrToIDTableLock:
+                    for supernode in self.supernodeSet.getSet():
+                        supernodeSendID = self.addrToIDTable.get(supernode)
+                        values = '000a0002'
+                        msg_len = len(values)
+                        msg = ''.join(['0101', f'{msg_len:04d}', sourceIP, sourcePort, values])
+                        mrt_send1(supernodeSendID, msg)
+            
+            # keep track of the supernode after relaying the request
+            superAddr = (sourceIP, sourcePort)
+            with self.supernodeSetLock:
+                self.supernodeSet.add(superAddr)
+            with self.addrToIDTableLock:
+                self.addrToIDTable[superAddr]=sendID
 
         elif type == 2:
-            with self.supernodeLock:
-                self.supernodeSet.add(sourceIP, sourcePort) #(IPV4,port)
-            #TODO: add functionality for relayed supernode
-            for supernode in self.supernodeSet:
-                sId = self.addrToIDTable.get(supernode)
-                #TODO: Reconstruct message and send
-                mrt_send1(sId, )
+            # keep track of the supernode
+            superAddr = (sourceIP, sourcePort)
+            with self.supernodeSetLock:
+                self.supernodeSet.add(superAddr)
+            with self.addrToIDTableLock:
+                self.addrToIDTable[superAddr]=sendID
             
         else:
-            print(f"{type} not found")
+            print(f"handleJoinRequest(): type \'{type}\' not found")
 
     '''
-        See protocol md
+        See Protocol.md
     '''
     def handleSupernodeListRequest(self, sourceIP, sourcePort,connID):
         # 100b | Number of Supernode Entries | Supernode Entries
@@ -109,29 +123,43 @@ class MainListener(threading.Thread):
 
     # handles both cases
     # all_files_requested is True/False indicating whether or not to request all cfiles
-    def handleLocalDHTEntriesRequest(self, all_files_requested, connID):
-        request_file_length = msg[20:24]
-        if all_files_requested:
-            response_type = '100c'
-            values = ''.JOIN([response_type,f'{len(self.FileInfoTable):04d}',str(self.FileInfoTable)])
-            response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
-            mrt_send1(connID, response) 
-        else:
-            file_id = msg[24:24+int(request_file_length)].decode()
-            file_entries = self.FileInfoTable.getTableByID(file_id)
-            values = ''.join(['100c',f'{len(file_entries):04d}',str(file_entries)])
-            response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
-            if len(file_entries) > 0:
-                mrt_send1(connID, response)
-            #error
-            else:
-                mrt_send1(connID, '0000')
-        pass
+    def handleLocalDHTEntriesRequest(self, sourceIP, sourcePort, connID, fileID):
+        response_type = '100c'
 
-    # handles both cases 
-    def handleAllDHTEntriesRequest(self):
-        pass
-        #TODO: This one is the most complicated as we first need to collect all of the file info from the other supernodes....
+        if len(fileID) > 0:
+            # requested entries on ALL files
+            values = ''.join([response_type,str(self.fileInfoTable)])
+        else:
+            # requested entries on one particular file
+            tempFileInfoTable = self.fileInfoTable.getFileInfoTableByID(fileID)
+            values = ''.join([response_type,str(tempFileInfoTable)])
+        
+        response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
+        mrt_send1(connID, response)
+
+    def handleAllDHTEntriesRequest(self, sourceIP, sourcePort, connID, fileIDLengthString, fileID):
+        #TODO: This one is the most complicated as we first need to collect all of the file info from the other supernodes...
+        supernodeAddr = (sourceIP, sourcePort)
+
+        if supernodeAddr not in self.supernodeSet.getSet():
+            # respond to the requesting node as if the request is of type '000c'
+            self.handleLocalDHTEntriesRequest(sourceIP, sourcePort, connID, fileID)
+
+            # forward the message with type '000c' to all the known supernodes
+            with self.supernodeSetLock:
+                with self.addrToIDTableLock:
+                    for supernode in self.supernodeSet.getSet():
+                        supernodeSendID = self.addrToIDTable.get(supernode)
+                        
+                        if len(fileID) > 0:
+                            values = f'000c{fileIDLengthString}{fileID}'
+                        # if the requester wants entries on ALL files
+                        else:
+                            values = '000c0000'
+
+                        msg_len = len(values)
+                        msg = ''.join(['0101', f'{msg_len:04d}', sourceIP, sourcePort, values])
+                        mrt_send1(supernodeSendID, msg)
 
     
     # see Protocol.md for 'Request for a file transfer'
