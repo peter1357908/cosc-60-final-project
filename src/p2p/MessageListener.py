@@ -117,7 +117,7 @@ class MessageListener(threading.Thread):
                         #TODO: load file and sent (or pass to manager to handle this)
                         #1. Open file
                         file_to_send = open(fileID, 'a+')
-                        byte_size = file.tell()
+                        byte_size = file_to_send.tell()
                         # puts the cursor back at tbeginning
                         #3. Split into smaller fragments and loop using mrt_send1() until sent
                         # The current fragment size is maxxed at 1024 bytes.
