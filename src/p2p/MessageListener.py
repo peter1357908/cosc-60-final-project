@@ -132,6 +132,7 @@ class MessageListener(threading.Thread):
                                 # Read in the file_to_send into a 1024 byte buffer
                                 current_part = file_to_send.read(1024)
                                 print(f'length of current read: {len(current_part)}\n')
+                                print(current_part.encode())
                                 # Send the packet using mrt_send1()
                                 # If the end of the file is reached:
                                 if len(current_part) < 1024:
