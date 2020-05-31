@@ -47,16 +47,6 @@ class InputListener(threading.Thread):
         transfer_id = CNode_helper.request_file(
             self.bootstrapSendID, self.ownIP, self.ownPort, filename, downloadIP, downloadPort)
 
-        # Start download:
-        # constantly receive 1?
-        new_file = open(filename,'a+')
-        data = mrt_receive1(transfer_id).decode()
-        new_file.write(data)
-        while len(data) >= 1024:
-            data = mrt_receive1(transfer_id).decode()
-            new_file.write(data)
-        new_file.close()
-
         print(f'New file written to {filename}')
 
         #TODO FIGURE OUT HOLE PUNCHING HERE

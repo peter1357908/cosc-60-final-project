@@ -118,7 +118,7 @@ class MainListener(threading.Thread):
         with self.addrToIDTableLock:
             sourceSendID = self.addrToIDTable[(sourceIP, sourcePort)]
 
-        print(f"sending supernode list back to {sourceIP}:{sourcePort} using {sourceSendID}")
+        print(f"sending supernode set back to {sourceIP}:{sourcePort} using {sourceSendID}")
         mrt_send1(sourceSendID, response)
 
     # handles both cases
@@ -258,8 +258,18 @@ class MainListener(threading.Thread):
     '''
         Note: not sure if we need this function - maybe it should start a downloader/uploader 
     '''
-    def handleFileTransfer(self, sourceIP, sourcePort):
-        pass
+    def handleFileTransfer(self, sourceIP, sourcePort, curr_file_part,fileID):
+        response_type = '000a'
+        fileID_length = len(fileID)
+        childAddr = (sourceIP, sourcePort)
+        len_data = len(curr_file_part)
+        values = ''.join([response_type,f'{fileID_length:04d}',fileID,f'{len_data:04d}',curr_file_part])
+        response = ''.join([FILE_TRANSFER,f'{len(values):04d}',self.ownIP,self.ownPort,values])
+
+        with self.addrToIDTableLock:
+            childSendID = self.addrToIDTable[childAddr]
+
+        mrt_send1(childSendID, response)
 
     def handleUserQuitInput(self):
         self.shouldQuit = True
