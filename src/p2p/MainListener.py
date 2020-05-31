@@ -73,6 +73,8 @@ class MainListener(threading.Thread):
             print("sending receive message back")
             response_type = '100a'
             values = f'{response_type}{self.supernodeSet}'
+            print(self.ownIP)
+            print(self.ownPort)
             response = ''.join([REQUEST, f'{len(values):04d}', self.ownIP, self.ownPort, values])
             # id is returned by accept1()
             mrt_send1(sendID, response)
