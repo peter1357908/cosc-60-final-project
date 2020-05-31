@@ -146,7 +146,7 @@ class InputListener(threading.Thread):
                     offererPort = file_host[1].strip(')').zfill(5)
                     
                     # TODO: move the following logic to MainListener:
-                    with self.manager.fileInfoTableLock
+                    with self.manager.fileInfoTableLock:
                         tempFileInfoDict = self.manager.fileInfoTable.getFileInfoDictByID(file_id)
                         maintainerIP, maintainerPort = (tempFileInfoDict[(offererIP, offererPort)]).maintainer
 
