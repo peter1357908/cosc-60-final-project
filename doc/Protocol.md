@@ -190,21 +190,18 @@ being 4 bytes in length:
   | ---- | ---- |
   | File ID ... | Offerer IPv4 ... |
   | Offerer Port ... | |
-
-  For UDP-holepunching, this message must be sent to the offering node **AND** to the supernode that maintains the file's Local-DHT entry (this information should have been recorded from a request response `100c`).
+  
+  If the offerer is not a supernode, send a dummy UDP-holepunching message to the offerer.
+  
+  This message needs to be sent to the supernode that maintains the file's Local-DHT entry (the maintainer information should have been recorded from a request response `100c`. This message would be forwarded to the offering childnode if the file is not offered by the supernode itself)
 
 * Response: 
-
-  If the receiving node is a:
   
-  * supernode:
-    
-    * If `(Offerer IPv4, Offerer Port)` specifies the receiving supernode and it does offer the requested file, send a dummy UDP (NOT MRT) message to the `(Source IPv4, Source Port)` for UDP-holepunching and start listening for connection from `(Source IPv4, Source Port)`.
-    * Else, if `(Offerer IPv4, Offerer Port)` specifies a childnode paired with the receiving supernode and it does offer the requested file, the supernode should "forward" the exact same message (same `(Source IPv4, Source Port)`) to that childnode.
-    
-  * childnode:
-    
-    * Send a dummy UDP (NOT MRT) message to the `(Source IPv4, Source Port)` for UDP-holepunching and start listening for connection from `(Source IPv4, Source Port)`.
+  Since the current protocol **does not require back-and-forth on the P2P layer**:
+  
+  * If `(Offerer IPv4, Offerer Port)` specifies the receiving node, connect to `(Source IPv4, Source Port)` and start sending File-Transfer messages accordingly (hole-punching is already)
+  
+  * Else if the receiving node is a supernode **AND** if `(Offerer IPv4, Offerer Port)` specifies a childnode paired with the receiving supernode and it does offer the requested file, the supernode should "forward" the exact same message (same `(Source IPv4, Source Port)`) to that childnode.
 
 ---
 
