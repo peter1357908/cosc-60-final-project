@@ -120,7 +120,7 @@ class MainListener(threading.Thread):
         response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
 
         with self.addrToIDTableLock:
-            sourceSendID = addrToIDTable[(sourceIP, sourcePort)]
+            sourceSendID = self.addrToIDTable[(sourceIP, sourcePort)]
 
         mrt_send1(sourceSendID, response)
 
@@ -140,7 +140,7 @@ class MainListener(threading.Thread):
         response = ''.join([response_type,f'{len(values):04d}',self.ownIP,self.ownPort,values])
 
         with self.addrToIDTableLock:
-            sourceSendID = addrToIDTable[(sourceIP, sourcePort)]
+            sourceSendID = self.addrToIDTable[(sourceIP, sourcePort)]
 
         mrt_send1(sourceSendID, response)
 
@@ -253,7 +253,7 @@ class MainListener(threading.Thread):
         response = ''.join([REQUEST,f'{len(values):04d}',self.ownIP,self.ownPort,values])
         
         with self.addrToIDTableLock:
-            childSendID = addrToIDTable[childAddr]
+            childSendID = self.addrToIDTable[childAddr]
 
         mrt_send1(childSendID, response)
 
