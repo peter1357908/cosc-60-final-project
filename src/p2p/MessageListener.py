@@ -160,7 +160,7 @@ class MessageListener(threading.Thread):
                     chunk_size = int(packet[chunk_size_index:chunk_size_index+4])
                     data = packet[chunk_size_index+4:chunk_size_index+ 4 + chunk_size].decode()
 
-                    with infile = open(fileID,'a+'):
+                    with infile as open(fileID,'a+'):
                         infile.write(data)
 
                 #update packet because this is stream based
