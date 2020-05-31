@@ -9,8 +9,8 @@ import socket
 
 # CONST VARIABLES
 # TODO: need to change this to an established supernode
-HARDCODED_SUPERNODE_IP = "35.212.76.82"
-HARDCODED_SUPERNODE_IP_DOTLESS = "352127682"
+HARDCODED_SUPERNODE_IP = "104.55.97.253"
+HARDCODED_SUPERNODE_IP_DOTLESS = "104055097253"
 HARDCODED_SUPERNODE_PORT = 5000
 
 
@@ -19,15 +19,17 @@ HARDCODED_SUPERNODE_PORT = 5000
     Takes an argument from the main program denoting whether to join as a supernode or regular node
     Returns (sendID, recvID) for successful connect and join; returns None (or gets blocked) otherwise
 '''
-def bootstrap_connect(ownIP, ownPort, supernodeIP, supernodePort, as_supernode=False):
+def bootstrap_connect(ownIP, ownPort, supernodeIP, supernodePort,recv_sock, as_supernode=False):
+    print(f'bootstrapping....')
     sendID = CNode_helper.connect_p2p(ip=supernodeIP, port=supernodePort)
     # assuming that 0 is the "bad case"
+    print(f'connected...')
     if sendID == 0:
         return None
     if as_supernode:
-        recvID = CNode_helper.join_p2p(sendID, ownIP, ownPort, 1)
+        recvID = CNode_helper.join_p2p(recv_sock,sendID, ownIP, ownPort, 1)
     else:
-        recvID = CNode_helper.join_p2p(sendID, ownIP, ownPort, 0)
+        recvID = CNode_helper.join_p2p(recv_sock,sendID, ownIP, ownPort, 0)
     return sendID, recvID
 
 '''
@@ -53,12 +55,14 @@ def main():
         isSupernode = args.supernode
         # If not a supernode:
         if not isSupernode:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            recv_sock.bind(('',5000))
             # and if the port-forwarding is configured
             if args.port_forward:
-                ownIP, ownPort = CNode_helper.get_own_addr(sock)
+                ownIP, ownPort = CNode_helper.get_own_addr(recv_sock)
+                print(f'ip: {ownIP}, port: {ownPort}')
 
-                bootstrapSendID, bootstrapRecvID = bootstrap_connect(ownIP, ownPort, HARDCODED_SUPERNODE_IP, HARDCODED_SUPERNODE_PORT, False)
+                bootstrapSendID, bootstrapRecvID = bootstrap_connect(ownIP, ownPort, HARDCODED_SUPERNODE_IP, HARDCODED_SUPERNODE_PORT,recv_sock,False)
 
                 mainListener = MainListener(isSupernode, ownIP, ownPort, bootstrapSendID, bootstrapRecvID, False)
                 mainListener.start()

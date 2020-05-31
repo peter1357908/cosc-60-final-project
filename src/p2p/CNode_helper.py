@@ -50,7 +50,7 @@ Returns an ID connection object
 """
 def connect_p2p(ip = SUPERNODE_IP,port = SUPERNODE_PORT):
 	global SUPERNODE_ID
-	SUPERNODE_ID = mrt_connect(ip,port)
+	SUPERNODE_ID = mrt_connect(ip,port,s=1)
 	print(SUPERNODE_ID)
 	return SUPERNODE_ID
 
@@ -74,9 +74,9 @@ join_type:
 	1: join as supernode
 	2: join as relayed supernode
 """
-def join_p2p(send_id, source_ip, source_port, join_type = 0):
+def join_p2p(recv_sock,send_id, source_ip, source_port, join_type = 0):
 	global RECV_ID
-	mrt_open()
+	mrt_open(s=recv_sock)
 	values = ''.join([R_JOIN,f'{join_type:04d}'])
 	msg_len = len(values)
 	msg = ''.join([REQUEST, f'{msg_len:04d}', source_ip, source_port, values])
