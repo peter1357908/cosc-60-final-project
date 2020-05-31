@@ -102,13 +102,15 @@ being 4 bytes in length:
 
 * Response:
 
-  | 100b | Number of supernode entries | Supernode entries ... |
+  | 100a | Number of supernode entries | Supernode entries ... |
   | ---- | ---- | ---- |
   
   Each `supernode entry` has the following format:
 
   | IPv4 ... | Port ... |
   | ---- | ---- |
+  
+  (which is the same as the response for Request `000a`)
   
 #### Request for a supernode's Local-DHT entries (on all files / one file):
 
