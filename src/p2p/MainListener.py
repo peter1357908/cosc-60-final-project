@@ -167,11 +167,14 @@ class MainListener(threading.Thread):
     # handles content from request 000e
     def handleFileTransferRequestIfNotOfferer(self, sourceIP, sourcePort, offererIP, offererPort, fileIDLengthString, fileID):
         offererAddr = (offererIP, offererPort)
-        if self.childTable.childHasFile(offererAddr, fileID):
-            # TODO: consider taking in the original message to allow forwarding
-            values = f'000e{fileIDLengthString}{fileID}{offererIP}{offererPort}'
-            msg = f'{REQUEST}{len(values):04d}{self.ownIP}{self.ownPort}{values}'
-            mrt_send1(supernodeSendID, msg)
+        with self.childTableLock:
+            if self.childTable.childHasFile(offererAddr, fileID):
+                with self.addrToIDTableLock:
+                    offererSendID = self.addrToIDTable([offererAddr])
+                # TODO: consider taking in the original message to allow forwarding
+                values = f'000e{fileIDLengthString}{fileID}{offererIP}{offererPort}'
+                msg = f'{REQUEST}{len(values):04d}{sourceIP}{sourcePort}{values}'
+                mrt_send1(offererSendID, msg)
 
     '''
         handles POSTing a file

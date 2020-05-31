@@ -162,7 +162,7 @@ def request_file(send_id, source_ip, source_port, file_id, ip, port):
 	print(f'SUPERNODE_IP: {SUPERNODE_IP}, SUPERNODE_PORT: {SUPERNODE_PORT}, dl_ip: {ip}, dl_port: {port}')
 	if ip != SUPERNODE_IP:
 		for i in range(3):
-			mrt_hole_punch(ip,port)
+			mrt_hole_punch(ip,int(port))
 			time.sleep(.2)
 
 

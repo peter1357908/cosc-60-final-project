@@ -110,6 +110,7 @@ class MessageListener(threading.Thread):
                         OffererPortIndex = OffererIPv4Index + 12
                         offererPort = int(packet[OffererPortIndex:OffererPortIndex+5])
                         print(f'id: {fileID}, offererIP: {offererIPv4}, offererPort = {offererPort}')
+                        
                         if offererIPv4 == self.manager.ownIP and offererPort == int(self.manager.ownPort):
                             #TODO: load file and sent (or pass to manager to handle this)
                             #1. Open file
