@@ -131,6 +131,7 @@ class MessageListener(threading.Thread):
                             while True: 
                                 # Read in the file_to_send into a 1024 byte buffer
                                 current_part = file_to_send.read(1024)
+                                print(f'length of current read: {len(current_part)}\n')
                                 # Send the packet using mrt_send1()
                                 # If the end of the file is reached:
                                 if len(current_part) < 1024:
@@ -138,12 +139,13 @@ class MessageListener(threading.Thread):
                                     # TODO: need to format this as a file transfer messages
                                     
                                     self.manager.handleFileTransfer(sourceIP,sourcePort, current_part,fileID)
-                                    time.sleep(1)
+
 
                                     # Exit out of the while loop
                                     break
                                 
                                 self.manager.handleFileTransfer(sourceIP,sourcePort,current_part,fileID)
+                                time.sleep(1)
                             file_to_send.close()
 
                         else: 

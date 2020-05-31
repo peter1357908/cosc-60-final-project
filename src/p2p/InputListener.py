@@ -40,7 +40,7 @@ class InputListener(threading.Thread):
             self.bootstrapSendID, self.ownIP, self.ownPort)
 
     # Begin a download:
-    def beginDownload(self, filename, downloadIP,downloadPort):
+    def beginDownload(self, filename, downloadIP, downloadPort):
         # downloader = Downloader(self.supernodeIP, downloadIP, file)
         # downloader.start()
         print("Attempting to download from ", downloadIP)
@@ -53,9 +53,6 @@ class InputListener(threading.Thread):
     
     # Offer a New File
     def offerNewFile(self, filename):
-        # TODO:
-            # STILL NEED TO FIGURE OUT FILE SIZE ETC AS PARAMETERS
-        # CNode_helper.post_file(file_size, id_size, filename)
         print("Announcing a new file is being offered: ", filename)
         file_size = os.path.getsize(filename)
         CNode_helper.post_file(
