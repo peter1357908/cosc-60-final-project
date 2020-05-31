@@ -159,6 +159,7 @@ class InputListener(threading.Thread):
                         assert(len(file_host) == 2)
                     except:
                         print(f'Usage: req dl file_id (download_ip:download_port)')
+                        continue
                     downloadIP = file_host[0]
                     downloadPort = file_host[1]
                     self.beginDownload(file_id, downloadIP, downloadPort)
