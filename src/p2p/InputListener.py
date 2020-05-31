@@ -160,8 +160,8 @@ class InputListener(threading.Thread):
                     except:
                         print(f'Usage: req dl file_id (download_ip:download_port)')
                         continue
-                    downloadIP = file_host[0]
-                    downloadPort = file_host[1]
+                    downloadIP = file_host[0].strip('(')
+                    downloadPort = file_host[1].strip(')')
                     self.beginDownload(file_id, downloadIP, downloadPort)
             elif input_tks[0] == "post":
                 try:
