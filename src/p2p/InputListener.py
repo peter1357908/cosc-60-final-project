@@ -130,7 +130,7 @@ class InputListener(threading.Thread):
                         self.usage_statement()
                 elif input_tks[1] == "supernodes":
                     if not self.isSupernode:
-                        self.request_supernodes()
+                        self.requestSupernodes()
                     else:
                         print(f'{self.manager.supernode_list}')
                 elif input_tks[1] == "dl":
