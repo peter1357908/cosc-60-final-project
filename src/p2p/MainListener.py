@@ -88,7 +88,7 @@ class MainListener(threading.Thread):
             # keep track of the supernode after relaying the request
             superAddr = (sourceIP, sourcePort)
             with self.supernodeSetLock:
-                self.supernodeSet.add(superAddr)
+                self.supernodeSet.addSupernode(superAddr)
             with self.addrToIDTableLock:
                 self.addrToIDTable[superAddr]=sendID
                 print(f'handle join request type 1 addrToIDTable after adding the joining supernode\'s address: {self.addrToIDTable}')
@@ -106,7 +106,7 @@ class MainListener(threading.Thread):
             # keep track of the supernode
             superAddr = (sourceIP, sourcePort)
             with self.supernodeSetLock:
-                self.supernodeSet.add(superAddr)
+                self.supernodeSet.addSupernode(superAddr)
             with self.addrToIDTableLock:
                 self.addrToIDTable[superAddr]=sendID
 
