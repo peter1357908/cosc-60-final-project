@@ -206,9 +206,7 @@ class MessageListener(threading.Thread):
                                 file_size = packet[cur_idx:cur_idx+4].decode()
                                 cur_idx += 4
                                 print(f"    -- {splitIP(offerer_ip)}:{offerer_port}, size: {file_size}")
-                        print(f'Do we even reach here?')
-                        self.manager.handleLocalDHTEntriesRequestResponse(packet[29:25+messageLen])
-                        print(f'This is after self.manager.handleLocalDHTEntriesRequestResponse(packet[29:25+messageLen])')
+                        self.manager.handleLocalDHTEntriesRequestResponse(packet[29:25+messageLen], sourceIP, sourcePort)
 
                     # response from request to get entire DHT
                     elif requestType == '100d':
