@@ -156,7 +156,8 @@ def request_file(send_id, source_ip, source_port, file_id, maintainer_ip, mainta
 		for _i in range(3):
 			offerer_ip_split = [int(offerer_ip[i:i+3]) for i in range(0, 12, 3)]
 			offerer_ip_with_dots = ".".join([str(x) for x in offerer_ip_split])
-			mrt_hole_punch(offerer_ip_with_dots, int(offerer_port))
+			# TODO: MAGIC NUMERO
+			mrt_hole_punch(offerer_ip_with_dots, 5001)
 			time.sleep(.2)
 
 """
