@@ -10,7 +10,7 @@ from FileInfoTable import FileInfoTable, FileInfo
 from ChildrenInfoTable import ChildrenInfoTable
 from SupernodeSet import SupernodeSet
 import MessageListener
-import CNode_helper
+from CNode_helper import *
 import time
 
 
@@ -66,7 +66,7 @@ class MainListener(threading.Thread):
             response_type = '100a'
             values = f'{response_type}{self.supernodeSet}'
             response = f'{REQUEST}{len(values):04d}{self.ownIP}{self.ownPort}{values}'
-            mrt_send1(sendID, response)
+            send_p2p_msg(sendID, response)
             
         elif type == 1:
             # relay supernode join request
@@ -78,7 +78,7 @@ class MainListener(threading.Thread):
                         values = '000a0002'
                         msg_len = len(values)
                         msg = ''.join(['0101', f'{msg_len:04d}', sourceIP, sourcePort, values])
-                        mrt_send1(supernodeSendID, msg)
+                        send_p2p_msg(supernodeSendID, msg)
             
             # keep track of the supernode after relaying the request
             superAddr = (sourceIP, sourcePort)
@@ -91,7 +91,7 @@ class MainListener(threading.Thread):
             response_type = '100a'
             values = f'{response_type}{self.supernodeSet}'
             response = f'{REQUEST}{len(values):04d}{self.ownIP}{self.ownPort}{values}'
-            mrt_send1(sendID, response)
+            send_p2p_msg(sendID, response)
 
         elif type == 2:
             # keep track of the supernode
@@ -116,7 +116,7 @@ class MainListener(threading.Thread):
             sourceSendID = self.addrToIDTable.get((sourceIP, sourcePort), None)
 
         print(f"sending supernode set back to {sourceIP}:{sourcePort} using {sourceSendID}")
-        mrt_send1(sourceSendID, response)
+        send_p2p_msg(sourceSendID, response)
     
     # handles request response 100a
     # `responseString` should not contain the type `100a`
@@ -141,7 +141,7 @@ class MainListener(threading.Thread):
         with self.addrToIDTableLock:
             sourceSendID = self.addrToIDTable.get((sourceIP, sourcePort), None)
 
-        mrt_send1(sourceSendID, response)
+        send_p2p_msg(sourceSendID, response)
 
     def handleAllDHTEntriesRequest(self, sourceIP, sourcePort, fileIDLengthString, fileID):
         #TODO: This one is the most complicated as we first need to collect all of the file info from the other supernodes...
@@ -164,7 +164,7 @@ class MainListener(threading.Thread):
                             values = '000c0000'
 
                         msg = f'{REQUEST}{len(values):04d}{self.ownIP}{self.ownPort}{values}'
-                        mrt_send1(supernodeSendID, msg)
+                        send_p2p_msg(supernodeSendID, msg)
 
     # handles message-forwarding for request 000e
     def forwardFileTransferRequest(self, sourceIP, sourcePort, offererIPv4, offererPort, maintainerIPv4, maintainerPort, fileIDLengthString, fileID):
@@ -190,7 +190,7 @@ class MainListener(threading.Thread):
         # TODO: consider taking in the original message to allow forwarding
         values = f'000e{fileIDLengthString}{fileID}{offererIPv4}{offererPort}{maintainerIPv4}{maintainerPort}'
         msg = f'{REQUEST}{len(values):04d}{sourceIP}{sourcePort}{values}'
-        mrt_send1(targetSendID, msg)
+        send_p2p_msg(targetSendID, msg)
 
     '''
         handles POSTing a file
@@ -234,7 +234,7 @@ class MainListener(threading.Thread):
         with self.addrToIDTableLock:
             childSendID = self.addrToIDTable.pop(childAddr, None)
 
-        mrt_send1(childSendID, response)
+        send_p2p_msg(childSendID, response)
 
 
     '''
@@ -250,7 +250,7 @@ class MainListener(threading.Thread):
         len_data = len(curr_file_part)
         values = ''.join([response_type,f'{fileID_length:04d}',fileID,f'{len_data:04d}',curr_file_part])
         response = ''.join([FILE_TRANSFER,f'{len(values):04d}',self.ownIP,self.ownPort,values])
-        mrt_send1(recvSendID, response)
+        send_p2p_msg(recvSendID, response)
 
         if eof:
             if (self.isSupernode and not self.childTable.hasChild(recvAddr)) or (recvSendID != self.bootstrapSendID):

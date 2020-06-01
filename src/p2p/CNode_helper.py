@@ -173,5 +173,5 @@ Function to send the pre-made p2p message.
 Message must be in binary (use binascii.unhexlify)
 """
 def send_p2p_msg(sock,msg):
-	print(f'sending to: {sock}, msg: {msg}')
+	print(f'*** SEND_P2P_MSG sending to: {sock}, msg: {msg}')
 	mrt_send1(sock, msg)
