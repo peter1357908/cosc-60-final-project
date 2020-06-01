@@ -291,15 +291,8 @@ class MainListener(threading.Thread):
 
         if eof:
             # only disconnect if the receiver of our file transfer is NOT OUR children AND that it is NOT our bootstrapper.
-            if (not (self.isSupernode and not self.childTable.hasChild(recvAddr))) and (recvSendID != self.bootstrapSendID):
+            if (self.isSupernode and not self.childTable.hasChild(recvAddr)) and (recvSendID != self.bootstrapSendID):
                 mrt_disconnect(recvSendID)
-
-    def handleUserQuitInput(self):
-        self.shouldQuit = True
-        self.quitCV.notify()
-
-    def isQuit(self):
-        return self.shouldQuit
     
     def run(self):
         print(f'MainListener starting... IP: {self.ownIP} port: {self.ownPort}')

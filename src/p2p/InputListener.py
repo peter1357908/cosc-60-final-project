@@ -55,9 +55,14 @@ class InputListener(threading.Thread):
     # Offer a New File
     def offerNewFile(self, filename):
         print("Announcing a new file is being offered: ", filename)
-        file_size = os.path.getsize(filename)
-        CNode_helper.post_file(
-            self.bootstrapSendID, self.ownIP, self.ownPort, file_size, len(filename), filename)
+        
+        if not os.path.exists(filename):
+            print(f"the file you've offered does not exist on your machine! -- {filename}")
+        else:
+            file_size = os.path.getsize(filename)
+            
+            CNode_helper.post_file(
+                self.bootstrapSendID, self.ownIP, self.ownPort, file_size, len(filename), filename)
     
     # Announce a file is no longer being offered:
     def removeOfferedFile(self, filename):
