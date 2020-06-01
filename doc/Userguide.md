@@ -4,7 +4,9 @@
 
 The purpose of this document is to describe how a user of the P2P network should interact with the P2P client.
 
-The user must have Python 3 installed and have a command-line interface, for now.
+The user must have Python 3 installed and have a command-line interface.
+
+Both the supernode and the child nodes may issue these commands. Note that the supernodes will continue to function in the absence of user input.
 
 Commands are issued to the client CLI via stdin, and upon pressing enter, the command is sent.
 
@@ -44,23 +46,19 @@ This requests just one specific file from the local DHT
 
 - `req files local`
 
-This requests the local DHT
+This requests the local DHT, that is the supernode's DHT.
 
-- `req files all`
-
-This requests the entire DHT.
-
-- `req files`
-
-This requests only the local DHT.
 
 - `req supernodes`
 
 This requests a list of all supernodes in the P2P network.
 
-- `req dl fileID fileHost`
+- `req dl fileID (IP:port)`
 
-This requests a download of a file named fileID from fileHost (IP:port)
+This requests a download of a file named fileID.
+
+A big caveat is that before downloading, the user must `req files local` or `req files all`
+since we assume that the user must search for available files and hosts before choosing to download.
 
 ### Post
 
@@ -76,7 +74,3 @@ This notifies the supernode that a file named fileID no longer available for hos
 
 This notifies the supernode that we wish to leave the network
 
-### Notes
-
-We may want to have a `req search fileID` which runs `req files` and/or `req files all`, and looks for peers who have the given fileID.
-The list of peers could be returned to the user, so that the user can then initiate a download. Maybe make this a stretch-goal issue?.
