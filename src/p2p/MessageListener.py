@@ -75,6 +75,7 @@ class MessageListener(threading.Thread):
                         print(f'trying to connect to {sourceIP}:{sourcePort}')
                         # TODO: make this connection attempt non-blocking / timeout?
                         sendID = mrt_connect(host=splitIP(sourceIP), port=int(sourcePort))
+                        print("This is the sendID" + sendID)
                         print("connection succeeded")
                         self.manager.handleJoinRequest(int(misc), sendID, sourceIP, sourcePort)
                     
@@ -206,6 +207,7 @@ class MessageListener(threading.Thread):
                                 file_size = packet[cur_idx:cur_idx+4].decode()
                                 cur_idx += 4
                                 print(f"    -- {splitIP(offerer_ip)}:{offerer_port}, size: {file_size}")
+                        print(packet[29:25+messageLen])
                         self.manager.handleLocalDHTEntriesRequestResponse(packet[29:25+messageLen], sourceIP, sourcePort)
 
                     # response from request to get entire DHT
