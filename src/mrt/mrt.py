@@ -397,7 +397,7 @@ def handshake(addr):
 		try:
 			client_sock.sendto(bytes_join,addr)
 			data, addr = client_sock.recvfrom(2048)
-			#print(f'data: {data}, addr: {addr}')
+			#print(f'data: {data[12:16].decode()}, addr: {addr}')
 			if verify_checksum(data) != 0: # discard packet if checksum doesnt add up
 					continue
 			p = Packet()
