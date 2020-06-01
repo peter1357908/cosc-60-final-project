@@ -31,7 +31,7 @@ class MessageListener(threading.Thread):
     def run(self):
         print("MessageListener started...")
 
-        while True:    
+        while True:
             # Accept a packet from the current recvID
             packet = mrt_receive1(self.recvID)           
 
@@ -44,7 +44,7 @@ class MessageListener(threading.Thread):
                 sourcePort = int(packet[20:25].decode())
                 sourceAddrTuple = (sourceIP, sourcePort)
                 
-                # POST 
+                # POST
                 if messageType == '0001':    # If the message is a post:
                     print('POST type received')
                     postType = packet[25:29].decode()
@@ -164,7 +164,7 @@ class MessageListener(threading.Thread):
                         print("RequestType 100a received!")
                         # num_supernode_entries = int(misc)
                         # cur_idx = 33
-                        # print(f"100a received; number of supernode entries is {num_supernode_entries}")
+                        # print(f"number of supernode entries is {num_supernode_entries}")
                         # for i in range(num_supernode_entries):
                         #     try:
                         #         snodeIP = packet[cur_idx:cur_idx+12].decode()
@@ -174,6 +174,7 @@ class MessageListener(threading.Thread):
                         #         print(f"100a; SUPERNODE at {splitIP(snodeIP)}:{snodePort}")
                         #     except IndexError as e:
                         #         print("100a received, cannot index supernode ip, port, index out of bounds")
+                        # self
 
 
                     # response from request to get local DHT
@@ -210,7 +211,7 @@ class MessageListener(threading.Thread):
 
                     # response from request to get entire DHT
                     elif requestType == '100d':
-                        print('Request type 100d received!')
+                        print('RequestType 100d received!')
                         pass
 
 

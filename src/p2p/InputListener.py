@@ -106,16 +106,18 @@ class InputListener(threading.Thread):
                         print(f'Usage: req [files,supernodes,dl] arg3')
                         continue
                     if input_tks[2] == "all" and len(input_tks) >= 4:
+                        isRequestingGlobalDHT = True
                         file_id = input_tks[3]
                         self.requestDHT(file_id, isRequestingGlobalDHT)
                     elif input_tks[2] == "all":
                         isRequestingGlobalDHT = True
                         self.requestDHT('', isRequestingGlobalDHT)
                     elif input_tks[2] == "local" and len(input_tks) >= 4:
+                        isRequestingGlobalDHT = False
                         file_id = input_tks[3]
                         self.requestDHT(file_id, isRequestingGlobalDHT)
                     elif input_tks[2] == "local":
-                        isRequestingGlobalDHT = True
+                        isRequestingGlobalDHT = False
                         self.requestDHT('', isRequestingGlobalDHT)
                     else:
                         print("ERR")

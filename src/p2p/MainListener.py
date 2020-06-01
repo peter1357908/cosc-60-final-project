@@ -117,6 +117,12 @@ class MainListener(threading.Thread):
 
         print(f"sending supernode set back to {sourceIP}:{sourcePort} using {sourceSendID}")
         mrt_send1(sourceSendID, response)
+    
+    # handles request response 100a
+    # `responseString` should not contain the type `100a`
+    def handleSupernodeSetRequestResponse(self, responseString):
+        with self.supernodeSetLock:
+            self.supernodeSet.importByString(responseString)
 
     # handles both cases of request `000c`
     def handleLocalDHTEntriesRequest(self, sourceIP, sourcePort, fileID):
@@ -194,19 +200,19 @@ class MainListener(threading.Thread):
         fileSize
         Updates local DHT, does not send a message
     '''
-    def handleFilePost(self, offerIP, offerPort, fileID, fileSize):
+    def handleFilePost(self, offererIP, offerPort, fileID, fileSize):
         # update the local DHT
-        offerer = (offerIP, offerPort)
+        offererAddr = (offererIP, offerPort)
         newFileInfo = FileInfo(fileSize, (self.ownIP, self.ownPort))
         with self.fileInfoTableLock:
-            self.fileInfoTable.addFileInfo(fileID, offerer, newFileInfo)
+            self.fileInfoTable.addFileInfo(fileID, offererAddr, newFileInfo)
 
-        # update childreninfotable as well
-        if offerer != (self.ownIP, self.ownPort):
+        # update childrenInfoTable as well
+        if offererAddr != (self.ownIP, self.ownPort):
             with self.childTableLock:
-                self.childTable.addFile(offerer, fileID)
+                self.childTable.addFile(offererAddr, fileID)
 
-        print(f'handle file post in mainlistener {fileID} of size {fileSize} from {offerIP}:{offerPort}')
+        print(f'handle file post in mainlistener: \'{fileID}\' of size {fileSize} from {offererIP}:{offerPort}')
         print(f'hash table now looks like: {self.fileInfoTable}')
 
     '''
