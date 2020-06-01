@@ -41,8 +41,7 @@ class MessageListener(threading.Thread):
                 messageType = packet[0:4].decode()
                 messageLen = int(packet[4:8].decode())
                 sourceIP = packet[8:20].decode()
-                sourcePort = int(packet[20:25].decode())
-                sourceAddrTuple = (sourceIP, sourcePort)
+                sourcePort = packet[20:25].decode()
                 
                 # POST
                 if messageType == '0001':    # If the message is a post:
@@ -73,7 +72,7 @@ class MessageListener(threading.Thread):
                     # Request to join the network:
                     if requestType == '000a':
                         print(f'REQUEST 000a to join received... type: {misc}')
-                        print(f'trying to connect to {splitIP(sourceIP)}:{sourcePort}')
+                        print(f'trying to connect to {sourceIP}:{sourcePort}')
                         # TODO: make this connection attempt non-blocking / timeout?
                         sendID = mrt_connect(host=splitIP(sourceIP), port=int(sourcePort))
                         print("connection succeeded")

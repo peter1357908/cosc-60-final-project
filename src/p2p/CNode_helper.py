@@ -92,7 +92,7 @@ Takes one arg: all (bool)
 	all = False: send '000c'
 	default is True
 """
-def request_local_dht(send_id, source_ip, source_port, filename=''):
+def request_local_dht(send_id, source_ip, source_port, filename):
 	if len(filename) > 0:
 		values = ''.join([R_LOCAL_DHT,f'{len(filename):04d}',filename])
 	else:
@@ -102,7 +102,7 @@ def request_local_dht(send_id, source_ip, source_port, filename=''):
 	send_p2p_msg(send_id,msg)
 
 
-def request_global_dht(send_id, source_ip, source_port, filename=''):
+def request_global_dht(send_id, source_ip, source_port, filename):
 	if len(filename) > 0:
 		values = ''.join([R_GLOBAL_DHT,f'{len(filename):04d}',filename])
 	else:
