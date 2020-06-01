@@ -167,7 +167,7 @@ class InputListener(threading.Thread):
                     if not self.isSupernode:
                         self.requestSupernodes()
                     else:
-                        print(f'{self.manager.supernode_list}')
+                        print(f'{self.manager.supernodeSet}')
                 elif input_tks[1] == "dl":
                     try: 
                         assert len(input_tks) >= 4
