@@ -141,12 +141,15 @@ class InputListener(threading.Thread):
                     # convert the input IPv4 and Port to P2P format
                     offererIP = ''.join([x.zfill(3) for x in (file_host[0].strip('(').split('.'))])
                     offererPort = file_host[1].strip(')').zfill(5)
+
                     
                     # TODO: move the following logic to MainListener:
                     with self.manager.fileInfoTableLock:
                         tempFileInfoDict = self.manager.fileInfoTable.getFileInfoDictByID(file_id)
-                        print("full table" + tempFileInfoDict)
-                        print(f'offererIP: {offererIP}, offererPort: {offererPort}')
+                        print(f'SHOULD BE IN P2P FORMAT: offererIP: {offererIP}, offererPort: {offererPort}')
+                        print(f'file_id is {file_id}')
+                        print(f'fileInfoTable:{self.manager.fileInfoTable.getTable()}')
+                        print(f'tempFileInfoDict:{tempFileInfoDict}')
                         if tempFileInfoDict is None:
                             print(f'You should not request a file that I do not know exisited; request global DHT entries first (tempFileInfoDict is `None`)')
                             continue
