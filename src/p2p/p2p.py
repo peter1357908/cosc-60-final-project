@@ -9,10 +9,10 @@ import socket
 import CNode_helper
 
 # CONST VARIABLES
-HARDCODED_FIRST_IP = "35.212.76.82"
-HARDCODED_FIRST_IP_P2P = "035212076082"
-HARDCODED_FIRST_PORT = 5000
-HARDCODED_FIRST_PORT_P2P = "05000"
+HARDCODED_BOOTSTRAP_IP = "35.212.76.82"
+HARDCODED_BOOTSTRAP_IP_P2P = "035212076082"
+HARDCODED_BOOTSTRAP_PORT = 5000
+HARDCODED_BOOTSTRAP_PORT_P2P = "05000"
 
 HARDCODED_SUPERNODE_IP = "35.245.175.182"
 HARDCODED_SUPERNODE_IP_P2P = "035245175182"
@@ -57,7 +57,7 @@ def main():
         print(f'starting up as first ever supernode')
         # TODO: we should find a way to get own IP and Port without STUN for supernodes
         # TODO: we should not hardcode first node's IP and Port
-        mainListener = MainListener(isSupernode=True, ownIP=HARDCODED_FIRST_IP_P2P, ownPort=HARDCODED_FIRST_PORT_P2P, is_first=True)
+        mainListener = MainListener(isSupernode=True, ownIP=HARDCODED_BOOTSTRAP_IP_P2P, ownPort=HARDCODED_BOOTSTRAP_PORT_P2P, is_first=True)
         mainListener.start()
     else:
         isSupernode = args.supernode
@@ -65,9 +65,9 @@ def main():
             recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             recv_sock.bind(('',5000))
 
-            bootstrapSendID, bootstrapRecvID = bootstrap_connect(HARDCODED_SUPERNODE_IP_P2P, HARDCODED_SUPERNODE_PORT_P2P, HARDCODED_FIRST_IP, HARDCODED_FIRST_PORT, recv_sock, True)
+            bootstrapSendID, bootstrapRecvID = bootstrap_connect(HARDCODED_SUPERNODE_IP_P2P, HARDCODED_SUPERNODE_PORT_P2P, HARDCODED_BOOTSTRAP_IP, HARDCODED_BOOTSTRAP_PORT, recv_sock, True)
 
-            mainListener = MainListener(True, HARDCODED_SUPERNODE_IP_P2P, HARDCODED_SUPERNODE_PORT_P2P, bootstrapSendID, bootstrapRecvID, HARDCODED_FIRST_IP_P2P, HARDCODED_FIRST_PORT_P2P, False)
+            mainListener = MainListener(True, HARDCODED_SUPERNODE_IP_P2P, HARDCODED_SUPERNODE_PORT_P2P, bootstrapSendID, bootstrapRecvID, HARDCODED_BOOTSTRAP_IP_P2P, HARDCODED_BOOTSTRAP_PORT_P2P, False)
             mainListener.start()
         else:
             recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -75,9 +75,9 @@ def main():
 
             ownIP, ownPort = CNode_helper.get_own_addr(recv_sock)
 
-            bootstrapSendID, bootstrapRecvID = bootstrap_connect(ownIP, ownPort, HARDCODED_FIRST_IP, HARDCODED_FIRST_PORT, recv_sock, False)
+            bootstrapSendID, bootstrapRecvID = bootstrap_connect(ownIP, ownPort, HARDCODED_BOOTSTRAP_IP, HARDCODED_BOOTSTRAP_PORT, recv_sock, False)
 
-            mainListener = MainListener(False, ownIP, ownPort, bootstrapSendID, bootstrapRecvID, HARDCODED_FIRST_IP_P2P, HARDCODED_FIRST_PORT_P2P, False)
+            mainListener = MainListener(False, ownIP, ownPort, bootstrapSendID, bootstrapRecvID, HARDCODED_BOOTSTRAP_IP_P2P, HARDCODED_BOOTSTRAP_PORT_P2P, False)
             mainListener.start()
 
 if __name__ == "__main__":

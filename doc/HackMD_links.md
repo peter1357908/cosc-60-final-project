@@ -4,4 +4,6 @@ The documentation in the repository should contain the latest version; before ed
 
 [Protocol.md](https://hackmd.io/Ntcyg_7wTsKrL5BiNz400g)
 
-[Info.md](https://hackmd.io/SxRImo-YSjqgC6BpyhjDbg)
+[Extra.md](https://hackmd.io/SxRImo-YSjqgC6BpyhjDbg)
+
+[Userguide.md](https://hackmd.io/i4iWAHqkQDqMaLU09IPlow)

@@ -8,11 +8,22 @@ The user must have Python 3 installed and have a command-line interface, for now
 
 Commands are issued to the client CLI via stdin, and upon pressing enter, the command is sent.
 
-Commands have the syntax:
+## P2P Start Syntax:
 
-\[command type\] \[options\]
+`python3 p2p.py [join-type]`
 
-Currently, two command types are supported:
+Where as `join-type` should be one of the following two:
+
+* `-f`: join as the first supernode (start a new network). `p2p.py` should be modified to contain hard-coded address information of the first supernode.
+* `-s`: join as a supernode. `p2p.py` should be modified to contain hard-coded address information of the bootstrapping supernode it wants to connect to as well as the joining supernode's own address information.
+
+If `join-type` is not specified, the node joins as a childnode. `p2p.py` should be modified to contain hard-coded address information of the bootstrapping supernode it wants to connect to.
+
+## User Interface Command Syntax:
+
+`[command type] [options]`
+
+Two command types are supported:
 - `req`
 - `post`
 
@@ -58,9 +69,9 @@ This requests only the local DHT.
 
 This requests a list of all supernodes in the P2P network.
 
-- `req dl fileID fileHost`
+- `req dl fileID fileHostAddr`
 
-This requests a download of a file named fileID from fileHost (IP:port)
+This requests a download of a file named `fileID` from `fileHostAddr` in the form `(IPv4:port)` (this information is available for copy-pasting upon a successful DHT request, e.g. `req files local` - in fact, our implementation forbids a user from downloading a file whose information is not made available to the user with a DHT request)
 
 ### Post
 
@@ -75,8 +86,3 @@ This notifies the supernode that a file named fileID no longer available for hos
 - `post disconnect`
 
 This notifies the supernode that we wish to leave the network
-
-### Notes
-
-We may want to have a `req search fileID` which runs `req files` and/or `req files all`, and looks for peers who have the given fileID.
-The list of peers could be returned to the user, so that the user can then initiate a download. Maybe make this a stretch-goal issue?.
