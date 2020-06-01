@@ -47,7 +47,7 @@ class MainListener(threading.Thread):
         self.childTableLock = threading.Lock() # pass to spawned threads
         self.supernodeSetLock = threading.Lock() # pass to spawned threads
         self.addrToIDTableLock = threading.Lock()
-    
+
     # type - 0, 1, 2
     # 0 = regular node
     # 1 = supernode
@@ -61,6 +61,7 @@ class MainListener(threading.Thread):
                 self.childTable.addChild(childAddr)
             with self.addrToIDTableLock:
                 self.addrToIDTable[childAddr] = sendID
+                print(f'handle join request type 0 addrToIDTable: {self.addrToIDTable}')
             
             # craft and send response `100a`
             response_type = '100a'
@@ -75,6 +76,7 @@ class MainListener(threading.Thread):
                 with self.addrToIDTableLock:
                     for supernodeAddr in self.supernodeSet.getSet():
                         supernodeSendID = self.addrToIDTable.get(supernodeAddr, None)
+                        print(f'handle join request type 1 addrToIDTable after getting supernodeAddr: {self.addrToIDTable}')
                         values = '000a0002'
                         msg_len = len(values)
                         msg = ''.join(['0101', f'{msg_len:04d}', sourceIP, sourcePort, values])
@@ -86,6 +88,7 @@ class MainListener(threading.Thread):
                 self.supernodeSet.add(superAddr)
             with self.addrToIDTableLock:
                 self.addrToIDTable[superAddr]=sendID
+                print(f'handle join request type 1 addrToIDTable after adding the joining supernode\'s address: {self.addrToIDTable}')
 
             # craft and send response `100a`
             response_type = '100a'

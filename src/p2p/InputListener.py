@@ -145,6 +145,9 @@ class InputListener(threading.Thread):
                     # TODO: move the following logic to MainListener:
                     with self.manager.fileInfoTableLock:
                         tempFileInfoDict = self.manager.fileInfoTable.getFileInfoDictByID(file_id)
+                        print("full table" + tempFileInfoDict)
+                        print("Dict of the Ip,port combo" + tempFileInfoDict[(offererIP, offererPort)])
+                        print("maintainer:"+ (tempFileInfoDict[(offererIP, offererPort)]).maintainer)
                         maintainerIP, maintainerPort = (tempFileInfoDict[(offererIP, offererPort)]).maintainer
 
                     print(

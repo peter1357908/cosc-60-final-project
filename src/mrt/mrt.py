@@ -319,7 +319,6 @@ def sender_recv_thread(id):
 
 """
 Implementation of the quick resend to beat timeout
-When 3 ou
 """
 def quick_resend(id):
 	sender = senders[id]
