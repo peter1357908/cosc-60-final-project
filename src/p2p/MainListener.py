@@ -290,7 +290,8 @@ class MainListener(threading.Thread):
         send_p2p_msg(recvSendID, response)
 
         if eof:
-            if (self.isSupernode and not self.childTable.hasChild(recvAddr)) or (recvSendID != self.bootstrapSendID):
+            # only disconnect if the receiver of our file transfer is NOT OUR children AND that it is NOT our bootstrapper.
+            if (not (self.isSupernode and not self.childTable.hasChild(recvAddr))) and (recvSendID != self.bootstrapSendID):
                 mrt_disconnect(recvSendID)
 
     def handleUserQuitInput(self):
