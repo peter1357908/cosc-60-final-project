@@ -29,7 +29,7 @@ class MainListener(threading.Thread):
         ownPort is a 5-byte string in ascii
     ''' 
 
-    def __init__(self, isSupernode, ownIP, ownPort, bootstrapSendID, bootstrapRecvID, bootstrapIP='', bootstrapPort='', is_first=False):
+    def __init__(self, isSupernode, ownIP, ownPort, bootstrapSendID='', bootstrapRecvID='', bootstrapIP='', bootstrapPort='', is_first=False):
         threading.Thread.__init__(self)
         self.isSupernode = isSupernode
         self.ownIP = ownIP
