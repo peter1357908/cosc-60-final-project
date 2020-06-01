@@ -6,6 +6,7 @@ import sys
 sys.path.append('../data-structures/')
 import argparse
 import socket
+import CNode_helper
 
 # CONST VARIABLES
 # TODO: need to change this to an established supernode
