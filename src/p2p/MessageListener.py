@@ -161,20 +161,19 @@ class MessageListener(threading.Thread):
                     # response from request to join 000a or request for supernodeSet
                     elif requestType == '100a':
                         print("RequestType 100a received!")
-                        # num_supernode_entries = int(misc)
-                        # cur_idx = 33
-                        # print(f"number of supernode entries is {num_supernode_entries}")
-                        # for i in range(num_supernode_entries):
-                        #     try:
-                        #         snodeIP = packet[cur_idx:cur_idx+12].decode()
-                        #         cur_idx += 12
-                        #         snodePort = packet[cur_idx:cur_idx+5].decode()
-                        #         cur_idx += 5
-                        #         print(f"100a; SUPERNODE at {splitIP(snodeIP)}:{snodePort}")
-                        #     except IndexError as e:
-                        #         print("100a received, cannot index supernode ip, port, index out of bounds")
-                        # self
-
+                        num_supernode_entries = int(misc)
+                        cur_idx = 33
+                        print(f"number of supernode entries is {num_supernode_entries}")
+                        for i in range(num_supernode_entries):
+                            try:
+                                snodeIP = packet[cur_idx:cur_idx+12].decode()
+                                cur_idx += 12
+                                snodePort = packet[cur_idx:cur_idx+5].decode()
+                                cur_idx += 5
+                                print(f"100a; SUPERNODE at {splitIP(snodeIP)}:{snodePort}")
+                            except IndexError as e:
+                                print("100a received, cannot index supernode ip, port, index out of bounds")
+                        self.manager.handleSupernodeSetRequestResponse(packet[29:25+messageLen])
 
                     # response from request to get local DHT
                     elif requestType == '100c':
@@ -207,6 +206,9 @@ class MessageListener(threading.Thread):
                                 file_size = packet[cur_idx:cur_idx+4].decode()
                                 cur_idx += 4
                                 print(f"    -- {splitIP(offerer_ip)}:{offerer_port}, size: {file_size}")
+                        print(f'Do we even reach here?')
+                        self.manager.handleLocalDHTEntriesRequestResponse(packet[29:25+messageLen])
+                        print(f'This is after self.manager.handleLocalDHTEntriesRequestResponse(packet[29:25+messageLen])')
 
                     # response from request to get entire DHT
                     elif requestType == '100d':

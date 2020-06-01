@@ -164,8 +164,10 @@ class MainListener(threading.Thread):
     # handles the request response `100c`
     # `responseString` should not contain the type `100c`
     def handleLocalDHTEntriesRequestResponse(self, responseString):
+        print(f'responseString: {responseString}')
         with self.fileInfoTableLock:
             self.fileInfoTable.importByString(responseString)
+            
 
     def handleAllDHTEntriesRequest(self, sourceIP, sourcePort, fileIDLengthString, fileID):
         #TODO: This one is the most complicated as we first need to collect all of the file info from the other supernodes...
