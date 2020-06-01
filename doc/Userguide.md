@@ -20,6 +20,7 @@ Currently, two command types are supported:
 
 ### Request
 
+<<<<<<< HEAD
 There are four types of requests **for files** you can make. There are two modes:
 
 1. Request from the local DHT 
@@ -46,6 +47,15 @@ This requests just one specific file from the local DHT
 - `req files local`
 
 This requests the local DHT
+=======
+- `req files all`
+
+This requests the entire DHT.
+
+- `req files`
+
+This requests only the local DHT.
+>>>>>>> Peter
 
 - `req supernodes`
 

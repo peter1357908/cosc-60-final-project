@@ -15,28 +15,39 @@ senders = {}
 conn_queue = deque()
 close = False
 conn_count = 0
-sock = 0
+server_sock = 0
 client_sock = 0
 recently_closed = []
+sender_counter = 1
 
 buffer_lock = threading.Lock() #buffer lock to help with data races
 
+
+
+def get_server_sock():
+	global server_sock
+	return server_sock
 
 """
 mrt_open: indicate ready-ness to receive incoming connections
 
 Create new socket, startup thread
 """
-def mrt_open(host = '192.168.0.249', port = 11235,socket=0):
-	global sock,close
+def mrt_open(host='', port=5000, s=0):
+	global server_sock,close
 	close = False
-	if socket ==0:
-		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
+	if s == 1:
+		server_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		server_sock.bind((host,port))
+	elif s == 0:
+		pass
 	else:
-		sock = socket
-	sock.bind((host,port))
-	threading.Thread(target=start_receiver_thread, args=[sock]).start()
+		server_sock = s
+		server_sock.settimeout(None)
+
+	
+	threading.Thread(target=start_receiver_thread, args=[server_sock]).start()
+
 
 """
 accept an incoming connection (return a connection), guaranteed to return one (will block until there is one)
@@ -131,13 +142,14 @@ def mrt_close():
 """
 connect to a given server (return a connection)
 """
-def mrt_connect(host  = '192.168.0.249',port = 11235,socket=0):
+def mrt_connect(host, port):
 	global client_sock
-	if socket == 0:
+	if type(client_sock) == int:
 		client_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	else:
-		client_sock = socket
+		client_sock.bind(('',5001))
+	client_sock.settimeout(None)
 	addr = (host,port)
+	#mrt_hole_punch(addr) # S-NAT help
 	id = handshake(addr)
 	senders[id].receiving=True
 	recv_thread = threading.Thread(target=sender_recv_thread,args=(id,))
@@ -157,7 +169,7 @@ def mrt_disconnect(id):
 	data = ''
 	cls_msg = kind+window+conn_id+frag+data
 	cls_sum = ichecksum(cls_msg)
-	cls_bytes = cls_sum.to_bytes(4,'big')+cls_msg.encode()
+	cls_bytes = cls_sum.to_bytes(4,'big')+cls_msg.encode('utf-8')
 
 	while len(conn.buffer) > 0 or len(conn.send_queue) > 0:
 		time.sleep(.5)
@@ -224,7 +236,7 @@ def mrt_send1(id, data):
 	while not copied:
 		if senders[id].check_buffer_size() > len(data):
 			buffer_lock.acquire()
-			senders[id].add_to_buffer(data.encode())
+			senders[id].add_to_buffer(data.encode('utf-8'))
 			buffer_lock.release()
 			copied = True
 		else:
@@ -269,7 +281,7 @@ def send_window_test(id):
 	data = ''
 	pre_message = kind+window+cid+frag+data
 	csum = ichecksum(pre_message)
-	msg_bytes = csum.to_bytes(4,'big')+pre_message.encode()
+	msg_bytes = csum.to_bytes(4,'big')+pre_message.encode('utf-8')
 	client_sock.sendto(msg_bytes,senders[id].addr)
 
 
@@ -278,8 +290,10 @@ Spins up a receiever thread to handle all incoming messages for the sender
 Responsible for updating latest frag, sending quick responses etc
 """
 def sender_recv_thread(id):
+	global client_sock
 	sender = senders[id]
 	while sender.is_receiving():
+		client_sock.settimeout(None)
 		data, addr = client_sock.recvfrom(2048)
 		if verify_checksum(data) != 0: # discard packet if checksum doesnt add up
 				continue
@@ -307,7 +321,6 @@ def sender_recv_thread(id):
 
 """
 Implementation of the quick resend to beat timeout
-When 3 ou
 """
 def quick_resend(id):
 	sender = senders[id]
@@ -354,7 +367,7 @@ def build_data_message(sender,data):
 	frag = pad(sender.get_latest_frag())
 	pre_message = kind+window+sid+frag+data.decode()
 	icsum = ichecksum(pre_message)
-	bytes_message = icsum.to_bytes(4,'big') + pre_message.encode()
+	bytes_message = icsum.to_bytes(4,'big') + pre_message.encode('utf-8')
 	return bytes_message
 
 """
@@ -369,6 +382,8 @@ Initiate handshake with server, return connection id and store connection stuff 
 """
 def handshake(addr):
 	global client_sock
+	#print(f'handshaking... socket: {client_sock}, send_addr = {addr}')
+
 	kind = "RCON"
 	window_size = "0000"
 	id = "0000"
@@ -376,14 +391,15 @@ def handshake(addr):
 	data = ''
 	join_msg = kind+window_size+id+frag+data
 	jcsum = ichecksum(join_msg)
-	bytes_join = jcsum.to_bytes(4,'big')+join_msg.encode()
+	bytes_join = jcsum.to_bytes(4,'big')+join_msg.encode('utf-8')
 	joined = False
-
+	print(client_sock)
 	client_sock.settimeout(.01)
 	while not joined:
 		try:
 			client_sock.sendto(bytes_join,addr)
 			data, addr = client_sock.recvfrom(2048)
+			#print(f'data: {data[12:16].decode()}, addr: {addr}')
 			if verify_checksum(data) != 0: # discard packet if checksum doesnt add up
 					continue
 			p = Packet()
@@ -403,12 +419,14 @@ def handshake(addr):
 Register sender for connect call
 """
 def reg_sender(packet,addr):
-	global senders
+	global senders,sender_counter
 	conn_id = pad(packet.conn_id)
 	c = Connection(conn_id,packet.frag,addr)
-	senders[c.get_id()] = c
+	print(f'MRT INTERNALS (REG_SENDER): new send connection created... sendID: {c.get_id()} addr: {c.addr}')
+	senders[sender_counter] = c
+	sender_counter += 1
 
-	return c.get_id()
+	return sender_counter - 1
 
 
 
@@ -432,7 +450,7 @@ def start_receiver_thread(socket):
 		else:
 			if check_conn(p,addr) == 0: 
 				reg_conn(p,addr)
-
+			#print(f'incoming packet: {p}')
 			direct_server_message(p)
 
 
@@ -503,10 +521,10 @@ resent the close connection message
 def resend_close(addr):
 	gc_msg = "ACLS000000000000"
 	gc_sum = ichecksum(gc_msg)
-	gc_bytes = gc_sum.to_bytes(4,'big')+gc_msg.encode()
-	sock.sendto(gc_bytes,addr)
-	sock.sendto(gc_bytes,addr)
-	sock.sendto(gc_bytes,addr)
+	gc_bytes = gc_sum.to_bytes(4,'big')+gc_msg.encode('utf-8')
+	server_sock.sendto(gc_bytes,addr)
+	server_sock.sendto(gc_bytes,addr)
+	server_sock.sendto(gc_bytes,addr)
 
 
 """
@@ -587,8 +605,8 @@ def send_ack_message(id,msg_kind):
 sends messages out. Takes checksum and premessage as args
 """
 def send_message(addr,checksum, pre_message):
-	final_msg = checksum.to_bytes(4,'big') + pre_message.encode()
-	sock.sendto(final_msg,addr)
+	final_msg = checksum.to_bytes(4,'big') + pre_message.encode('utf-8')
+	server_sock.sendto(final_msg,addr)
 
 """
 Creates a new connection. Used when reading a packet of kind RCON and conn_id = 0
@@ -665,5 +683,26 @@ def verify_checksum(data):
 	csum_recv = int.from_bytes(data[:4],'big') # Get the first 4 bytes
 	csum_calc = ichecksum(data[4:].decode())
 	return csum_recv - csum_calc
+
+
+"""
+MRT Hole Punch function
+Will send out a hole punch message using server_sock, no reliability
+"""
+def mrt_hole_punch(ip,port):
+	print("trying mrt hole punch in mrt.py")
+	global server_sock
+	if type(server_sock) == int:
+		print(f'Initialize mrt_open before calling hole punch....')
+	else:
+		try:
+			assert(type(port) == int)
+			assert(type(ip) == str)
+			for i in range(0,10):
+				server_sock.sendto('HOLE PUNCH'.encode('utf-8'),(ip,port))
+				time.sleep(0.1)
+		except: 
+			print(f'port must be integer and ip must be str')
+
 
 

@@ -259,7 +259,8 @@ being 4 bytes in length:
 
   | 000a | File ID length |
   | ---- | ---- |
-  | File ID ... | File Data ... |
+  | File ID ... | Chunk Size |
+  | File Data ... | ...|
 
   The node that is to receive the file-transfer is responsible for keeping track of which file it is downloading and if it has fully received the file.
   

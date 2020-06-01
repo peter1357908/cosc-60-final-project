@@ -40,7 +40,7 @@ class FileInfoTable:
 
   # will replace the old fileInfo from the same offerer if it already exists
   def addFileInfo(self, fileID, offerer, fileInfo):
-    fileInfoDict = self.tb.get(fileID)
+    fileInfoDict = self.tb.get(fileID, None)
     
     if fileInfoDict is None:
       fileInfoDict = dict()
@@ -50,7 +50,7 @@ class FileInfoTable:
   # returns the underlying dictionary object corresponding
   # to the specified fileID
   def getFileInfoDictByID(self, fileID):
-    return self.tb.get(fileID)
+    return self.tb.get(fileID, None)
 
   # note that the data strcuture for the "table" is a Python Dictionary
   def getTable(self):
@@ -59,7 +59,7 @@ class FileInfoTable:
   # returns a newly instantiated FileInfoTable object with only one entry:
   # the fileID to its fileInfoDict (to enable usage of __repr__(self))
   def getFileInfoTableByID(self, fileID):
-    fileInfoDict = self.tb.get(fileID)
+    fileInfoDict = self.tb.get(fileID, None)
     if fileInfoDict is None:
       return None
     # DANGEROUS: nested class usage... might be a better way to this
@@ -78,7 +78,7 @@ class FileInfoTable:
       fileIDIndex = fileEntryIndex + NUMBER_LENGTH
       fileID = string[fileIDIndex:fileIDIndex+fileIDLength]
 
-      fileInfoDict = self.tb.get(fileID)
+      fileInfoDict = self.tb.get(fileID, None)
       if fileInfoDict is None:
           fileInfoDict = dict()
           self.tb[fileID] = fileInfoDict
@@ -104,7 +104,7 @@ class FileInfoTable:
     return (fileID in self.tb)
   
   def hasFileByOfferer(self, fileID, offerer):
-    fileInfoDict = self.tb.get(fileID)
+    fileInfoDict = self.tb.get(fileID, None)
     if fileInfoDict is None:
       return False
     return (offerer in fileInfoDict)
@@ -112,7 +112,7 @@ class FileInfoTable:
   # will remove the fileID entry if the fileInfoDict would be empty after removal
   # does nothing if the corresponding FileInfo is not found
   def removeFileInfoByOfferer(self, fileID, offerer):
-    fileInfoDict = self.tb.get(fileID)
+    fileInfoDict = self.tb.get(fileID, None)
     if fileInfoDict is not None:
       fileInfoDict.pop(offerer, None)
       if not fileInfoDict:
@@ -122,7 +122,7 @@ class FileInfoTable:
   def removeAllFileInfoByOfferer(self, fileIDSet, offerer):
     for fileID in fileIDSet:
       # the following should be the same as removeFileInfoByOfferer()
-      fileInfoDict = self.tb.get(fileID)
+      fileInfoDict = self.tb.get(fileID, None)
       if fileInfoDict is not None:
         fileInfoDict.pop(offerer, None)
         if not fileInfoDict:
@@ -142,10 +142,10 @@ class FileInfoTable:
     
     return_string = f'{numLDHTEntries:04d}'
     for fileID in fileIDs:
-      fileInfoDict = self.tb.get(fileID)
+      fileInfoDict = self.tb.get(fileID, None)
       return_string += f'{len(fileID):04d}{fileID}{len(fileInfoDict):04d}'
       for offerer in fileInfoDict:
-        fileInfo = fileInfoDict.get(offerer)
+        fileInfo = fileInfoDict.get(offerer, None)
         return_string += f'{offerer[0]}{offerer[1]}{fileInfo.size:04d}'
     
     return return_string
