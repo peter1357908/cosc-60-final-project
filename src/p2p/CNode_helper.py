@@ -75,15 +75,15 @@ join_type:
 	0: join as chlidnode
 	1: join as supernode
 """
-def join_p2p(recv_sock, send_id, source_ip, source_port, join_type = 0):
+def join_p2p(recv_sock, send_id, holepunch_ip, holepunch_port, source_ip, source_port, join_type = 0):
 	mrt_open(s=recv_sock)
 	values = ''.join([R_JOIN,f'{join_type:04d}'])
 	msg_len = len(values)
 	msg = ''.join([REQUEST, f'{msg_len:04d}', source_ip, source_port, values])
-	send_p2p_msg(send_id,msg)
+	# holepunch to receive from port 5001 to our 5000
+	mrt_hole_punch(holepunch_ip, holepunch_port)
+	send_p2p_msg(send_id, msg)
 	return mrt_accept1()
-	
-
 
 """
 Function to create the request for DHT

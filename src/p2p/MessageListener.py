@@ -12,7 +12,7 @@ from mrt import *
 # helper function for converting 12-byte IP for P2P into dot-delimited IP
 def splitIP(ip):
     ip_split = [int(ip[i:i+3]) for i in range(0, len(ip), 3)]
-    return ".".join([str(x) for x in ip_split]) 
+    return ".".join([str(x) for x in ip_split])
 
 class MessageListener(threading.Thread):
 

@@ -33,7 +33,7 @@ mrt_open: indicate ready-ness to receive incoming connections
 
 Create new socket, startup thread
 """
-def mrt_open(host='', port=5000,s=0):
+def mrt_open(host='', port=5000, s=0):
 	global server_sock,close
 	close = False
 	if s == 1:
@@ -142,7 +142,7 @@ def mrt_close():
 """
 connect to a given server (return a connection)
 """
-def mrt_connect(host='192.168.0.249',port=11235):
+def mrt_connect(host, port):
 	global client_sock
 	if type(client_sock) == int:
 		client_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
