@@ -36,7 +36,7 @@ def bootstrap_connect(ownIP, ownPort, bootstrapperIP, bootstrapperPort, recv_soc
         # TODO: no magic numbas plz
         recvID = CNode_helper.join_p2p(recv_sock, sendID, bootstrapperIP, 5001, ownIP, ownPort, 1)
     else:
-        recvID = CNode_helper.join_p2p(recv_sock, sendID, ownIP, ownPort, 0)
+        recvID = CNode_helper.join_p2p(recv_sock, sendID, bootstrapperIP, 5001, ownIP, ownPort, 0)
     return sendID, recvID
 
 '''
