@@ -46,6 +46,7 @@ class MessageListener(threading.Thread):
                 
                 # POST 
                 if messageType == '0001':    # If the message is a post:
+                    print('POST type received')
                     postType = packet[25:29].decode()
                     if postType == '000a':   # If the message announces a new file
                         # TODO: parse out necessary info for the file list (usually a list with 1 file)
@@ -53,24 +54,25 @@ class MessageListener(threading.Thread):
                         fileIDLength = int(packet[33:37])
                         fileID = packet[37:37+fileIDLength].decode()
                         self.manager.handleFilePost(sourceIP, sourcePort, fileID, fileSize)
-                        print(f'file post.... fsize: {fileSize}, fid_len: {fileIDLength}, fid: {fileID}')
+                        print(f'POST offer 000a type; file post.... fsize: {fileSize}, fid_len: {fileIDLength}, fid: {fileID}')
                     elif postType == '000b':    # If the messages announces a disconnect
+                        print(f'POST disconnect 000b, {splitIP(sourceIP)}:{sourcePort} would like to disconnect')
                         self.manager.handleDisconnectPost(sourceIP, sourcePort)
                         return
 
                     elif postType == '100b':
-                        # TODO: what if the user decides to rejoin?
+                        print(f'POST disconnect 100b response received')
                         print("You can safely disconnect")
 
                 # REQUEST
                 elif messageType == '0101':
-                    print(f'request received')
+                    print(f'REQUEST type received')
                     requestType = packet[25:29].decode()
                     misc = packet[29:33].decode()
 
                     # Request to join the network:
                     if requestType == '000a':
-                        print(f'request to join received... type: {misc}')
+                        print(f'REQUEST 000a to join received... type: {misc}')
                         print(f'trying to connect to {splitIP(sourceIP)}:{sourcePort}')
                         # TODO: make this connection attempt non-blocking / timeout?
                         sendID = mrt_connect(host=splitIP(sourceIP), port=int(sourcePort))
@@ -79,10 +81,12 @@ class MessageListener(threading.Thread):
                     
                     # Request for a supernode's supernode set:
                     elif requestType == '000b':
+                        print(f'REQUEST 000b for supernode set received')
                         self.manager.handleSupernodeSetRequest(sourceIP, sourcePort)
 
                     # Request for a supernode's Local-DHT entries (on all files / one file):
                     elif requestType == '000c':
+                        print(f'REQUEST 000c for local DHT entries received')
                         fileIDLength = int(misc)
                         fileID = ''
                         if fileIDLength > 0:
@@ -92,6 +96,7 @@ class MessageListener(threading.Thread):
                     
                     # Request for all DHT entries (on all files / one file):
                     elif requestType == '000d':
+                        print(f'REQUEST 000d for all DHT entries received')
                         fileIDLength = int(misc)
                         fileID = ''
                         if fileIDLength > 0:
@@ -113,8 +118,11 @@ class MessageListener(threading.Thread):
                         maintainerIPv4 = packet[maintainerIPv4Index:maintainerIPv4Index+12].decode()
                         maintainerPortIndex = maintainerIPv4Index + 12
                         maintainerPort = packet[maintainerPortIndex:maintainerPortIndex+5].decode()
+                        print(f'REQUEST 000e for file transfer request received from {splitIP(sourceIP)}:{sourcePort} \
+                            maintained by {splitIP(offererIPv4)}:{offererPort}, offered by {splitIP(maintainerIPv4)}:{maintainerPort}')
 
                         if offererIPv4 == self.manager.ownIP and offererPort == self.manager.ownPort:
+                            print("I host the file myself!")
                             #TODO: load file and sent (or pass to manager to handle this)
                             #1. Open file
                             file_to_send = open(fileID, 'a+')
@@ -147,6 +155,7 @@ class MessageListener(threading.Thread):
                             file_to_send.close()
  
                         else:
+                            print("forwarding file request...")
                             self.manager.forwardFileTransferRequest(sourceIP, sourcePort, offererIPv4, offererPort, maintainerIPv4, maintainerPort, misc, fileID)
 
 
@@ -201,12 +210,13 @@ class MessageListener(threading.Thread):
 
                     # response from request to get entire DHT
                     elif requestType == '100d':
-                        print("Request type 100d received!")
+                        print('Request type 100d received!')
                         pass
 
 
                 # FILE TRANSFER
                 elif messageType == '1111':
+                    print("FILE TRANSFER 1111 received")
                     fileIDIndex = 33
                     fileIDLength = int(packet[29:33])
                     fileID = packet[fileIDIndex:fileIDIndex + fileIDLength].decode()
@@ -217,7 +227,7 @@ class MessageListener(threading.Thread):
                     with open(fileID,'a+') as infile:
                         infile.write(data)
 
-                        print(f'Writing file to {fileID}')
+                        print(f'Writing data to {fileID}')
 
 
 
