@@ -4,7 +4,9 @@
 
 The purpose of this document is to describe how a user of the P2P network should interact with the P2P client.
 
-The user must have Python 3 installed and have a command-line interface, for now.
+The user must have Python 3 installed and have a command-line interface.
+
+Both the supernode and the child nodes may issue these commands. Note that the supernodes will continue to function in the absence of user input.
 
 Commands are issued to the client CLI via stdin, and upon pressing enter, the command is sent.
 
@@ -55,15 +57,8 @@ This requests just one specific file from the local DHT
 
 - `req files local`
 
-This requests the local DHT
+This requests the local DHT, that is the supernode's DHT.
 
-- `req files all`
-
-This requests the entire DHT.
-
-- `req files`
-
-This requests only the local DHT.
 
 - `req supernodes`
 
