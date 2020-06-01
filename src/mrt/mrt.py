@@ -420,6 +420,7 @@ def reg_sender(packet,addr):
 	global senders
 	conn_id = pad(packet.conn_id)
 	c = Connection(conn_id,packet.frag,addr)
+	print(f'MRT INTERNALS (REG_SENDER): new send connection created... sendID: {c.get_id()} addr: {c.addr}')
 	senders[c.get_id()] = c
 
 	return c.get_id()
