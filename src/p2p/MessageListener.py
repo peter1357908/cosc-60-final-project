@@ -75,7 +75,7 @@ class MessageListener(threading.Thread):
                         print(f'trying to connect to {sourceIP}:{sourcePort}')
                         # TODO: make this connection attempt non-blocking / timeout?
                         sendID = mrt_connect(host=splitIP(sourceIP), port=int(sourcePort))
-                        print("This is the sendID" + sendID)
+                        print("This is the sendID" + str(sendID))
                         print("connection succeeded")
                         self.manager.handleJoinRequest(int(misc), sendID, sourceIP, sourcePort)
                     

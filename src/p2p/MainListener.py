@@ -163,10 +163,10 @@ class MainListener(threading.Thread):
 
     # handles the request response `100c`
     # `responseString` should not contain the type `100c`
-    def handleLocalDHTEntriesRequestResponse(self, responseString):
+    def handleLocalDHTEntriesRequestResponse(self, responseString, sourceIP, sourcePort):
         print(f'responseString: {responseString}')
         with self.fileInfoTableLock:
-            self.fileInfoTable.importByString(responseString)
+            self.fileInfoTable.importByString(responseString, (sourceIP, sourcePort))
             
 
     def handleAllDHTEntriesRequest(self, sourceIP, sourcePort, fileIDLengthString, fileID):
