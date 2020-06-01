@@ -189,8 +189,11 @@ class InputListener(threading.Thread):
 
                     if not self.isSupernode:
                         self.offerNewFile(file_id)
-                    else: 
-                        self.manager.handleFilePost(self.ownIP, self.ownPort, file_id, os.path.getsize(file_id))
+                    else:
+                        if not os.path.exists(file_id):
+                            print(f"the file you've offered to post doesn't exist! {file_id}")
+                        else:
+                            self.manager.handleFilePost(self.ownIP, self.ownPort, file_id, os.path.getsize(file_id))
                 elif input_tks[1] == "rm":
                     try:
                         assert len(input_tks) >= 3

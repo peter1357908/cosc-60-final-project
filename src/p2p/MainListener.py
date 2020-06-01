@@ -169,7 +169,6 @@ class MainListener(threading.Thread):
             
 
     def handleAllDHTEntriesRequest(self, sourceIP, sourcePort, fileIDLengthString, fileID):
-        #TODO: This one is the most complicated as we first need to collect all of the file info from the other supernodes...
         supernodeAddr = (sourceIP, sourcePort)
 
         if supernodeAddr not in self.supernodeSet.getSet():
