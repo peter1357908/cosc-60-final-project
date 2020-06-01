@@ -29,7 +29,7 @@ class MainListener(threading.Thread):
         ownPort is a 5-byte string in ascii
     ''' 
 
-    def __init__(self, isSupernode, ownIP, ownPort, bootstrapSendID='', bootstrapRecvID='', is_first=False):
+    def __init__(self, isSupernode, ownIP, ownPort, bootstrapSendID, bootstrapRecvID, bootstrapIP='', bootstrapPort='', is_first=False):
         threading.Thread.__init__(self)
         self.isSupernode = isSupernode
         self.ownIP = ownIP
@@ -47,6 +47,11 @@ class MainListener(threading.Thread):
         self.childTableLock = threading.Lock() # pass to spawned threads
         self.supernodeSetLock = threading.Lock() # pass to spawned threads
         self.addrToIDTableLock = threading.Lock()
+
+        # keep track of the bootstrapping supernode if self is a non-first supernode
+        if isSupernode and not is_first:
+            with self.supernodeSetLock:
+                self.supernodeSet.addSupernode((bootstrapIP, bootstrapPort))
 
     # type - 0, 1, 2
     # 0 = regular node

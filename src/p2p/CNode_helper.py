@@ -22,7 +22,7 @@ ERROR = '0000'
 
 """ REQUESTS """
 R_JOIN = '000a'
-R_LIST = '000b'
+R_SET = '000b'
 R_LOCAL_DHT = '000c'
 R_GLOBAL_DHT = '000d'
 R_FILE_TRANS = '000e'
@@ -115,8 +115,8 @@ def request_global_dht(send_id, source_ip, source_port, filename):
 Function to request supernode list
 Takes no parameters
 """
-def request_super_list(send_id, source_ip, source_port):
-	values = ''.join([R_LIST])
+def request_super_set(send_id, source_ip, source_port):
+	values = ''.join([R_SET])
 	msg_len = len(values)
 	msg = ''.join([REQUEST, f'{msg_len:04d}', source_ip, source_port, values])
 	send_p2p_msg(send_id,msg)

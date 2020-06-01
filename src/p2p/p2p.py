@@ -67,7 +67,7 @@ def main():
 
             bootstrapSendID, bootstrapRecvID = bootstrap_connect(HARDCODED_SUPERNODE_IP_P2P, HARDCODED_SUPERNODE_PORT_P2P, HARDCODED_FIRST_IP, HARDCODED_FIRST_PORT, recv_sock, True)
 
-            mainListener = MainListener(True, HARDCODED_SUPERNODE_IP_P2P, HARDCODED_SUPERNODE_PORT_P2P, bootstrapSendID, bootstrapRecvID, False)
+            mainListener = MainListener(True, HARDCODED_SUPERNODE_IP_P2P, HARDCODED_SUPERNODE_PORT_P2P, bootstrapSendID, bootstrapRecvID, HARDCODED_FIRST_IP, HARDCODED_FIRST_PORT, False)
             mainListener.start()
         else:
             recv_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -77,7 +77,7 @@ def main():
 
             bootstrapSendID, bootstrapRecvID = bootstrap_connect(ownIP, ownPort, HARDCODED_FIRST_IP, HARDCODED_FIRST_PORT, recv_sock, False)
 
-            mainListener = MainListener(False, ownIP, ownPort, bootstrapSendID, bootstrapRecvID, False)
+            mainListener = MainListener(False, ownIP, ownPort, bootstrapSendID, bootstrapRecvID, HARDCODED_FIRST_IP, HARDCODED_FIRST_PORT, False)
             mainListener.start()
 
 if __name__ == "__main__":

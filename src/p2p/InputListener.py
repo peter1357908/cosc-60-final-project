@@ -77,7 +77,7 @@ class InputListener(threading.Thread):
     # Request list of supernodes
     def requestSupernodes(self):
         print("requesting all the supernodes")
-        CNode_helper.request_super_list(
+        CNode_helper.request_super_set(
             self.bootstrapSendID, self.ownIP, self.ownPort)
 
     # Begin a download (input are all in P2P format):

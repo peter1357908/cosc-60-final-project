@@ -23,8 +23,7 @@ class MessageListener(threading.Thread):
         threading.Thread.__init__(self)
         # Main Listener 
         self.recvID = recvID
-
-        self.manager = mainListener 
+        self.manager = mainListener
 
     # TODO: run() method:
     def run(self):
