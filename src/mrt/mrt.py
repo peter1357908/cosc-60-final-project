@@ -18,6 +18,7 @@ conn_count = 0
 server_sock = 0
 client_sock = 0
 recently_closed = []
+sender_counter = 1
 
 buffer_lock = threading.Lock() #buffer lock to help with data races
 
@@ -417,13 +418,14 @@ def handshake(addr):
 Register sender for connect call
 """
 def reg_sender(packet,addr):
-	global senders
+	global senders,sender_counter
 	conn_id = pad(packet.conn_id)
 	c = Connection(conn_id,packet.frag,addr)
 	print(f'MRT INTERNALS (REG_SENDER): new send connection created... sendID: {c.get_id()} addr: {c.addr}')
-	senders[c.get_id()] = c
+	senders[sender_counter] = c
+	sender_counter += 1
 
-	return c.get_id()
+	return sender_counter - 1
 
 
 
