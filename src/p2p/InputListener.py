@@ -37,9 +37,37 @@ class InputListener(threading.Thread):
             else:
                 CNode_helper.request_global_dht(self.bootstrapSendID, self.ownIP, self.ownPort, filename)
         else:
-            # TODO: enable supernode to query other supernodes instead of only its
-            # bootstrapping supernode
-            CNode_helper.request_local_dht(self.bootstrapSendID, self.ownIP, self.ownPort, filename)
+            if self.isSupernode:
+                # just print the local dht (copied from MessageListener; should move to MainListener)
+                DHTString = str(self.manager.fileInfoTable)
+                num_DHT_entries = int(DHTString[0:4])
+                cur_idx = 4
+
+                # for each local DHT entry
+                for i in range(num_DHT_entries):
+                    # see Protocol.md
+                    print(f"*** request type 100c - LOCAL DHT entry number {i+1}: ***")
+                    file_id_length = int(DHTString[cur_idx:cur_idx + 4])
+                    cur_idx += 4
+
+                    file_id = DHTString[cur_idx:cur_idx + file_id_length]
+                    cur_idx += file_id_length
+
+                    print(f"---- fileID : {file_id}")
+
+                    num_file_entries = int(DHTString[cur_idx:cur_idx +4])
+                    cur_idx += 4
+                    # for each file entry
+                    for j in range(num_file_entries):
+                        offerer_ip = DHTString[cur_idx:cur_idx+12]
+                        cur_idx += 12
+                        offerer_port = DHTString[cur_idx:cur_idx+5]
+                        cur_idx += 5
+                        file_size = DHTString[cur_idx:cur_idx+4]
+                        cur_idx += 4
+                        print(f"    -- {splitIP(offerer_ip)}:{int(offerer_port)}, size: {file_size}")
+            else:
+                CNode_helper.request_local_dht(self.bootstrapSendID, self.ownIP, self.ownPort, filename)
 
     # Request list of supernodes
     def requestSupernodes(self):
