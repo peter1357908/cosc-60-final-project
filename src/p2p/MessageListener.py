@@ -165,14 +165,14 @@ class MessageListener(threading.Thread):
                         print("RequestType 100a received!")
                         num_supernode_entries = int(misc)
                         cur_idx = 33
-                        print(f"number of supernode entries is {num_supernode_entries}")
+                        print(f"*** number of supernode entries is {num_supernode_entries}")
                         for i in range(num_supernode_entries):
                             try:
                                 snodeIP = packet[cur_idx:cur_idx+12].decode()
                                 cur_idx += 12
                                 snodePort = packet[cur_idx:cur_idx+5].decode()
                                 cur_idx += 5
-                                print(f"100a; SUPERNODE at {splitIP(snodeIP)}:{snodePort}")
+                                print(f"    -- SUPERNODE at {splitIP(snodeIP)}:{snodePort}")
                             except IndexError as e:
                                 print("100a received, cannot index supernode ip, port, index out of bounds")
                         self.manager.handleSupernodeSetRequestResponse(packet[29:25+messageLen].decode())

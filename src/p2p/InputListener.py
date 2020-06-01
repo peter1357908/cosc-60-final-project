@@ -167,7 +167,21 @@ class InputListener(threading.Thread):
                     if not self.isSupernode:
                         self.requestSupernodes()
                     else:
-                        print(f'{self.manager.supernodeSet}')
+                        supernodeString = str(self.manager.supernodeSet)
+
+                        num_supernode_entries = int(supernodeString[0:4])
+                        cur_idx = 4
+                        print(f"*** number of supernode entries is {num_supernode_entries}")
+                        for i in range(num_supernode_entries):
+                            try:
+                                snodeIP = supernodeString[cur_idx:cur_idx+12]
+                                cur_idx += 12
+                                snodePort = supernodeString[cur_idx:cur_idx+5]
+                                cur_idx += 5
+                                print(f"    -- SUPERNODE at {splitIP(snodeIP)}:{snodePort}")
+                            except IndexError as e:
+                                print("fake 100a received from supernode, cannot index supernode ip, port, index out of bounds")
+
                 elif input_tks[1] == "dl":
                     try: 
                         assert len(input_tks) >= 4
