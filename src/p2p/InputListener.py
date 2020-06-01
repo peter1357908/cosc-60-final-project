@@ -145,9 +145,14 @@ class InputListener(threading.Thread):
                     # TODO: move the following logic to MainListener:
                     with self.manager.fileInfoTableLock:
                         tempFileInfoDict = self.manager.fileInfoTable.getFileInfoDictByID(file_id)
+                        print("full table" + tempFileInfoDict)
+                        print(f'offererIP: {offererIP}, offererPort: {offererPort}')
+                        if tempFileInfoDict is None:
+                            print(f'You should not request a file that I do not know exisited; request global DHT entries first (tempFileInfoDict is `None`)')
+                            continue
                         tempFileInfo = tempFileInfoDict[(offererIP, offererPort)]
                         if tempFileInfo is None:
-                            print(f'You should not request a file that I do not know exisited; request global DHT entries first')
+                            print(f'You should not request a file that I do not know exisited; request global DHT entries first (tempFileInfo is `None`)')
                             continue
                         maintainerIP, maintainerPort = tempFileInfo.maintainer
 
