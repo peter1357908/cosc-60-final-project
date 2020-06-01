@@ -107,6 +107,8 @@ if there is data in the buffer, return the entire buffer
 otherwise sleep and repeat
 """
 def mrt_receive1(id):
+	print(f"conns: {conns}")
+	print(f"connid: {conns[id]}")
 	while id in conns:
 		conn = conns[id]
 		if len(conn.buffer) > 0:

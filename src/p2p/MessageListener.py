@@ -3,7 +3,6 @@
 # Message Listener Thread:
 import threading
 import File
-import FileInfoTable
 import sys
 import time
 sys.path.append("../mrt/")
@@ -33,7 +32,10 @@ class MessageListener(threading.Thread):
 
         while True:
             # Accept a packet from the current recvID
-            packet = mrt_receive1(self.recvID)           
+            packet = mrt_receive1(self.recvID)
+
+            if packet == -1:
+                print("packet is -1 so mrt_receive ended")         
 
             while len(packet) > 0:
                 # Parse the packet:
