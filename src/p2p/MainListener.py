@@ -62,6 +62,9 @@ class MainListener(threading.Thread):
             with self.addrToIDTableLock:
                 self.addrToIDTable[childAddr] = sendID
                 print(f'handle join request type 0 addrToIDTable: {self.addrToIDTable}')
+
+            # print the address to send id table
+            print("addr to send table is ", self.addrToIDTable)
             
             # craft and send response `100a`
             response_type = '100a'
@@ -90,6 +93,9 @@ class MainListener(threading.Thread):
                 self.addrToIDTable[superAddr]=sendID
                 print(f'handle join request type 1 addrToIDTable after adding the joining supernode\'s address: {self.addrToIDTable}')
 
+            # print the address to send id table
+            print("addr to send table is ", self.addrToIDTable)
+
             # craft and send response `100a`
             response_type = '100a'
             values = f'{response_type}{self.supernodeSet}'
@@ -103,6 +109,9 @@ class MainListener(threading.Thread):
                 self.supernodeSet.add(superAddr)
             with self.addrToIDTableLock:
                 self.addrToIDTable[superAddr]=sendID
+
+            # print the address to send id table
+            print("addr to send table is ", self.addrToIDTable)
             
         else:
             print(f"handleJoinRequest(): type \'{type}\' not found")
@@ -118,10 +127,13 @@ class MainListener(threading.Thread):
         with self.addrToIDTableLock:
             sourceSendID = self.addrToIDTable.get((sourceIP, sourcePort), None)
 
+        # print the address to send id table
+        print("addr to send table is ", self.addrToIDTable)
+
         print(f"sending supernode set back to {sourceIP}:{sourcePort} using {sourceSendID}")
         send_p2p_msg(sourceSendID, response)
     
-    # handles request response 100a
+    # handles request response `100a`
     # `responseString` should not contain the type `100a`
     def handleSupernodeSetRequestResponse(self, responseString):
         with self.supernodeSetLock:
@@ -144,7 +156,16 @@ class MainListener(threading.Thread):
         with self.addrToIDTableLock:
             sourceSendID = self.addrToIDTable.get((sourceIP, sourcePort), None)
 
+        # print the address to send id table
+        print("addr to send table is ", self.addrToIDTable)
+
         send_p2p_msg(sourceSendID, response)
+
+    # handles the request response `100c`
+    # `responseString` should not contain the type `100c`
+    def handleLocalDHTEntriesRequestResponse(self, responseString):
+        with self.fileInfoTableLock:
+            self.fileInfoTable.importByString(responseString)
 
     def handleAllDHTEntriesRequest(self, sourceIP, sourcePort, fileIDLengthString, fileID):
         #TODO: This one is the most complicated as we first need to collect all of the file info from the other supernodes...
@@ -165,6 +186,9 @@ class MainListener(threading.Thread):
                         # if the requester wants entries on ALL files
                         else:
                             values = '000c0000'
+
+                        # print the address to send id table
+                        print("addr to send table is ", self.addrToIDTable)
 
                         msg = f'{REQUEST}{len(values):04d}{self.ownIP}{self.ownPort}{values}'
                         send_p2p_msg(supernodeSendID, msg)
@@ -189,6 +213,9 @@ class MainListener(threading.Thread):
         else:
             with self.addrToIDTableLock:
                 targetSendID = self.addrToIDTable.get(maintainerAddr, None)
+
+        # print the address to send id table
+        print("forwardfiletransferreq, addr to send table is ", self.addrToIDTable)
         
         # TODO: consider taking in the original message to allow forwarding
         values = f'000e{fileIDLengthString}{fileID}{offererIPv4}{offererPort}{maintainerIPv4}{maintainerPort}'
@@ -214,6 +241,9 @@ class MainListener(threading.Thread):
         if offererAddr != (self.ownIP, self.ownPort):
             with self.childTableLock:
                 self.childTable.addFile(offererAddr, fileID)
+
+        # print the address to send id table
+        print("handlefilepost addr to send table is ", self.addrToIDTable)
 
         print(f'handle file post in mainlistener: \'{fileID}\' of size {fileSize} from {offererIP}:{offerPort}')
         print(f'hash table now looks like: {self.fileInfoTable}')
@@ -247,6 +277,9 @@ class MainListener(threading.Thread):
         recvAddr = (sourceIP, sourcePort)
         with self.addrToIDTableLock:
             recvSendID = self.addrToIDTable[recvAddr]
+
+        # print the address to send id table
+        print("handlefiletransfer, addr to send table is ", self.addrToIDTable)
 
         response_type = '000a'
         fileID_length = len(fileID)

@@ -181,32 +181,32 @@ class MessageListener(threading.Thread):
                         print("RequestType 100c received!")
                         pass
                         # This stuff is just pretty print for the user
-                        # num_DHT_entries = int(misc)
-                        # cur_idx = 33
+                        num_DHT_entries = int(misc)
+                        cur_idx = 33
 
-                        # # for each local DHT entry
-                        # for i in range(num_DHT_entries):
-                        #     # see Protocol.md
-                        #     print(f"*** request type 100c - LOCAL DHT entry number {i} ***")
-                        #     file_id_length = int(packet[cur_idx:cur_idx + 4])
-                        #     cur_idx += 4
+                        # for each local DHT entry
+                        for i in range(num_DHT_entries):
+                            # see Protocol.md
+                            print(f"*** request type 100c - LOCAL DHT entry number {i+1}: ***")
+                            file_id_length = int(packet[cur_idx:cur_idx + 4].decode())
+                            cur_idx += 4
 
-                        #     file_id = packet[cur_idx:cur_idx + file_id_length].decode()
-                        #     cur_idx += file_id_length
+                            file_id = packet[cur_idx:cur_idx + file_id_length].decode()
+                            cur_idx += file_id_length
 
-                        #     print(f"---- fileID : {file_id}")
+                            print(f"---- fileID : {file_id}")
 
-                        #     num_file_entries = int(packet[cur_idx:cur_idx +4])
-                        #     cur_idx += 4
-                        #     # for each file entry
-                        #     for j in range(num_file_entries):
-                        #         offerer_ip = packet[cur_idx:cur_idx+12].decode()
-                        #         cur_idx += 12
-                        #         offerer_port = packet[cur_idx:cur_idx+5].decode()
-                        #         cur_idx += 5
-                        #         file_size = packet[cur_idx:cur_idx+4].decode()
-                        #         cur_idx += 4
-                        #         print(f"    -- {splitIP(offerer_ip)}:{offerer_port}, size: {file_size}")
+                            num_file_entries = int(packet[cur_idx:cur_idx +4])
+                            cur_idx += 4
+                            # for each file entry
+                            for j in range(num_file_entries):
+                                offerer_ip = packet[cur_idx:cur_idx+12].decode()
+                                cur_idx += 12
+                                offerer_port = packet[cur_idx:cur_idx+5].decode()
+                                cur_idx += 5
+                                file_size = packet[cur_idx:cur_idx+4].decode()
+                                cur_idx += 4
+                                print(f"    -- {splitIP(offerer_ip)}:{offerer_port}, size: {file_size}")
 
                     # response from request to get entire DHT
                     elif requestType == '100d':

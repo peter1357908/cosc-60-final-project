@@ -145,10 +145,11 @@ class InputListener(threading.Thread):
                     # TODO: move the following logic to MainListener:
                     with self.manager.fileInfoTableLock:
                         tempFileInfoDict = self.manager.fileInfoTable.getFileInfoDictByID(file_id)
-                        print("full table" + tempFileInfoDict)
-                        print("Dict of the Ip,port combo" + tempFileInfoDict[(offererIP, offererPort)])
-                        print("maintainer:"+ (tempFileInfoDict[(offererIP, offererPort)]).maintainer)
-                        maintainerIP, maintainerPort = (tempFileInfoDict[(offererIP, offererPort)]).maintainer
+                        tempFileInfo = tempFileInfoDict[(offererIP, offererPort)]
+                        if tempFileInfo is None:
+                            print(f'You should not request a file that I do not know exisited; request global DHT entries first')
+                            continue
+                        maintainerIP, maintainerPort = tempFileInfo.maintainer
 
                     print(
                         f'Attempting to download \'{file_id}\' from {offererIP}:{offererPort}. Contacting the file\'s DHT entry maintainer at {maintainerIP}:{maintainerPort}. The addresses are in P2P format.')
