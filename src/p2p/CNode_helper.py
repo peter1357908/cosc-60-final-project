@@ -75,7 +75,7 @@ join_type:
 	0: join as chlidnode
 	1: join as supernode
 """
-def join_p2p(recv_sock,send_id, source_ip, source_port, join_type = 0):
+def join_p2p(recv_sock, send_id, source_ip, source_port, join_type = 0):
 	mrt_open(s=recv_sock)
 	values = ''.join([R_JOIN,f'{join_type:04d}'])
 	msg_len = len(values)

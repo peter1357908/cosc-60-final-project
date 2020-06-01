@@ -174,7 +174,7 @@ class MessageListener(threading.Thread):
                                 print(f"100a; SUPERNODE at {splitIP(snodeIP)}:{snodePort}")
                             except IndexError as e:
                                 print("100a received, cannot index supernode ip, port, index out of bounds")
-                        self.manager.handleSupernodeSetRequestResponse(packet[29:25+messageLen])
+                        self.manager.handleSupernodeSetRequestResponse(packet[29:25+messageLen].decode())
 
                     # response from request to get local DHT
                     elif requestType == '100c':
@@ -208,7 +208,7 @@ class MessageListener(threading.Thread):
                                 cur_idx += 4
                                 print(f"    -- {splitIP(offerer_ip)}:{offerer_port}, size: {file_size}")
                         print(packet[29:25+messageLen])
-                        self.manager.handleLocalDHTEntriesRequestResponse(packet[29:25+messageLen], sourceIP, sourcePort)
+                        self.manager.handleLocalDHTEntriesRequestResponse(packet[29:25+messageLen].decode(), sourceIP, sourcePort)
 
                     # response from request to get entire DHT
                     elif requestType == '100d':

@@ -134,7 +134,7 @@ class MainListener(threading.Thread):
         send_p2p_msg(sourceSendID, response)
     
     # handles request response `100a`
-    # `responseString` should not contain the type `100a`
+    # `responseString` should not contain the type `100a`, and should be decoded already (NOT binary)
     def handleSupernodeSetRequestResponse(self, responseString):
         with self.supernodeSetLock:
             self.supernodeSet.importByString(responseString)
@@ -162,9 +162,8 @@ class MainListener(threading.Thread):
         send_p2p_msg(sourceSendID, response)
 
     # handles the request response `100c`
-    # `responseString` should not contain the type `100c`
+    # `responseString` should not contain the type `100c`, and should be decoded already (NOT binary)
     def handleLocalDHTEntriesRequestResponse(self, responseString, sourceIP, sourcePort):
-        print(f'responseString: {responseString}')
         with self.fileInfoTableLock:
             self.fileInfoTable.importByString(responseString, (sourceIP, sourcePort))
             

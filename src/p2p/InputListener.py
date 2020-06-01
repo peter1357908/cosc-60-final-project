@@ -27,11 +27,19 @@ class InputListener(threading.Thread):
     # Construct Request DHT packet and send to supernodeIP:
     def requestDHT(self, filename, isRequestingGlobalDHT):
         if isRequestingGlobalDHT:
-            CNode_helper.request_global_dht(
-                self.bootstrapSendID, self.ownIP, self.ownPort, filename)
+            if self.isSupernode:
+                # move this logic to MainListener
+                with self.manager.supernodeSetLock:
+                    with self.manager.addrToIDTableLock:
+                        for supernodeAddr in self.supernodeSet.getSet():
+                            targetSendID = self.manager.addrToIDTable[supernodeAddr]
+                            CNode_helper.request_local_dht(targetSendID, supernodeAddr[0], supernodeAddr[1], filename)
+            else:
+                CNode_helper.request_global_dht(self.bootstrapSendID, self.ownIP, self.ownPort, filename)
         else:
-            CNode_helper.request_local_dht(
-                self.bootstrapSendID, self.ownIP, self.ownPort, filename)
+            # TODO: enable supernode to query other supernodes instead of only its
+            # bootstrapping supernode
+            CNode_helper.request_local_dht(self.bootstrapSendID, self.ownIP, self.ownPort, filename)
 
     # Request list of supernodes
     def requestSupernodes(self):
@@ -146,16 +154,12 @@ class InputListener(threading.Thread):
                     # TODO: move the following logic to MainListener:
                     with self.manager.fileInfoTableLock:
                         tempFileInfoDict = self.manager.fileInfoTable.getFileInfoDictByID(file_id)
-                        print(f'SHOULD BE IN P2P FORMAT: offererIP: {offererIP}, offererPort: {offererPort}')
-                        print(f'file_id is {file_id}')
-                        print(f'fileInfoTable:{self.manager.fileInfoTable.getTable()}')
-                        print(f'tempFileInfoDict:{tempFileInfoDict}')
                         if tempFileInfoDict is None:
-                            print(f'You should not request a file that I do not know exisited; request global DHT entries first (tempFileInfoDict is `None`)')
+                            print('You should not request a file that I do not know exisited; request global DHT entries first (tempFileInfoDict is `None`)')
                             continue
                         tempFileInfo = tempFileInfoDict[(offererIP, offererPort)]
                         if tempFileInfo is None:
-                            print(f'You should not request a file that I do not know exisited; request global DHT entries first (tempFileInfo is `None`)')
+                            print('You should not request a file that I do not know exisited; request global DHT entries first (tempFileInfo is `None`)')
                             continue
                         maintainerIP, maintainerPort = tempFileInfo.maintainer
 
