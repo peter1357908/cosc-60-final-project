@@ -208,7 +208,7 @@ class MessageListener(threading.Thread):
                                 cur_idx += 5
                                 file_size = packet[cur_idx:cur_idx+4].decode()
                                 cur_idx += 4
-                                print(f"    -- {splitIP(offerer_ip)}:{offerer_port}, size: {file_size}")
+                                print(f"    -- {splitIP(offerer_ip)}:{int(offerer_port)}, size: {file_size}")
                         print(packet[29:25+messageLen])
                         self.manager.handleLocalDHTEntriesRequestResponse(packet[29:25+messageLen].decode(), sourceIP, sourcePort)
 

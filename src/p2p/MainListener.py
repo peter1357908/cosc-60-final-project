@@ -220,6 +220,7 @@ class MainListener(threading.Thread):
         # TODO: consider taking in the original message to allow forwarding
         values = f'000e{fileIDLengthString}{fileID}{offererIPv4}{offererPort}{maintainerIPv4}{maintainerPort}'
         msg = f'{REQUEST}{len(values):04d}{sourceIP}{sourcePort}{values}'
+        print(f"TargetSendID: {targetSendID}")
         send_p2p_msg(targetSendID, msg)
 
     '''
@@ -276,8 +277,11 @@ class MainListener(threading.Thread):
     def handleFileTransfer(self, sourceIP, sourcePort, curr_file_part, fileID, eof=False):
         recvAddr = (sourceIP, sourcePort)
         with self.addrToIDTableLock:
-            recvSendID = self.addrToIDTable[recvAddr]
-
+            recvSendID = self.addrToIDTable.get(recvAddr, None)
+            if recvSendID is None:
+                recvSendID = mrt_connect(MessageListener.splitIP(sourceIP), int(sourcePort))
+                self.addrToIDTable[recvAddr] = recvSendID
+        
         # print the address to send id table
         print("handlefiletransfer, addr to send table is ", self.addrToIDTable)
 
@@ -291,7 +295,7 @@ class MainListener(threading.Thread):
         if eof:
             # only disconnect if the receiver of our file transfer is NOT OUR children AND that it is NOT our bootstrapper.
             if (self.isSupernode and not self.childTable.hasChild(recvAddr)) and (recvSendID != self.bootstrapSendID):
-                mrt_disconnect(recvSendID)
+                mrt_disconnect(self.addrToIDTable.pop(recvAddr))
     
     def run(self):
         print(f'MainListener starting... IP: {self.ownIP} port: {self.ownPort}')

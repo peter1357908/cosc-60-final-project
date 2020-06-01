@@ -149,6 +149,7 @@ def mrt_connect(host='192.168.0.249',port=11235):
 		client_sock.bind(('',5001))
 	client_sock.settimeout(None)
 	addr = (host,port)
+	#mrt_hole_punch(addr) # S-NAT help
 	id = handshake(addr)
 	senders[id].receiving=True
 	recv_thread = threading.Thread(target=sender_recv_thread,args=(id,))
@@ -689,6 +690,7 @@ MRT Hole Punch function
 Will send out a hole punch message using server_sock, no reliability
 """
 def mrt_hole_punch(ip,port):
+	print("trying mrt hole punch in mrt.py")
 	global server_sock
 	if type(server_sock) == int:
 		print(f'Initialize mrt_open before calling hole punch....')
@@ -696,7 +698,9 @@ def mrt_hole_punch(ip,port):
 		try:
 			assert(type(port) == int)
 			assert(type(ip) == str)
-			server_sock.sendto('HOLE PUNCH'.encode('utf-8'),(ip,port))
+			for i in range(0,10):
+				server_sock.sendto('HOLE PUNCH'.encode('utf-8'),(ip,port))
+				time.sleep(0.1)
 		except: 
 			print(f'port must be integer and ip must be str')
 

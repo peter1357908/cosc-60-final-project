@@ -162,7 +162,7 @@ class InputListener(threading.Thread):
                         if tempFileInfoDict is None:
                             print('You should not request a file that I do not know exisited; request global DHT entries first (tempFileInfoDict is `None`)')
                             continue
-                        tempFileInfo = tempFileInfoDict[(offererIP, offererPort)]
+                        tempFileInfo = tempFileInfoDict.get((offererIP, offererPort), None)
                         if tempFileInfo is None:
                             print('You should not request a file that I do not know exisited; request global DHT entries first (tempFileInfo is `None`)')
                             continue
